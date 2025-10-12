@@ -1,33 +1,29 @@
 import { Context } from 'hono';
 import { getDb } from '../../db';
-import { providerKeys, NewProviderKey } from '../../db/schema';
+import { providerKeys, NewProviderKey, virtualKeys } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { encryptProviderKey, maskApiKey } from '../../services/encryptionService';
 
 /**
  * List provider keys (masked)
- * GET /v1/admin/provider-keys
+ * GET /v1/admin/provider-keys?workspaceId=xxx
  */
 export async function listProviderKeys(c: Context) {
   const timestamp = new Date().toISOString();
   const db = getDb();
   const workspace = c.get('workspace');
-  
-  if (!workspace) {
-    return c.json(
-      {
-        status: 'failure',
-        message: 'Workspace context required',
-      },
-      400
-    );
-  }
+  const workspaceIdParam = c.req.query('workspaceId');
   
   try {
-    const keys = await db
-      .select()
-      .from(providerKeys)
-      .where(eq(providerKeys.workspaceId, workspace.id));
+    let query = db.select().from(providerKeys);
+    
+    // Filter by workspace if provided
+    const workspaceId = workspace?.id || workspaceIdParam;
+    if (workspaceId) {
+      query = query.where(eq(providerKeys.workspaceId, workspaceId)) as any;
+    }
+    
+    const keys = await query;
     
     // Mask the keys before returning
     const maskedKeys = keys.map((key) => ({
@@ -35,7 +31,7 @@ export async function listProviderKeys(c: Context) {
       encryptedKey: maskApiKey(key.encryptedKey),
     }));
     
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Listed ${maskedKeys.length} provider keys for workspace ${workspace.id}`);
+    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Listed ${maskedKeys.length} provider keys${workspaceId ? ` for workspace ${workspaceId}` : ''}`);
     
     return c.json({
       status: 'success',
@@ -316,6 +312,23 @@ export async function deleteProviderKey(c: Context) {
           message: 'Provider key not found',
         },
         404
+      );
+    }
+    
+    // Check if any virtual keys are using this provider key
+    const linkedVirtualKeys = await db
+      .select()
+      .from(virtualKeys)
+      .where(eq(virtualKeys.providerKeyId, id));
+    
+    if (linkedVirtualKeys.length > 0) {
+      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Cannot delete provider key ${id} - used by ${linkedVirtualKeys.length} virtual key(s)`);
+      return c.json(
+        {
+          status: 'failure',
+          message: `Cannot delete provider key - it is used by ${linkedVirtualKeys.length} virtual key(s). Delete or reassign the virtual keys first.`,
+        },
+        400
       );
     }
     

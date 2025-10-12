@@ -49,16 +49,33 @@ export const providerKeys = sqliteTable('provider_keys', {
 }));
 
 /**
- * API Keys table
- * Custom API keys for gateway access with rate limits and permissions
+ * Admin Keys table
+ * Authentication keys for accessing the admin panel
  */
-export const apiKeys = sqliteTable('api_keys', {
+export const adminKeys = sqliteTable('admin_keys', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
   keyHash: text('key_hash').notNull().unique(),
   name: text('name').notNull(),
   description: text('description'),
-  permissions: text('permissions', { mode: 'json' }).$type<Record<string, boolean>>().notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
+}, (table) => ({
+  keyHashIdx: index('admin_keys_key_hash_idx').on(table.keyHash),
+}));
+
+/**
+ * Virtual Keys table
+ * Gateway access keys with rate limits, token limits, and model restrictions
+ * Each virtual key is bound to a specific provider key
+ */
+export const virtualKeys = sqliteTable('virtual_keys', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+  providerKeyId: text('provider_key_id').notNull().references(() => providerKeys.id, { onDelete: 'cascade' }),
+  keyHash: text('key_hash').notNull().unique(),
+  name: text('name').notNull(),
+  description: text('description'),
   rateLimitRpm: integer('rate_limit_rpm'), // requests per minute
   rateLimitTpm: integer('rate_limit_tpm'), // tokens per minute
   allowedModels: text('allowed_models', { mode: 'json' }).$type<string[]>(),
@@ -68,8 +85,9 @@ export const apiKeys = sqliteTable('api_keys', {
   expiresAt: integer('expires_at', { mode: 'timestamp' }),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 }, (table) => ({
-  keyHashIdx: index('api_keys_key_hash_idx').on(table.keyHash),
-  workspaceIdx: index('api_keys_workspace_idx').on(table.workspaceId),
+  keyHashIdx: index('virtual_keys_key_hash_idx').on(table.keyHash),
+  workspaceIdx: index('virtual_keys_workspace_idx').on(table.workspaceId),
+  providerKeyIdx: index('virtual_keys_provider_key_idx').on(table.providerKeyId),
 }));
 
 /**
@@ -170,28 +188,28 @@ export const guardrails = sqliteTable('guardrails', {
 
 /**
  * Rate Limit Usage table
- * Tracks API usage for rate limiting
+ * Tracks virtual key usage for rate limiting
  */
 export const rateLimitUsage = sqliteTable('rate_limit_usage', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  apiKeyId: text('api_key_id').notNull().references(() => apiKeys.id, { onDelete: 'cascade' }),
+  virtualKeyId: text('virtual_key_id').notNull().references(() => virtualKeys.id, { onDelete: 'cascade' }),
   windowStart: integer('window_start', { mode: 'timestamp' }).notNull(),
   requestsCount: integer('requests_count').notNull().default(0),
   tokensCount: integer('tokens_count').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 }, (table) => ({
-  apiKeyWindowIdx: index('rate_limit_usage_api_key_window_idx').on(table.apiKeyId, table.windowStart),
+  virtualKeyWindowIdx: index('rate_limit_usage_virtual_key_window_idx').on(table.virtualKeyId, table.windowStart),
 }));
 
 /**
  * Workspace Guardrails binding table
- * Links guardrails to workspaces or specific API keys
+ * Links guardrails to workspaces or specific virtual keys
  */
 export const workspaceGuardrails = sqliteTable('workspace_guardrails', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
   workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
   guardrailId: text('guardrail_id').notNull().references(() => guardrails.id, { onDelete: 'cascade' }),
-  apiKeyId: text('api_key_id').references(() => apiKeys.id, { onDelete: 'cascade' }), // optional: bind to specific key
+  virtualKeyId: text('virtual_key_id').references(() => virtualKeys.id, { onDelete: 'cascade' }), // optional: bind to specific key
   mode: text('mode', { enum: ['block', 'observe'] }).notNull().default('observe'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 }, (table) => ({
@@ -209,8 +227,11 @@ export type NewUser = typeof users.$inferInsert;
 export type ProviderKey = typeof providerKeys.$inferSelect;
 export type NewProviderKey = typeof providerKeys.$inferInsert;
 
-export type ApiKey = typeof apiKeys.$inferSelect;
-export type NewApiKey = typeof apiKeys.$inferInsert;
+export type AdminKey = typeof adminKeys.$inferSelect;
+export type NewAdminKey = typeof adminKeys.$inferInsert;
+
+export type VirtualKey = typeof virtualKeys.$inferSelect;
+export type NewVirtualKey = typeof virtualKeys.$inferInsert;
 
 export type Prompt = typeof prompts.$inferSelect;
 export type NewPrompt = typeof prompts.$inferInsert;

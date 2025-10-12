@@ -87,7 +87,7 @@ export async function chatCompletionsHandler(c: Context): Promise<Response> {
       }
     }
     
-    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders);
+    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders, c);
     const tryTargetsResponse = await tryTargetsRecursively(
       c,
       camelCaseConfig ?? {},

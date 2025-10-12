@@ -78,7 +78,7 @@
       <!-- API Key Management -->
       <div class="form-group" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
         <label class="form-label">API Key Management</label>
-        <button class="btn btn-secondary" @click="$store.app.showApiKeySetup = true">
+        <button class="btn btn-secondary" @click="$store.app.showAdminKeySetup = true">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
           </svg>
@@ -93,7 +93,7 @@
         <p style="font-size: 0.875rem; color: #991b1b; margin-bottom: 1rem;">
           These actions are irreversible. Please be certain.
         </p>
-        <button class="btn btn-danger" @click="$store.app.clearApiKey()">
+        <button class="btn btn-danger" @click="$store.app.clearAdminKey()">
           Clear API Key & Log Out
         </button>
       </div>
@@ -119,7 +119,7 @@
             <td><code>Ctrl/Cmd + 1</code></td>
           </tr>
           <tr>
-            <td>Go to API Keys</td>
+            <td>Go to Virtual Keys</td>
             <td><code>Ctrl/Cmd + 2</code></td>
           </tr>
           <tr>

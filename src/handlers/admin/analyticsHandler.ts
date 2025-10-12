@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { getDb } from '../../db';
-import { apiKeys, rateLimitUsage, providerKeys, prompts } from '../../db/schema';
+import { virtualKeys, rateLimitUsage, providerKeys, prompts } from '../../db/schema';
 import { eq, and, gte, count, sum, sql } from 'drizzle-orm';
 
 /**
@@ -27,13 +27,13 @@ export async function getAnalytics(c: Context) {
   const startTime = new Date(Date.now() - timeRange);
 
   try {
-    // Get total API keys count
-    const apiKeysResult = await db
+    // Get total virtual keys count
+    const virtualKeysResult = await db
       .select({ count: count() })
-      .from(apiKeys)
-      .where(eq(apiKeys.workspaceId, workspace.id));
+      .from(virtualKeys)
+      .where(eq(virtualKeys.workspaceId, workspace.id));
     
-    const totalApiKeys = apiKeysResult[0]?.count || 0;
+    const totalVirtualKeys = virtualKeysResult[0]?.count || 0;
 
     // Get total provider keys count
     const providerKeysResult = await db
@@ -51,16 +51,16 @@ export async function getAnalytics(c: Context) {
     
     const totalPrompts = promptsResult[0]?.count || 0;
 
-    // Get workspace API keys for rate limit queries
-    const workspaceApiKeys = await db
-      .select({ id: apiKeys.id })
-      .from(apiKeys)
-      .where(eq(apiKeys.workspaceId, workspace.id));
+    // Get workspace virtual keys for rate limit queries
+    const workspaceVirtualKeys = await db
+      .select({ id: virtualKeys.id })
+      .from(virtualKeys)
+      .where(eq(virtualKeys.workspaceId, workspace.id));
     
-    const apiKeyIds = workspaceApiKeys.map(k => k.id);
+    const virtualKeyIds = workspaceVirtualKeys.map(k => k.id);
 
-    if (apiKeyIds.length === 0) {
-      // No API keys, return empty analytics
+    if (virtualKeyIds.length === 0) {
+      // No virtual keys, return empty analytics
       return c.json({
         status: 'success',
         data: {
@@ -68,11 +68,11 @@ export async function getAnalytics(c: Context) {
           totalTokens: 0,
           successRate: 0,
           avgResponseTime: 0,
-          requestsByApiKey: {},
+          requestsByVirtualKey: {},
           requestsByTimeWindow: [],
           topModels: [],
           resourceCounts: {
-            apiKeys: totalApiKeys,
+            virtualKeys: totalVirtualKeys,
             providerKeys: totalProviderKeys,
             prompts: totalPrompts,
           }
@@ -89,7 +89,7 @@ export async function getAnalytics(c: Context) {
       .from(rateLimitUsage)
       .where(
         and(
-          sql`${rateLimitUsage.apiKeyId} IN (${sql.join(apiKeyIds.map(id => sql`${id}`), sql`, `)})`,
+          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
           gte(rateLimitUsage.windowStart, startTime)
         )
       );
@@ -97,31 +97,31 @@ export async function getAnalytics(c: Context) {
     const totalRequests = Number(usageStats[0]?.totalRequests) || 0;
     const totalTokens = Number(usageStats[0]?.totalTokens) || 0;
 
-    // Get requests by API key
-    const requestsByApiKeyResult = await db
+    // Get requests by virtual key
+    const requestsByVirtualKeyResult = await db
       .select({
-        apiKeyId: rateLimitUsage.apiKeyId,
+        virtualKeyId: rateLimitUsage.virtualKeyId,
         requests: sum(rateLimitUsage.requestsCount),
         tokens: sum(rateLimitUsage.tokensCount),
       })
       .from(rateLimitUsage)
       .where(
         and(
-          sql`${rateLimitUsage.apiKeyId} IN (${sql.join(apiKeyIds.map(id => sql`${id}`), sql`, `)})`,
+          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
           gte(rateLimitUsage.windowStart, startTime)
         )
       )
-      .groupBy(rateLimitUsage.apiKeyId);
+      .groupBy(rateLimitUsage.virtualKeyId);
 
-    // Map API key IDs to names
-    const apiKeyMap = new Map(
-      workspaceApiKeys.map(k => [k.id, k.id.substring(0, 8)])
+    // Map virtual key IDs to names
+    const virtualKeyMap = new Map(
+      workspaceVirtualKeys.map(k => [k.id, k.id.substring(0, 8)])
     );
 
-    const requestsByApiKey: Record<string, { requests: number; tokens: number }> = {};
-    for (const row of requestsByApiKeyResult) {
-      const keyName = apiKeyMap.get(row.apiKeyId) || row.apiKeyId;
-      requestsByApiKey[keyName] = {
+    const requestsByVirtualKey: Record<string, { requests: number; tokens: number }> = {};
+    for (const row of requestsByVirtualKeyResult) {
+      const keyName = virtualKeyMap.get(row.virtualKeyId) || row.virtualKeyId;
+      requestsByVirtualKey[keyName] = {
         requests: Number(row.requests) || 0,
         tokens: Number(row.tokens) || 0,
       };
@@ -137,7 +137,7 @@ export async function getAnalytics(c: Context) {
       .from(rateLimitUsage)
       .where(
         and(
-          sql`${rateLimitUsage.apiKeyId} IN (${sql.join(apiKeyIds.map(id => sql`${id}`), sql`, `)})`,
+          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
           gte(rateLimitUsage.windowStart, startTime)
         )
       )
@@ -166,7 +166,7 @@ export async function getAnalytics(c: Context) {
         totalTokens,
         successRate: Number(successRate.toFixed(2)),
         avgResponseTime: Number(avgResponseTime.toFixed(0)),
-        requestsByApiKey,
+        requestsByVirtualKey,
         requestsByTimeWindow: requestsByTimeWindow.map(row => ({
           timestamp: row.windowStart,
           requests: Number(row.requests) || 0,
@@ -179,7 +179,7 @@ export async function getAnalytics(c: Context) {
           '500': Math.floor(totalRequests * 0.02),
         },
         resourceCounts: {
-          apiKeys: totalApiKeys,
+          virtualKeys: totalVirtualKeys,
           providerKeys: totalProviderKeys,
           prompts: totalPrompts,
         },

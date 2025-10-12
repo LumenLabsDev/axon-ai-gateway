@@ -1,19 +1,19 @@
-<!-- API Keys Section -->
-<div x-show="$store.app.currentSection === 'api-keys'" x-data="apiKeysManager" style="display: none;">
+<!-- Virtual Keys Section -->
+<div x-show="$store.app.currentSection === 'api-keys'" x-data="virtualKeysManager" style="display: none;">
   <div class="card">
     <div class="card-header">
-      <h2 class="card-title">API Keys</h2>
+      <h2 class="card-title">Virtual Keys</h2>
       <div style="display: flex; gap: 0.5rem;">
         <button class="btn btn-secondary btn-sm" @click="loadKeys()" title="Refresh">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
-        <button class="btn btn-primary" @click="showCreateModal = true">
+        <button class="btn btn-primary" @click="showCreateModal = true" :disabled="providerKeys.length === 0" :title="providerKeys.length === 0 ? 'Create a Provider Key first' : ''">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Create API Key
+          Create Virtual Key
         </button>
       </div>
     </div>
@@ -25,9 +25,15 @@
     <div x-show="error" class="form-error" x-text="error" style="padding: 1rem;"></div>
     
     <div x-show="!loading && keys.length === 0" class="empty-state">
-      <div class="empty-state-title">No API Keys</div>
-      <p class="empty-state-text">Create your first API key to get started</p>
-      <button class="btn btn-primary" @click="showCreateModal = true">Create API Key</button>
+      <div class="empty-state-title">No Virtual Keys</div>
+      <p class="empty-state-text">Create your first virtual key to get started</p>
+      <p class="empty-state-text" x-show="providerKeys.length === 0" style="color: #f59e0b; font-size: 0.875rem;">
+        💡 Tip: You need to create a Provider Key first before creating Virtual Keys
+      </p>
+      <button class="btn btn-primary" @click="showCreateModal = true" x-show="providerKeys.length > 0">Create Virtual Key</button>
+      <button class="btn btn-secondary" @click="$store.app.navigateTo('provider-keys')" x-show="providerKeys.length === 0">
+        Go to Provider Keys
+      </button>
     </div>
     
     <div x-show="!loading && keys.length > 0">
@@ -164,7 +170,7 @@
   <div x-show="showCreateModal || showEditModal" class="modal-overlay" x-cloak style="display: none;">
     <div class="modal" @click.away="showCreateModal = false; showEditModal = false;">
       <div class="modal-header">
-        <h2 class="modal-title" x-text="showEditModal ? 'Edit API Key' : 'Create API Key'"></h2>
+        <h2 class="modal-title" x-text="showEditModal ? 'Edit Virtual Key' : 'Create Virtual Key'"></h2>
         <button class="modal-close" @click="showCreateModal = false; showEditModal = false;">&times;</button>
       </div>
       <form @submit.prevent="showEditModal ? updateKey() : createKey()">
@@ -180,6 +186,20 @@
           </div>
           
           <div class="form-group">
+            <label class="form-label" for="api-key-provider">Provider Key *</label>
+            <select id="api-key-provider" class="form-select" x-model="formData.providerKeyId" required :disabled="providerKeys.length === 0">
+              <option value="">Select a provider key</option>
+              <template x-for="provider in providerKeys" :key="provider.id">
+                <option :value="provider.id" x-text="`${provider.name} (${provider.provider})`"></option>
+              </template>
+            </select>
+            <p class="form-help" x-show="providerKeys.length > 0">Select which provider key this virtual key will use</p>
+            <p class="form-error" x-show="providerKeys.length === 0" style="margin-top: 0.5rem;">
+              ⚠️ No provider keys available. Please create a provider key first in the Provider Keys section.
+            </p>
+          </div>
+          
+          <div class="form-group">
             <label class="form-label" for="api-key-rpm">Rate Limit (RPM)</label>
             <input type="number" id="api-key-rpm" class="form-input" x-model.number="formData.rateLimitRpm" placeholder="Requests per minute" />
           </div>
@@ -190,37 +210,16 @@
           </div>
           
           <div class="form-group">
-            <label class="form-label">Permissions</label>
-            <div class="checkbox-group">
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.completions.create" />
-                <span>Create Completions</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.api_keys.read" />
-                <span>Read API Keys</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.api_keys.write" />
-                <span>Write API Keys</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.provider_keys.read" />
-                <span>Read Provider Keys</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.provider_keys.write" />
-                <span>Write Provider Keys</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.prompts.read" />
-                <span>Read Prompts</span>
-              </label>
-              <label class="checkbox-item">
-                <input type="checkbox" x-model="formData.permissions.prompts.write" />
-                <span>Write Prompts</span>
-              </label>
-            </div>
+            <label class="form-label" for="api-key-models">Allowed Models</label>
+            <input 
+              type="text" 
+              id="api-key-models" 
+              class="form-input" 
+              :value="formData.allowedModels.join(', ')"
+              @input="formData.allowedModels = $event.target.value.split(',').map(m => m.trim()).filter(m => m)" 
+              placeholder="gpt-4o, gpt-4, claude-3-5-sonnet, etc." 
+            />
+            <p class="form-help">Enter comma-separated model names. Leave empty to allow all models.</p>
           </div>
           
           <div class="form-group" x-show="showEditModal">
@@ -246,7 +245,7 @@
   <div x-show="showCreatedKey" class="modal-overlay" x-cloak style="display: none;">
     <div class="modal" @click.away="showCreatedKey = false; createdKeyValue = ''">
       <div class="modal-header">
-        <h2 class="modal-title">API Key Created</h2>
+        <h2 class="modal-title">Virtual Key Created</h2>
         <button class="modal-close" @click="showCreatedKey = false; createdKeyValue = ''">&times;</button>
       </div>
       <div class="modal-body">
@@ -255,7 +254,7 @@
         </p>
         <div class="code-block">
           <div class="code-block-header">
-            <span>API Key</span>
+            <span>Virtual Key</span>
             <button class="btn btn-sm btn-secondary" @click="Utils.copyToClipboard(createdKeyValue)">Copy</button>
           </div>
           <code x-text="createdKeyValue"></code>

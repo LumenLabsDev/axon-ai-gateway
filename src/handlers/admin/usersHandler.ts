@@ -5,30 +5,26 @@ import { eq } from 'drizzle-orm';
 
 /**
  * List users in a workspace
- * GET /v1/admin/users
+ * GET /v1/admin/users?workspaceId=xxx
  */
 export async function listUsers(c: Context) {
   const timestamp = new Date().toISOString();
   const db = getDb();
   const workspace = c.get('workspace');
-  
-  if (!workspace) {
-    return c.json(
-      {
-        status: 'failure',
-        message: 'Workspace context required',
-      },
-      400
-    );
-  }
+  const workspaceIdParam = c.req.query('workspaceId');
   
   try {
-    const workspaceUsers = await db
-      .select()
-      .from(users)
-      .where(eq(users.workspaceId, workspace.id));
+    let query = db.select().from(users);
     
-    console.log(`[${timestamp}] [UsersHandler] [INFO] Listed ${workspaceUsers.length} users for workspace ${workspace.id}`);
+    // Filter by workspace if provided
+    const workspaceId = workspace?.id || workspaceIdParam;
+    if (workspaceId) {
+      query = query.where(eq(users.workspaceId, workspaceId)) as any;
+    }
+    
+    const workspaceUsers = await query;
+    
+    console.log(`[${timestamp}] [UsersHandler] [INFO] Listed ${workspaceUsers.length} users${workspaceId ? ` for workspace ${workspaceId}` : ''}`);
     
     return c.json({
       status: 'success',

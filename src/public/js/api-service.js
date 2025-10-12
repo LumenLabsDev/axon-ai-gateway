@@ -5,15 +5,21 @@
 
 const API = {
   baseUrl: '/v1/admin',
-  apiKey: localStorage.getItem('axon_api_key'),
+  adminKey: localStorage.getItem('axon_admin_key'),
 
   // Generic request handler
   async request(endpoint, options = {}) {
+    const workspaceId = localStorage.getItem('axon_current_workspace');
     const headers = {
       'Content-Type': 'application/json',
-      'x-axon-api-key': this.apiKey,
+      'x-axon-admin-key': this.adminKey,
       ...options.headers
     };
+    
+    // Add workspace ID header if available
+    if (workspaceId) {
+      headers['x-axon-workspace-id'] = workspaceId;
+    }
 
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -23,6 +29,27 @@ const API = {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Check for unauthorized access (401 or invalid admin key message)
+        const isUnauthorized = response.status === 401 || 
+                              errorText.includes('Invalid admin key') ||
+                              errorText.includes('Unauthorized');
+        
+        if (isUnauthorized) {
+          // Auto sign-out on unauthorized access
+          console.warn('Unauthorized access detected. Signing out...');
+          
+          // Clear admin key from Alpine store if available
+          if (window.Alpine && Alpine.store('app')) {
+            Alpine.store('app').clearAdminKey();
+            
+            // Show notification
+            if (Alpine.store('toasts')) {
+              Alpine.store('toasts').add('Session expired or invalid admin key. Please sign in again.', 'error');
+            }
+          }
+        }
+        
         throw new Error(errorText || `Request failed with status ${response.status}`);
       }
 
@@ -33,19 +60,36 @@ const API = {
     }
   },
 
-  // API Keys
-  apiKeys: {
-    list: () => API.request('/api-keys'),
-    get: (id) => API.request(`/api-keys/${id}`),
-    create: (data) => API.request('/api-keys', { 
+  // Admin Keys (for admin panel authentication)
+  adminKeys: {
+    list: () => API.request('/admin-keys'),
+    get: (id) => API.request(`/admin-keys/${id}`),
+    create: (data) => API.request('/admin-keys', { 
       method: 'POST', 
       body: JSON.stringify(data) 
     }),
-    update: (id, data) => API.request(`/api-keys/${id}`, { 
+    update: (id, data) => API.request(`/admin-keys/${id}`, { 
       method: 'PATCH', 
       body: JSON.stringify(data) 
     }),
-    delete: (id) => API.request(`/api-keys/${id}`, { 
+    delete: (id) => API.request(`/admin-keys/${id}`, { 
+      method: 'DELETE' 
+    })
+  },
+
+  // Virtual Keys (gateway access with rate limits)
+  virtualKeys: {
+    list: () => API.request('/virtual-keys'),
+    get: (id) => API.request(`/virtual-keys/${id}`),
+    create: (data) => API.request('/virtual-keys', { 
+      method: 'POST', 
+      body: JSON.stringify(data) 
+    }),
+    update: (id, data) => API.request(`/virtual-keys/${id}`, { 
+      method: 'PATCH', 
+      body: JSON.stringify(data) 
+    }),
+    delete: (id) => API.request(`/virtual-keys/${id}`, { 
       method: 'DELETE' 
     })
   },
@@ -112,10 +156,10 @@ const API = {
     get: (timeRange = '24h') => API.request(`/analytics?timeRange=${timeRange}`)
   },
 
-  // Update API key
-  setApiKey(key) {
-    this.apiKey = key;
-    localStorage.setItem('axon_api_key', key);
+  // Update admin key
+  setAdminKey(key) {
+    this.adminKey = key;
+    localStorage.setItem('axon_admin_key', key);
   }
 };
 

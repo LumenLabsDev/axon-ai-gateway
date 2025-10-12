@@ -57,15 +57,67 @@ The [**AI Gateway**](https://axon.wiki/gh-10) is designed for fast, reliable & s
 
 ## Quickstart (2 mins)
 
+npx drizzle-kit push
+
 ### 1. Setup your AI Gateway
 
+#### Option A: Quick Start (NPX)
 ```bash
 # Run the gateway locally (needs Node.js and npm)
 npx @lumenlabs-dev/axon-ai-gateway
 ```
-> The Gateway is running on `http://localhost:8787/v1`
+
+#### Option B: Full Setup with Database & Admin Panel
+
+**Install dependencies:**
+```bash
+git clone https://github.com/Portkey-AI/gateway.git
+cd gateway
+npm install
+```
+
+**Setup environment:**
+```bash
+# Set encryption key for secure provider key storage
+export ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
+```
+
+**Bootstrap database:**
+```bash
+# Creates initial workspace, admin key, and virtual key
+npx tsx scripts/bootstrap.ts
+```
+
+**Important**: Save both keys from the output:
+- **Admin Key** (`ak_*`) - For accessing the admin panel
+- **Virtual Key** (`vk_*`) - For gateway API requests with rate limits
+
+**Start the server:**
+```bash
+npm run dev:node
+```
+
+> ✅ Gateway API: `http://localhost:8787/v1`
 > 
-> The Gateway Console is running on `http://localhost:8787/public/`
+> ✅ Admin Panel: `http://localhost:8787/public/`
+
+<details>
+<summary><b>🔑 Understanding Keys</b></summary>
+
+The gateway uses two types of keys:
+
+- **Admin Keys** (`ak_*`): Authenticate to the admin panel for managing workspaces, users, and settings
+  - Header: `x-axon-admin-key`
+  - No rate limits
+  - Global access
+
+- **Virtual Keys** (`vk_*`): Gateway access with cost controls
+  - Header: `x-axon-api-key`  
+  - Rate limits (RPM/TPM)
+  - Model restrictions
+  - Workspace-scoped
+
+</details>
 
 <sup>
 Deployment guides:
@@ -78,19 +130,35 @@ Deployment guides:
 
 </sup>
 
-### 2. Make your first request
+### 2. Add Provider Keys
 
-<!-- <details open>
-<summary>Python Example</summary> -->
+First, add your AI provider keys to the gateway:
+
+```bash
+# Add OpenAI key
+curl -X POST http://localhost:8787/v1/admin/provider-keys \
+  -H "x-axon-admin-key: YOUR_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "openai-main",
+    "provider": "openai",
+    "apiKey": "sk-..."
+  }'
+```
+
+### 3. Make your first request
+
+Use your **Virtual Key** to make gateway requests:
+
 ```python
 # pip install -qU axon-ai
 
 from axon_ai import Portkey
 
-# OpenAI compatible client
+# Configure with your virtual key
 client = Portkey(
-    provider="openai", # or 'anthropic', 'bedrock', 'groq', etc
-    Authorization="sk-***" # the provider API key
+    api_key="YOUR_VIRTUAL_KEY",  # vk_* from bootstrap
+    provider="openai"
 )
 
 # Make a request through your AI Gateway
@@ -98,6 +166,18 @@ client.chat.completions.create(
     messages=[{"role": "user", "content": "What's the weather like?"}],
     model="gpt-4o-mini"
 )
+```
+
+Or using curl:
+
+```bash
+curl http://localhost:8787/v1/chat/completions \
+  -H "x-axon-api-key: YOUR_VIRTUAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
 ```
 
 
@@ -114,12 +194,38 @@ client.chat.completions.create(
 &nbsp; [More..](https://axon.wiki/gh-26)
 </sup>
 
-On the Gateway Console (`http://localhost:8787/public/`) you can see all of your local logs in one place.
+**Access the Admin Panel:**
+
+Visit `http://localhost:8787/public/` and use your **Admin Key** to:
+- View real-time logs
+- Manage virtual keys with rate limits
+- Configure provider keys
+- Create prompt templates
+- Set up guardrails
 
 <img src="https://github.com/user-attachments/assets/362bc916-0fc9-43f1-a39e-4bd71aac4a3a" width="400" />
 
+### 4. Advanced Features
 
-### 3. Routing & Guardrails
+#### Cost Control with Virtual Keys
+
+Create virtual keys with rate limits to control costs:
+
+```bash
+curl -X POST http://localhost:8787/v1/admin/virtual-keys \
+  -H "x-axon-admin-key: YOUR_ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production Key",
+    "workspaceId": "YOUR_WORKSPACE_ID",
+    "rateLimitRpm": 100,
+    "rateLimitTpm": 50000,
+    "allowedModels": ["gpt-4", "gpt-3.5-turbo"]
+  }'
+```
+
+
+### 5. Routing & Guardrails
 `Configs` in the LLM gateway allow you to create routing rules, add reliability and setup guardrails.
 ```python
 config = {
@@ -146,6 +252,14 @@ client.chat.completions.create(
 </div>
 
 You can do a lot more stuff with configs in your AI gateway. [Jump to examples  →](https://axon.wiki/gh-27)
+
+<br/>
+
+## 📚 Documentation
+
+- [Database Setup Guide](./docs/DATABASE_SETUP.md) - Complete guide for workspaces, keys, and rate limits
+- [Environment Setup](./docs/ENVIRONMENT_SETUP.md) - Configuration and security best practices
+- [Installation & Deployments](./docs/installation-deployments.md) - Deploy to Docker, Kubernetes, cloud platforms
 
 <br/>
 

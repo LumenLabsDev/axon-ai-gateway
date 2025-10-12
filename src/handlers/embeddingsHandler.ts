@@ -17,7 +17,7 @@ export async function embeddingsHandler(c: Context): Promise<Response> {
   try {
     let request = await c.req.json();
     let requestHeaders = Object.fromEntries(c.req.raw.headers);
-    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders);
+    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders, c);
 
     const tryTargetsResponse = await tryTargetsRecursively(
       c,

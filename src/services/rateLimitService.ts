@@ -1,10 +1,10 @@
 import { getDb } from '../db';
-import { rateLimitUsage, apiKeys } from '../db/schema';
+import { rateLimitUsage, virtualKeys } from '../db/schema';
 import { eq, and, gte } from 'drizzle-orm';
 
 /**
  * Rate Limiting Service
- * Implements sliding window rate limiting for API keys
+ * Implements sliding window rate limiting for virtual keys
  */
 
 interface RateLimitResult {
@@ -27,27 +27,27 @@ function getWindowStart(): Date {
 
 /**
  * Check if a request is allowed under rate limits
- * @param apiKeyId - The API key ID
+ * @param virtualKeyId - The virtual key ID
  * @param estimatedTokens - Estimated tokens for this request (default: 0)
  * @returns Rate limit result
  */
 export async function checkRateLimit(
-  apiKeyId: string,
+  virtualKeyId: string,
   estimatedTokens: number = 0
 ): Promise<RateLimitResult> {
   const timestamp = new Date().toISOString();
   const db = getDb();
   
   try {
-    // Get API key configuration
-    const apiKey = await db
+    // Get virtual key configuration
+    const virtualKey = await db
       .select()
-      .from(apiKeys)
-      .where(eq(apiKeys.id, apiKeyId))
+      .from(virtualKeys)
+      .where(eq(virtualKeys.id, virtualKeyId))
       .get();
     
-    if (!apiKey) {
-      console.error(`[${timestamp}] [RateLimitService] [ERROR] API key not found: ${apiKeyId}`);
+    if (!virtualKey) {
+      console.error(`[${timestamp}] [RateLimitService] [ERROR] Virtual key not found: ${virtualKeyId}`);
       return {
         allowed: false,
         remaining: { requests: null, tokens: null },
@@ -55,7 +55,7 @@ export async function checkRateLimit(
     }
     
     // If no limits are set, allow the request
-    if (!apiKey.rateLimitRpm && !apiKey.rateLimitTpm) {
+    if (!virtualKey.rateLimitRpm && !virtualKey.rateLimitTpm) {
       return {
         allowed: true,
         remaining: { requests: null, tokens: null },
@@ -71,7 +71,7 @@ export async function checkRateLimit(
       .from(rateLimitUsage)
       .where(
         and(
-          eq(rateLimitUsage.apiKeyId, apiKeyId),
+          eq(rateLimitUsage.virtualKeyId, virtualKeyId),
           gte(rateLimitUsage.windowStart, oneMinuteAgo)
         )
       );
@@ -86,29 +86,29 @@ export async function checkRateLimit(
     }
     
     // Check request limit
-    if (apiKey.rateLimitRpm && totalRequests >= apiKey.rateLimitRpm) {
+    if (virtualKey.rateLimitRpm && totalRequests >= virtualKey.rateLimitRpm) {
       console.warn(
-        `[${timestamp}] [RateLimitService] [WARN] Request rate limit exceeded for key ${apiKey.name}: ${totalRequests}/${apiKey.rateLimitRpm}`
+        `[${timestamp}] [RateLimitService] [WARN] Request rate limit exceeded for key ${virtualKey.name}: ${totalRequests}/${virtualKey.rateLimitRpm}`
       );
       return {
         allowed: false,
         remaining: {
           requests: 0,
-          tokens: apiKey.rateLimitTpm ? Math.max(0, apiKey.rateLimitTpm - totalTokens) : null,
+          tokens: virtualKey.rateLimitTpm ? Math.max(0, virtualKey.rateLimitTpm - totalTokens) : null,
         },
         resetAt: new Date(Date.now() + 60 * 1000),
       };
     }
     
     // Check token limit
-    if (apiKey.rateLimitTpm && totalTokens + estimatedTokens > apiKey.rateLimitTpm) {
+    if (virtualKey.rateLimitTpm && totalTokens + estimatedTokens > virtualKey.rateLimitTpm) {
       console.warn(
-        `[${timestamp}] [RateLimitService] [WARN] Token rate limit exceeded for key ${apiKey.name}: ${totalTokens + estimatedTokens}/${apiKey.rateLimitTpm}`
+        `[${timestamp}] [RateLimitService] [WARN] Token rate limit exceeded for key ${virtualKey.name}: ${totalTokens + estimatedTokens}/${virtualKey.rateLimitTpm}`
       );
       return {
         allowed: false,
         remaining: {
-          requests: apiKey.rateLimitRpm ? Math.max(0, apiKey.rateLimitRpm - totalRequests) : null,
+          requests: virtualKey.rateLimitRpm ? Math.max(0, virtualKey.rateLimitRpm - totalRequests) : null,
           tokens: 0,
         },
         resetAt: new Date(Date.now() + 60 * 1000),
@@ -119,8 +119,8 @@ export async function checkRateLimit(
     return {
       allowed: true,
       remaining: {
-        requests: apiKey.rateLimitRpm ? apiKey.rateLimitRpm - totalRequests - 1 : null,
-        tokens: apiKey.rateLimitTpm ? apiKey.rateLimitTpm - totalTokens - estimatedTokens : null,
+        requests: virtualKey.rateLimitRpm ? virtualKey.rateLimitRpm - totalRequests - 1 : null,
+        tokens: virtualKey.rateLimitTpm ? virtualKey.rateLimitTpm - totalTokens - estimatedTokens : null,
       },
     };
   } catch (error: any) {
@@ -135,10 +135,10 @@ export async function checkRateLimit(
 
 /**
  * Record usage for rate limiting
- * @param apiKeyId - The API key ID
+ * @param virtualKeyId - The virtual key ID
  * @param tokensUsed - Number of tokens used
  */
-export async function recordUsage(apiKeyId: string, tokensUsed: number = 0): Promise<void> {
+export async function recordUsage(virtualKeyId: string, tokensUsed: number = 0): Promise<void> {
   const timestamp = new Date().toISOString();
   const db = getDb();
   
@@ -151,7 +151,7 @@ export async function recordUsage(apiKeyId: string, tokensUsed: number = 0): Pro
       .from(rateLimitUsage)
       .where(
         and(
-          eq(rateLimitUsage.apiKeyId, apiKeyId),
+          eq(rateLimitUsage.virtualKeyId, virtualKeyId),
           eq(rateLimitUsage.windowStart, windowStart)
         )
       )
@@ -169,7 +169,7 @@ export async function recordUsage(apiKeyId: string, tokensUsed: number = 0): Pro
     } else {
       // Insert new record
       await db.insert(rateLimitUsage).values({
-        apiKeyId,
+        virtualKeyId,
         windowStart,
         requestsCount: 1,
         tokensCount: tokensUsed,
@@ -202,9 +202,9 @@ export async function cleanupOldRecords(): Promise<void> {
 }
 
 /**
- * Get current usage for an API key
+ * Get current usage for a virtual key
  */
-export async function getCurrentUsage(apiKeyId: string): Promise<{
+export async function getCurrentUsage(virtualKeyId: string): Promise<{
   requests: number;
   tokens: number;
 }> {
@@ -216,7 +216,7 @@ export async function getCurrentUsage(apiKeyId: string): Promise<{
     .from(rateLimitUsage)
     .where(
       and(
-        eq(rateLimitUsage.apiKeyId, apiKeyId),
+        eq(rateLimitUsage.virtualKeyId, virtualKeyId),
         gte(rateLimitUsage.windowStart, oneMinuteAgo)
       )
     );

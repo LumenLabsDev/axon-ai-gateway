@@ -9,14 +9,14 @@ import { HookObject, HookType } from '../middlewares/hooks/types';
  */
 
 /**
- * Get guardrails for a workspace and/or API key
+ * Get guardrails for a workspace and/or virtual key
  * @param workspaceId - The workspace ID
- * @param apiKeyId - Optional API key ID for specific bindings
+ * @param virtualKeyId - Optional virtual key ID for specific bindings
  * @returns Array of guardrails with their execution mode
  */
 export async function getGuardrailsForContext(
   workspaceId: string,
-  apiKeyId?: string
+  virtualKeyId?: string
 ): Promise<Array<{
   guardrail: typeof guardrails.$inferSelect;
   mode: 'block' | 'observe';
@@ -25,20 +25,20 @@ export async function getGuardrailsForContext(
   const db = getDb();
   
   try {
-    // Build query to get bindings for workspace and optionally for specific API key
+    // Build query to get bindings for workspace and optionally for specific virtual key
     const queryConditions = [eq(workspaceGuardrails.workspaceId, workspaceId)];
     
-    if (apiKeyId) {
-      // Get bindings for specific API key OR workspace-wide bindings
+    if (virtualKeyId) {
+      // Get bindings for specific virtual key OR workspace-wide bindings
       queryConditions.push(
         or(
-          eq(workspaceGuardrails.apiKeyId, apiKeyId),
-          isNull(workspaceGuardrails.apiKeyId)
+          eq(workspaceGuardrails.virtualKeyId, virtualKeyId),
+          isNull(workspaceGuardrails.virtualKeyId)
         )!
       );
     } else {
       // Only workspace-wide bindings
-      queryConditions.push(isNull(workspaceGuardrails.apiKeyId));
+      queryConditions.push(isNull(workspaceGuardrails.virtualKeyId));
     }
     
     const bindings = await db
@@ -69,7 +69,7 @@ export async function getGuardrailsForContext(
       });
     
     console.log(
-      `[${timestamp}] [GuardrailService] [INFO] Found ${boundGuardrails.length} guardrails for workspace ${workspaceId}${apiKeyId ? ` / API key ${apiKeyId}` : ''}`
+      `[${timestamp}] [GuardrailService] [INFO] Found ${boundGuardrails.length} guardrails for workspace ${workspaceId}${virtualKeyId ? ` / virtual key ${virtualKeyId}` : ''}`
     );
     
     return boundGuardrails;
@@ -202,17 +202,17 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
 /**
  * Get all hooks for a request context
  * @param workspaceId - The workspace ID
- * @param apiKeyId - Optional API key ID
+ * @param virtualKeyId - Optional virtual key ID
  * @returns Combined before and after request hooks
  */
 export async function getHooksForContext(
   workspaceId: string,
-  apiKeyId?: string
+  virtualKeyId?: string
 ): Promise<{
   beforeRequestHooks: HookObject[];
   afterRequestHooks: HookObject[];
 }> {
-  const guardrailsWithMode = await getGuardrailsForContext(workspaceId, apiKeyId);
+  const guardrailsWithMode = await getGuardrailsForContext(workspaceId, virtualKeyId);
   
   const allBeforeHooks: HookObject[] = [];
   const allAfterHooks: HookObject[] = [];

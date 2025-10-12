@@ -46,12 +46,12 @@ export class RequestContext {
     
     try {
       const workspace = this.honoContext.get('workspace');
-      const apiKey = this.honoContext.get('apiKey');
+      const virtualKey = this.honoContext.get('virtualKey');
       
       if (workspace) {
         this._dbGuardrails = await getHooksForContext(
           workspace.id,
-          apiKey?.id
+          virtualKey?.id
         );
       }
     } catch (error) {

@@ -28,12 +28,11 @@ export const requestValidator = (c: Context, next: any) => {
     );
   }
 
-  if (
-    !(
-      requestHeaders[`x-${POWERED_BY}-config`] ||
-      requestHeaders[`x-${POWERED_BY}-provider`]
-    )
-  ) {
+  // Check if provider is specified via headers or via virtual key context
+  const hasProviderHeader = requestHeaders[`x-${POWERED_BY}-config`] || requestHeaders[`x-${POWERED_BY}-provider`];
+  const hasProviderFromVirtualKey = !!c.get('providerKey');
+  
+  if (!hasProviderHeader && !hasProviderFromVirtualKey) {
     return new Response(
       JSON.stringify({
         status: 'failure',
@@ -86,7 +85,8 @@ export const requestValidator = (c: Context, next: any) => {
       const parsedConfig = JSON.parse(requestHeaders[`x-${POWERED_BY}-config`]);
       if (
         !requestHeaders[`x-${POWERED_BY}-provider`] &&
-        !(parsedConfig.provider || parsedConfig.targets)
+        !(parsedConfig.provider || parsedConfig.targets) &&
+        !hasProviderFromVirtualKey
       ) {
         return new Response(
           JSON.stringify({

@@ -2,11 +2,25 @@
  * Alpine.js Components for Admin Dashboard
  */
 
+// Helper function to wait for workspace to be ready
+const waitForWorkspace = async () => {
+  return new Promise((resolve) => {
+    const check = () => {
+      if (Alpine.store('app').workspaceReady) {
+        resolve();
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  });
+};
+
 document.addEventListener('alpine:init', () => {
   // Dashboard Manager
   Alpine.data('dashboardManager', () => ({
   stats: {
-    apiKeys: 0,
+    virtualKeys: 0,
     providerKeys: 0,
     prompts: 0,
     totalRequests: 0
@@ -15,19 +29,21 @@ document.addEventListener('alpine:init', () => {
   loading: true,
 
   async init() {
+    // Wait for workspace to be ready
+    await waitForWorkspace();
     await this.loadStats();
     this.connectToLogStream();
   },
 
   async loadStats() {
     try {
-      const [apiKeysRes, providerKeysRes, promptsRes] = await Promise.all([
-        API.apiKeys.list(),
+      const [virtualKeysRes, providerKeysRes, promptsRes] = await Promise.all([
+        API.virtualKeys.list(),
         API.providerKeys.list(),
         API.prompts.list()
       ]);
 
-      this.stats.apiKeys = apiKeysRes.data?.length || 0;
+      this.stats.virtualKeys = virtualKeysRes.data?.length || 0;
       this.stats.providerKeys = providerKeysRes.data?.length || 0;
       this.stats.prompts = promptsRes.data?.length || 0;
     } catch (error) {
@@ -53,9 +69,10 @@ document.addEventListener('alpine:init', () => {
   }
 }));
 
-// API Keys Manager
-Alpine.data('apiKeysManager', () => ({
+// Virtual Keys Manager
+Alpine.data('virtualKeysManager', () => ({
   keys: [],
+  providerKeys: [],
   loading: true,
   error: null,
   showCreateModal: false,
@@ -73,19 +90,17 @@ Alpine.data('apiKeysManager', () => ({
   formData: {
     name: '',
     description: '',
+    workspaceId: '',
+    providerKeyId: '',
     rateLimitRpm: null,
     rateLimitTpm: null,
-    permissions: {
-      completions: { create: true },
-      api_keys: { read: false, write: false },
-      provider_keys: { read: false, write: false },
-      prompts: { read: false, write: false }
-    },
+    allowedModels: [],
     isActive: true
   },
 
   async init() {
     await this.loadKeys();
+    await this.loadProviderKeys();
   },
   
   get filteredData() {
@@ -181,30 +196,47 @@ Alpine.data('apiKeysManager', () => ({
     this.loading = true;
     this.error = null;
     try {
-      const response = await API.apiKeys.list();
+      const response = await API.virtualKeys.list();
       this.keys = response.data || [];
     } catch (err) {
       this.error = err.message;
-      Utils.showToast('Failed to load API keys: ' + err.message, 'error');
+      Utils.showToast('Failed to load virtual keys: ' + err.message, 'error');
     } finally {
       this.loading = false;
+    }
+  },
+
+  async loadProviderKeys() {
+    try {
+      const response = await API.providerKeys.list();
+      this.providerKeys = response.data || [];
+    } catch (err) {
+      console.error('Failed to load provider keys:', err);
+      Utils.showToast('Failed to load provider keys: ' + err.message, 'error');
     }
   },
 
   async createKey() {
     this.submitting = true;
     try {
-      const response = await API.apiKeys.create(this.formData);
+      // Set workspace ID from current workspace
+      const currentWorkspaceId = localStorage.getItem('axon_current_workspace');
+      const payload = {
+        ...this.formData,
+        workspaceId: currentWorkspaceId
+      };
+      
+      const response = await API.virtualKeys.create(payload);
       if (response.data?.plainKey) {
         this.createdKeyValue = response.data.plainKey;
         this.showCreatedKey = true;
         this.showCreateModal = false;
       }
       await this.loadKeys();
-      Utils.showToast('API key created successfully', 'success');
+      Utils.showToast('Virtual key created successfully', 'success');
       this.resetForm();
     } catch (err) {
-      Utils.showToast('Failed to create API key: ' + err.message, 'error');
+      Utils.showToast('Failed to create virtual key: ' + err.message, 'error');
     } finally {
       this.submitting = false;
     }
@@ -215,9 +247,11 @@ Alpine.data('apiKeysManager', () => ({
     this.formData = {
       name: key.name,
       description: key.description || '',
+      workspaceId: key.workspaceId || '',
+      providerKeyId: key.providerKeyId || '',
       rateLimitRpm: key.rateLimitRpm,
       rateLimitTpm: key.rateLimitTpm,
-      permissions: key.permissions || this.formData.permissions,
+      allowedModels: key.allowedModels || [],
       isActive: key.isActive
     };
     this.showEditModal = true;
@@ -226,13 +260,20 @@ Alpine.data('apiKeysManager', () => ({
   async updateKey() {
     this.submitting = true;
     try {
-      await API.apiKeys.update(this.selectedKey.id, this.formData);
+      // Ensure workspace ID is set
+      const currentWorkspaceId = localStorage.getItem('axon_current_workspace');
+      const payload = {
+        ...this.formData,
+        workspaceId: this.formData.workspaceId || currentWorkspaceId
+      };
+      
+      await API.virtualKeys.update(this.selectedKey.id, payload);
       await this.loadKeys();
       this.showEditModal = false;
-      Utils.showToast('API key updated successfully', 'success');
+      Utils.showToast('Virtual key updated successfully', 'success');
       this.resetForm();
     } catch (err) {
-      Utils.showToast('Failed to update API key: ' + err.message, 'error');
+      Utils.showToast('Failed to update virtual key: ' + err.message, 'error');
     } finally {
       this.submitting = false;
     }
@@ -242,9 +283,9 @@ Alpine.data('apiKeysManager', () => ({
     if (!confirm(`Are you sure you want to delete "${key.name}"?`)) return;
 
     try {
-      await API.apiKeys.delete(key.id);
+      await API.virtualKeys.delete(key.id);
       await this.loadKeys();
-      Utils.showToast('API key deleted successfully', 'success');
+      Utils.showToast('Virtual key deleted successfully', 'success');
     } catch (err) {
       Utils.showToast('Failed to delete API key: ' + err.message, 'error');
     }
@@ -260,7 +301,7 @@ Alpine.data('apiKeysManager', () => ({
     
     try {
       await Promise.all(
-        Array.from(this.selectedItems).map(id => API.apiKeys.delete(id))
+        Array.from(this.selectedItems).map(id => API.virtualKeys.delete(id))
       );
       await this.loadKeys();
       this.clearSelection();
@@ -274,14 +315,11 @@ Alpine.data('apiKeysManager', () => ({
     this.formData = {
       name: '',
       description: '',
+      workspaceId: '',
+      providerKeyId: '',
       rateLimitRpm: null,
       rateLimitTpm: null,
-      permissions: {
-        completions: { create: true },
-        api_keys: { read: false, write: false },
-        provider_keys: { read: false, write: false },
-        prompts: { read: false, write: false }
-      },
+      allowedModels: [],
       isActive: true
     };
     this.selectedKey = null;
@@ -501,6 +539,7 @@ Alpine.data('promptsManager', () => ({
   },
 
   async init() {
+    await waitForWorkspace();
     await this.loadPrompts();
   },
   
@@ -768,6 +807,7 @@ Alpine.data('analyticsManager', () => ({
   timeRange: '24h',
   
   async init() {
+    await waitForWorkspace();
     await this.loadAnalytics();
   },
   
@@ -896,6 +936,8 @@ Alpine.data('playgroundManager', () => ({
   responseTime: 0,
   responseTab: 'formatted',
   selectedApiKey: '',
+  manualApiKey: '',
+  useManualKey: true,
   apiKeys: [],
   endpoint: '/v1/chat/completions',
   requestBody: {
@@ -917,7 +959,7 @@ Alpine.data('playgroundManager', () => ({
   
   async loadApiKeys() {
     try {
-      const result = await API.apiKeys.list();
+      const result = await API.virtualKeys.list();
       this.apiKeys = result.data || [];
       if (this.apiKeys.length > 0 && !this.selectedApiKey) {
         this.selectedApiKey = this.apiKeys[0].id;
@@ -936,8 +978,22 @@ Alpine.data('playgroundManager', () => ({
   },
   
   async sendRequest() {
-    if (!this.selectedApiKey) {
-      Utils.showToast('Please select an API key', 'error');
+    // Determine which key to use
+    let apiKey = '';
+    if (this.useManualKey) {
+      if (!this.manualApiKey) {
+        Utils.showToast('Please enter a virtual key', 'error');
+        return;
+      }
+      apiKey = this.manualApiKey;
+    } else {
+      if (!this.selectedApiKey) {
+        Utils.showToast('Please select a virtual key or enter one manually', 'error');
+        return;
+      }
+      // Since we can't get the plain key from the list, ask user to enter it manually
+      Utils.showToast('Please use "Enter Virtual Key Manually" option below', 'error');
+      this.useManualKey = true;
       return;
     }
     
@@ -947,12 +1003,6 @@ Alpine.data('playgroundManager', () => ({
     
     try {
       const startTime = Date.now();
-      
-      // Get the selected API key's actual key value
-      const selectedKey = this.apiKeys.find(k => k.id === this.selectedApiKey);
-      if (!selectedKey) {
-        throw new Error('Selected API key not found');
-      }
       
       // Prepare request body based on endpoint
       let body = { ...this.requestBody };
@@ -969,7 +1019,7 @@ Alpine.data('playgroundManager', () => ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${selectedKey.plainKey || 'test-key'}` // Use actual key if available
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify(body)
       });
@@ -1081,6 +1131,8 @@ Alpine.data('workspacesManager', () => ({
         this.currentWorkspace = this.workspaces.find(w => w.id === savedId) || this.workspaces[0];
       } else if (this.workspaces.length > 0) {
         this.currentWorkspace = this.workspaces[0];
+        // Save the first workspace as current workspace
+        localStorage.setItem('axon_current_workspace', this.currentWorkspace.id);
       }
     } catch (error) {
       console.error('Failed to load workspaces:', error);
