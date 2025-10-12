@@ -1,7 +1,7 @@
 'use server';
 
 import { openai } from '@ai-sdk/openai';
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 import { streamText, generateText } from 'ai';
 import { createStreamableValue } from 'ai/rsc';
 import { z } from 'zod';

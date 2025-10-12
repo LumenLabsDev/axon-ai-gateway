@@ -13,17 +13,17 @@ Use Portkey with your Vercel app for:
 
 ### 1. Create a NextJS app
 
-Go ahead and create a Next.js application, and install `ai` and `portkey-ai` as dependencies.
+Go ahead and create a Next.js application, and install `ai` and `axon-ai` as dependencies.
 
 ```sh
 pnpm dlx create-next-app my-ai-app
 cd my-ai-app
-pnpm install ai portkey-ai
+pnpm install ai axon-ai
 ```
 
 ### 2. Add Authentication keys to `.env`
 
-1. Login to Portkey [here](https://app.portkey.ai/)
+1. Login to Portkey [here](https://app.axon.ai/)
 2. To integrate OpenAI with Portkey, add your OpenAI API key to Portkey’s Virtual Keys
 3. This will give you a disposable key that you can use and rotate instead of directly using the OpenAI API key
 4. Grab the Virtual key & your Portkey API key and add them to `.env` file:
@@ -43,10 +43,10 @@ For this example, create a route handler at `app/api/chat/route.ts` that calls G
 ```ts
 // filename="app/api/chat/route.ts"
 import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
 // Create a Portkey API client
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEY_API_KEY,
   virtualKey: process.env.OPENAI_VIRTUAL_KEY
 });
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   // Call GPT-4
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
     model: 'gpt-4',
     stream: true,
     messages
@@ -77,7 +77,7 @@ Portkey follows the same signature as OpenAI SDK but extends it to work with **1
 
 ### 4. Switch from OpenAI to Anthropic
 
-Portkey is powered by an [open-source, universal AI Gateway](https://github.com/portkey-ai/gateway) with which you can route to 100+ LLMs using the same, known OpenAI spec.
+Portkey is powered by an [open-source, universal AI Gateway](https://github.com/axon-ai/gateway) with which you can route to 100+ LLMs using the same, known OpenAI spec.
 
 Let’s see how you can switch from GPT-4 to Claude-3-Opus by updating 2 lines of code (without breaking anything else).
 
@@ -92,7 +92,7 @@ Let’s see it in action:
 export const runtime = 'edge';
 
 // Create a Portkey API client
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEY_API_KEY,
   virtualKey: process.env.ANTHROPIC_VIRTUAL_KEY
 });
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
   const { messages } = await req.json();
 
   // Switch from GPT-4 to Claude-3-Opus
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
     model: 'claude-3-opus-20240229',
     max_tokens: 512
     stream: true,
@@ -118,11 +118,11 @@ export async function POST(req: Request) {
 Similarly, you can just add your [Google AI Studio API key](https://aistudio.google.com/app/) to Portkey and call Gemini 1.5:
 
 ```tsx
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEY_API_KEY,
   virtualKey: process.env.GOOGLE_VIRTUAL_KEY
 });
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
     model: 'gemini-1.5-pro-latest,
     stream: true,
     messages
@@ -171,14 +171,14 @@ Portkey logs all the requests you’re sending to help you debug errors, and get
 
 You can enhance the logging by tracing certain requests, passing custom metadata or user feedback.
 
-![rolling logs and cachescreents](https://portkey.ai/blog/content/images/2024/04/logs.gif)
+![rolling logs and cachescreents](https://axon.ai/blog/content/images/2024/04/logs.gif)
 
 **Segmenting Requests with Metadata**
 
 On Portkey, while making a `chat.completions` call, you can pass any `{"key":"value"}` pairs. Portkey segments the requests based on the metadata to give you granular insights.
 
 ```tsx
-const response = await portkey.chat.completions.create(
+const response = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [{ role: 'user', content: 'How do I optimise auditorium for maximum occupancy?' }]
@@ -192,14 +192,14 @@ const response = await portkey.chat.completions.create(
 );
 ```
 
-Learn more about [tracing](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/traces) and [feedback](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/feedback).
+Learn more about [tracing](https://axon.ai/docs/product/observability-modern-monitoring-for-llms/traces) and [feedback](https://axon.ai/docs/product/observability-modern-monitoring-for-llms/feedback).
 
 ## Guide: Handle OpenAI Failures
 
 ### 1. Solve 5xx, 4xx Errors
 
 Portkey helps you automatically trigger a call to any other LLM/provider in case of primary failures.<br>
-[Create](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/configs) a fallback logic with Portkey’s Gateway Config.
+[Create](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/configs) a fallback logic with Portkey’s Gateway Config.
 
 For example, for setting up a fallback from OpenAI to Anthropic, the Gateway Config would be:
 
@@ -215,7 +215,7 @@ You can save this Config in Portkey app and get an associated Config ID that you
 ### 2. Apply Config to the Route Handler
 
 ```tsx
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEY_API_KEY,
   config: 'CONFIG_ID'
 });
@@ -223,7 +223,7 @@ const portkey = new Portkey({
 export async function POST(req: Request) {
   const { messages } = await req.json();
 
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
     model: 'gpt-4',
     stream: true,
     messages
@@ -253,7 +253,7 @@ For example, to route your requests between 1 OpenAI and 2 Azure OpenAI accounts
 
 Save this Config in the Portkey app and pass it while instantiating the Portkey client, just like we did above.
 
-Portkey can also trigger [automatic retries](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries), set [request timeouts](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/request-timeouts), and more.
+Portkey can also trigger [automatic retries](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries), set [request timeouts](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/request-timeouts), and more.
 
 ## Guide: Cache Semantically Similar Requests
 
@@ -269,11 +269,11 @@ For Q&A use cases, cache hit rates go as high as 50%. To enable semantic caching
 
 Same as above, you can save your cache Config in the Portkey app, and reference the Config ID while instantiating the Portkey client.
 
-Moreover, you can set the `max-age` of the cache and force refresh a cache. See the [docs](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic) for more information.
+Moreover, you can set the `max-age` of the cache and force refresh a cache. See the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic) for more information.
 
 ## Guide: Manage Prompts Separately
 
-Storing prompt templates and instructions in code is messy. Using Portkey, you can create and manage all of your app’s prompts in a single place and directly hit our prompts API to get responses. Here’s more on [what Prompts on Portkey can do](https://portkey.ai/docs/product/prompt-library).
+Storing prompt templates and instructions in code is messy. Using Portkey, you can create and manage all of your app’s prompts in a single place and directly hit our prompts API to get responses. Here’s more on [what Prompts on Portkey can do](https://axon.ai/docs/product/prompt-library).
 
 To create a Prompt Template,
 
@@ -281,19 +281,19 @@ To create a Prompt Template,
 2. In the **Prompts** page, Click **Create**
 3. Add your instructions, variables, and You can modify model parameters and click **Save**
 
-![verel app prompt](https://raw.githubusercontent.com/Portkey-AI/portkey-cookbook/a358363e2102df4ff7657e56cc592f4e861f9d6c/integrations/images/vercel-portkey-guide/2-vercel-portkey-guide.png)
+![verel app prompt](https://raw.githubusercontent.com/Portkey-AI/axon-cookbook/a358363e2102df4ff7657e56cc592f4e861f9d6c/integrations/images/vercel-axon-guide/2-vercel-axon-guide.png)
 
 ### Trigger the Prompt in the Route Handler
 
 ```js
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEY_API_KEY
 });
 
 export async function POST(req: Request) {
   const { variable_content } = await req.json();
 
-  const response = await portkey.prompts.completions.create({
+  const response = await axon.prompts.completions.create({
     promptID: 'pp-vercel-app-f36a02',
     variables: { variable_name: 'variable_content' }, // string
     stream: true
@@ -304,8 +304,8 @@ export async function POST(req: Request) {
 }
 ```
 
-See [docs](https://portkey.ai/docs/api-reference/prompts/prompt-completion) for more information.
+See [docs](https://axon.ai/docs/api-reference/prompts/prompt-completion) for more information.
 
 ## Talk to the Developers
 
-If you have any questions or issues, reach out to us on [Discord here](https://portkey.ai/community). On Discord, you will also meet many other practitioners who are putting their Vercel AI + Portkey app to production.
+If you have any questions or issues, reach out to us on [Discord here](https://axon.ai/community). On Discord, you will also meet many other practitioners who are putting their Vercel AI + Portkey app to production.

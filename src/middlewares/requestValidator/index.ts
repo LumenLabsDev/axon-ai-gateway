@@ -66,7 +66,7 @@ export const requestValidator = (c: Context, next: any) => {
   }
 
   const customHostHeader = requestHeaders[`x-${POWERED_BY}-custom-host`];
-  if (customHostHeader && customHostHeader.indexOf('api.portkey') > -1) {
+  if (customHostHeader && customHostHeader.indexOf('api.axon') > -1) {
     return new Response(
       JSON.stringify({
         status: 'failure',

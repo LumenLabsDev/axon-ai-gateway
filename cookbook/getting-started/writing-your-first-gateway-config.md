@@ -9,9 +9,9 @@ The Portkey AI gateway provides several useful features that you can use to enha
 Consider a typical API call to GPT4 to get chat completions using OpenAI SDK. It takes `messages` and `model` arguments to get us a response. If you have tried one before, the following code snippet should look familiar. That’s because Portkey Client SDK follows the same signature as OpenAI’s.
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxxxxtrk',
   virtualKey: 'ma5xfxxxxx4x'
 });
@@ -23,7 +23,7 @@ const messages = [
   }
 ];
 
-const response = await portkey.chat.completions.create({
+const response = await axon.chat.completions.create({
   messages,
   model: 'gpt-4'
 });
@@ -31,7 +31,7 @@ const response = await portkey.chat.completions.create({
 console.log(response.choices[0].message.content);
 ```
 
-Along with Portkey API Key ([get one](https://portkey.ai/docs/api-reference/authentication#obtaining-your-api-key)), you might’ve noticed a new parameter while instantiating the `portkey` variable — `virtualKey`. Portkey securely stores API keys of LLM providers in a vault and substitutes them at runtime in your requests. These unique identifiers to your API keys are called Virtual Keys. For more information, see the [docs](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+Along with Portkey API Key ([get one](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)), you might’ve noticed a new parameter while instantiating the `axon` variable — `virtualKey`. Portkey securely stores API keys of LLM providers in a vault and substitutes them at runtime in your requests. These unique identifiers to your API keys are called Virtual Keys. For more information, see the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 With basics out of our way, let’s jump into applying what we set out to do in the first place with the AI gateway — To automatically retry our request when we hit rate-limits (429 status codes).
 
@@ -58,7 +58,7 @@ Just as the title says — you create them on the UI and use an ID to have Portk
 
 To create Gateway Configs,
 
-1. Go to **portkey.ai** and
+1. Go to **axon.ai** and
 2. Click on **Configs**
    1. Select **Create**
    2. Choose any name (such as request_retries)
@@ -77,16 +77,16 @@ The Configs saved will appear as a row item on the Configs page. The `ID` is imp
 
 #### Portkey SDK
 
-The Portkey SDK accepts the config parameter that takes the created config ID as it’s argument. To ensure all requests have automatic retries enabled on them, pass the config ID as argument when `portkey` is instantiated.
+The Portkey SDK accepts the config parameter that takes the created config ID as it’s argument. To ensure all requests have automatic retries enabled on them, pass the config ID as argument when `axon` is instantiated.
 
 That’s right! One line of code, and all the request from your apps now inherit Gateway Configs and demonstrate automatic retries.
 
 Let’s take a look at the code snippet:
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxxxrk',
   virtualKey: 'xxxxx',
   config: 'pc-xxxxx-edx21x' // Gateway Configs
@@ -99,7 +99,7 @@ const messages = [
   }
 ];
 
-const response = await portkey.chat.completions.create({
+const response = await axon.chat.completions.create({
   messages,
   model: 'gpt-4'
 });
@@ -109,7 +109,7 @@ console.log(response.choices[0].message.content);
 
 #### Axios
 
-In the cases, where you are not able to use an SDK, you can pass the same configs as headers with the key `x-portkey-config` .
+In the cases, where you are not able to use an SDK, you can pass the same configs as headers with the key `x-axon-config` .
 
 ```js
 const CONFIG_ID = 'pc-reques-edf21c';
@@ -118,13 +118,13 @@ const OPENAI_API_KEY = 'sk-*******';
 
 const response = await axios({
   method: 'post',
-  url: 'https://api.portkey.ai/v1/chat/completions',
+  url: 'https://api.axon.ai/v1/chat/completions',
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
-    'x-portkey-api-key': PORTKEY_API_KEY,
-    'x-portkey-provider': 'openai',
-    'x-portkey-config': CONFIG_ID
+    'x-axon-api-key': PORTKEY_API_KEY,
+    'x-axon-provider': 'openai',
+    'x-axon-config': CONFIG_ID
   },
   data: data
 });
@@ -140,7 +140,7 @@ To send a request with using OpenAI SDK client and apply gateway configs to the 
 
 ```js
 import OpenAI from 'openai'; // We're using the v4 SDK
-import { PORTKEY_GATEWAY_URL, createHeaders } from 'portkey-ai';
+import { PORTKEY_GATEWAY_URL, createHeaders } from 'axon-ai';
 
 const PORTKEY_API_KEY = 'xxxxxrk';
 const CONFIG_ID = 'pc-reques-edf21c';
@@ -180,9 +180,9 @@ Depending on the dynamics of your app, you might want to construct the Gateway C
 #### Portkey SDK
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxxxx',
   virtualKey: 'maxxxxx8f4d',
   config: JSON.stringify({
@@ -200,7 +200,7 @@ const messages = [
   }
 ];
 
-const response = await portkey.chat.completions.create({
+const response = await axon.chat.completions.create({
   messages,
   model: 'gpt-4'
 });
@@ -235,13 +235,13 @@ const data = {
 
 const { data: response } = await axios({
   method: 'post',
-  url: 'https://api.portkey.ai/v1/chat/completions',
+  url: 'https://api.axon.ai/v1/chat/completions',
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
-    'x-portkey-api-key': PORTKEY_API_KEY,
-    'x-portkey-provider': 'openai',
-    'x-portkey-config': JSON.stringify(CONFIG_ID)
+    'x-axon-api-key': PORTKEY_API_KEY,
+    'x-axon-provider': 'openai',
+    'x-axon-config': JSON.stringify(CONFIG_ID)
   },
   data: data
 });
@@ -253,7 +253,7 @@ console.log(response.choices[0].message.content);
 
 ```js
 import OpenAI from 'openai'; // We're using the v4 SDK
-import { PORTKEY_GATEWAY_URL, createHeaders } from 'portkey-ai';
+import { PORTKEY_GATEWAY_URL, createHeaders } from 'axon-ai';
 
 const PORTKEY_API_KEY = 'xxxxxrk';
 const CONFIG_ID = 'pc-reques-edf21c';
@@ -294,7 +294,7 @@ Those are three ways to use Gateway Configs in your requests.
 In the cases where you want to specifically add a config for a specific request instead of all, Portkey allows you to pass `config` argument as seperate objects right at the time of chat completions call instead of `Portkey({..})` instantiation.
 
 ```js
-const response = await portkey.chat.completions.create(
+const response = await axon.chat.completions.create(
   {
     messages,
     model: 'gpt-4'
@@ -331,6 +331,6 @@ TARGET 1 (root):
           Request Timeouts
 ```
 
-For complete reference, refer to the _[Config Object](https://portkey.ai/docs/api-reference/config-object)_.
+For complete reference, refer to the _[Config Object](https://axon.ai/docs/api-reference/config-object)_.
 
 It's exciting to see all the AI gateway features available for your requests. Feel free to experiment and make the most of them. Keep up the great work!

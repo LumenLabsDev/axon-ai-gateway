@@ -10,15 +10,15 @@
 ### 通过一个快速友好的API链接超过100个大型语言模型。
 
 [![License](https://img.shields.io/github/license/Ileriayo/markdown-badges)](./LICENSE)
-[![Discord](https://img.shields.io/discord/1143393887742861333)](https://portkey.ai/community)
-[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/portkeyai?style=social&label=Follow%20%40PortkeyAI)](https://twitter.com/portkeyai)
-[![npm version](https://badge.fury.io/js/%40portkey-ai%2Fgateway.svg)](https://www.npmjs.com/package/@portkey-ai/gateway)
+[![Discord](https://img.shields.io/discord/1143393887742861333)](https://axon.ai/community)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/axonai?style=social&label=Follow%20%40PortkeyAI)](https://twitter.com/axonai)
+[![npm version](https://badge.fury.io/js/%40axon-ai%2Fgateway.svg)](https://www.npmjs.com/package/@axon-ai/gateway)
 <!-- ![example workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg) -->
 
 </div>
 <br><br>
 
-[Portkey的AI网关](https://portkey.ai/features/ai-gateway) 是您的应用程序与托管的大型语言模型(LLMs)之间的接口。它通过统一的API简化了对OpenAI、Anthropic、Mistral、LLama2、Anyscale、Google Gemini等的API请求。
+[Portkey的AI网关](https://axon.ai/features/ai-gateway) 是您的应用程序与托管的大型语言模型(LLMs)之间的接口。它通过统一的API简化了对OpenAI、Anthropic、Mistral、LLama2、Anyscale、Google Gemini等的API请求。
 
 ✅ 极速响应（快9.9倍），占用空间极小（安装后约45kb）<br>✅ 跨多个模型、提供商和密钥进行**负载均衡**<br>✅ 通过**备用方案**确保应用程序的稳定性<br>✅ 默认提供具有指数级备用方案的**自动重试**<br>✅ 根据需要插入中间件<br>✅ 经过超过**1000亿令牌**的实战测试<br> <br>
 
@@ -29,12 +29,12 @@
 如果您熟悉Node.js和`npx`，您可以在本地运行您的私有AI网关。
 
 ```
-npx @portkey-ai/gateway
+npx @axon-ai/gateway
 ```
 
 <sup>
 [ 其它部署选项 ]
-&nbsp; <a href="https://portkey.wiki/gh-18"><img height="12" width="12" src="https://cfassets.portkey.ai/logo/dew-color.svg" /> Portkey Cloud 官方部署(推荐)</a>
+&nbsp; <a href="https://axon.wiki/gh-18"><img height="12" width="12" src="https://cfassets.axon.ai/logo/dew-color.svg" /> Portkey Cloud 官方部署(推荐)</a>
 &nbsp; <a href="../docs/installation-deployments.md#docker"><img height="12" width="12" src="https://cdn.simpleicons.org/docker/3776AB" /> Docker</a>
 &nbsp; <a href="../docs/installation-deployments.md#nodejs-server"><img height="12" width="12" src="https://cdn.simpleicons.org/node.js/3776AB" /> Node.js</a>
 &nbsp; <a href="../docs/installation-deployments.md#cloudflare-workers"><img height="12" width="12" src="https://cdn.simpleicons.org/cloudflare/3776AB" /> Cloudflare</a>
@@ -50,7 +50,7 @@ npx @portkey-ai/gateway
 
 ```
 bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
-  -H 'x-portkey-provider: openai' \
+  -H 'x-axon-provider: openai' \
   -H "Authorization: Bearer $OPENAI_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"messages": [{"role": "user","content": "Say this is test."}], "max_tokens": 20, "model": "gpt-4"}'
@@ -75,7 +75,7 @@ bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
 | <img src="https://www.perplexity.ai/favicon.svg" width=25>| Perplexity  | ✅  |✅  | `/chat/completions` |
 | <img src="https://docs.mistral.ai/img/favicon.ico" width=25>| Mistral  | ✅  |✅  | `/chat/completions`, `/embeddings` |
 
-> [在这里查看支持的100多个模型的完整列表](https://portkey.ai/docs/welcome/what-is-portkey#ai-providers-supported)
+> [在这里查看支持的100多个模型的完整列表](https://axon.ai/docs/welcome/what-is-axon#ai-providers-supported)
 <br />
 
 ## 特点
@@ -83,7 +83,7 @@ bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
 <table>
   <tr>
     <td>
-      <h4><a href="https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/universal-api">统一API签名</a></h4>
+      <h4><a href="https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/universal-api">统一API签名</a></h4>
       使用OpenAI的API签名连接100多个LLM。AI网关处理请求、响应和错误转换，因此您无需对代码进行任何更改。您可以使用OpenAI SDK本身连接到任何支持的LLM。
       <br><br>
       <img src="docs/images/openai.png" height=40 />&nbsp;&nbsp;&nbsp;<img src="docs/images/azure.png" height=40 />&nbsp;&nbsp;&nbsp;
@@ -98,7 +98,7 @@ bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
      <br><br>
     </td>
     <td>
-      <h4><a href="https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks">备用方案</a></h4>
+      <h4><a href="https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks">备用方案</a></h4>
       不要让失败阻止您。备用功能允许您按优先顺序指定语言模型API（LLMs）列表。如果主LLM无法响应或遇到错误，Portkey将自动备用到列表中的下一个LLM，确保您的应用程序的稳定性和可靠性。
       <br><br>
       <img src="https://framerusercontent.com/images/gmlOW8yeKP2pGuIsObM6gKLzeMI.png" height=200 />
@@ -108,13 +108,13 @@ bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
 <table>
   <tr>
     <td>
-      <h4><a href="https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries">自动重试</a></h4>
+      <h4><a href="https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries">自动重试</a></h4>
       临时问题不应该意味着手动重新运行。AI网关可以自动重试失败的请求多达5次。我们采用指数退避策略，间隔重试尝试以防止网络过载。
       <br><br>
       <img src="https://github.com/roh26it/Rubeus/assets/971978/8a6e653c-94b2-4ba7-95c7-93544ee476b1" height=200 />
     </td>
     <td>
-      <h4><a href="https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing">负载均衡</a></h4>
+      <h4><a href="https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing">负载均衡</a></h4>
       根据自定义权重在多个API密钥或提供商之间有效分配负载。这确保了您的生成式AI应用程序的高可用性和最佳性能，防止任何单一LLM成为性能瓶颈。
       <br><br>
       <img src="https://framerusercontent.com/images/6EWuq3FWhqrPe3kKLqVspevi4.png" height=200 />
@@ -125,15 +125,15 @@ bashCopy codecurl '127.0.0.1:8787/v1/chat/completions' \
 <br>
 
 ## 配置 AI 网关
-AI 网关支持[配置](https://portkey.ai/docs/api-reference/config-object)，以实现如**后备（fallbacks）**、**负载均衡（load balancing）**、**重试（retries）**等多样化的路由策略。
+AI 网关支持[配置](https://axon.ai/docs/api-reference/config-object)，以实现如**后备（fallbacks）**、**负载均衡（load balancing）**、**重试（retries）**等多样化的路由策略。
 <br><br>
-您可以在通过 `x-portkey-config` 头部进行 OpenAI 调用时使用这些配置
+您可以在通过 `x-axon-config` 头部进行 OpenAI 调用时使用这些配置
 ```js
 // 使用 OpenAI JS SDK
 const client = new OpenAI({
   baseURL: "http://127.0.0.1:8787", // 网关 URL
   defaultHeaders: {
-    'x-portkey-config': {.. 你的配置在这里 ..}, 
+    'x-axon-config': {.. 你的配置在这里 ..}, 
   }
 });
 ```
@@ -179,8 +179,8 @@ const client = new OpenAI({
 
 | 语言 | 支持的SDKs |
 |---|---|
-| Node.js / JS / TS | [Portkey SDK](https://www.npmjs.com/package/portkey-ai) <br> [OpenAI SDK](https://www.npmjs.com/package/openai) <br> [LangchainJS](https://www.npmjs.com/package/langchain) <br> [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex) |
-| Python | [Portkey SDK](https://pypi.org/project/portkey-ai/) <br> [OpenAI SDK](https://pypi.org/project/openai/) <br> [Langchain](https://pypi.org/project/langchain/) <br> [LlamaIndex](https://pypi.org/project/llama-index/) |
+| Node.js / JS / TS | [Portkey SDK](https://www.npmjs.com/package/axon-ai) <br> [OpenAI SDK](https://www.npmjs.com/package/openai) <br> [LangchainJS](https://www.npmjs.com/package/langchain) <br> [LlamaIndex.TS](https://www.npmjs.com/package/llamaindex) |
+| Python | [Portkey SDK](https://pypi.org/project/axon-ai/) <br> [OpenAI SDK](https://pypi.org/project/openai/) <br> [Langchain](https://pypi.org/project/langchain/) <br> [LlamaIndex](https://pypi.org/project/llama-index/) |
 | Go | [go-openai](https://github.com/sashabaranov/go-openai) |
 | Java | [openai-java](https://github.com/TheoKanning/openai-java) |
 | Rust | [async-openai](https://docs.rs/async-openai/latest/async_openai/) |
@@ -219,12 +219,12 @@ const client = new OpenAI({
 
 加入我们不断增长的全球社区，寻求帮助，分享想法，讨论 AI。
 
-- 查看我们的官方[博客](https://portkey.ai/blog)
-- 在 [Discord](https://portkey.ai/community) 上与我们实时交流
+- 查看我们的官方[博客](https://axon.ai/blog)
+- 在 [Discord](https://axon.ai/community) 上与我们实时交流
 - 在 [Twitter](https://twitter.com/PortkeyAI) 上关注我们
-- 在 [LinkedIn](https://www.linkedin.com/company/portkey-ai/) 上与我们建立联系
+- 在 [LinkedIn](https://www.linkedin.com/company/axon-ai/) 上与我们建立联系
 - 阅读日文版文档 [日本語](./README.jp.md)
 
-<!-- - 在 [YouTube](https://www.youtube.com/channel/UCZph50gLNXAh1DpmeX8sBdw) 上访问我们 --> <!-- - 加入我们的 [Dev 社区](https://dev.to/portkeyai) --> <!-- - 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/portkey) 上查看标记为 #portkey 的问题 -->
+<!-- - 在 [YouTube](https://www.youtube.com/channel/UCZph50gLNXAh1DpmeX8sBdw) 上访问我们 --> <!-- - 加入我们的 [Dev 社区](https://dev.to/axonai) --> <!-- - 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/axon) 上查看标记为 #axon 的问题 -->
 
 ![Rubeus Social Share (4)](https://github.com/Portkey-AI/gateway/assets/971978/89d6f0af-a95d-4402-b451-14764c40d03f)

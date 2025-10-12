@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **Portkey AI Gateway** - a fast, reliable AI gateway that routes requests to 250+ LLMs with sub-1ms latency. It's built with Hono framework for TypeScript/JavaScript and can be deployed to multiple environments including Cloudflare Workers, Node.js servers, and Docker containers.
+This is the **Axon AI Gateway** - a fast, reliable AI gateway that routes requests to 250+ LLMs with sub-1ms latency. It's built with Hono framework for TypeScript/JavaScript and can be deployed to multiple environments including Cloudflare Workers, Node.js servers, and Docker containers.
 
 ## Development Commands
 
@@ -48,7 +48,7 @@ This is the **Portkey AI Gateway** - a fast, reliable AI gateway that routes req
 - `hooks` - Pre/post request hooks
 - `memoryCache` - Response caching
 - `logger` - Request/response logging
-- `portkey` - Core Portkey-specific middleware for routing, guardrails, etc.
+- `axon` - Core Portkey-specific middleware for routing, guardrails, etc.
 
 **Plugin System (`plugins/`)**
 - Guardrail plugins for content filtering, PII detection, etc.

@@ -14,10 +14,10 @@ import { handler as defaultalllowercase } from './default/alllowercase';
 import { handler as defaultendsWith } from './default/endsWith';
 import { handler as defaultmodelWhitelist } from './default/modelWhitelist';
 import { handler as defaultmodelRules } from './default/modelRules';
-import { handler as portkeymoderateContent } from './portkey/moderateContent';
-import { handler as portkeylanguage } from './portkey/language';
-import { handler as portkeypii } from './portkey/pii';
-import { handler as portkeygibberish } from './portkey/gibberish';
+import { handler as axonmoderateContent } from './axon/moderateContent';
+import { handler as axonlanguage } from './axon/language';
+import { handler as axonpii } from './axon/pii';
+import { handler as axongibberish } from './axon/gibberish';
 import { handler as aporiavalidateProject } from './aporia/validateProject';
 import { handler as sydelabssydeguard } from './sydelabs/sydeguard';
 import { handler as pillarscanPrompt } from './pillar/scanPrompt';
@@ -78,11 +78,11 @@ export const plugins = {
     regexReplace: defaultregexReplace,
     allowedRequestTypes: defaultallowedRequestTypes,
   },
-  portkey: {
-    moderateContent: portkeymoderateContent,
-    language: portkeylanguage,
-    pii: portkeypii,
-    gibberish: portkeygibberish,
+  axon: {
+    moderateContent: axonmoderateContent,
+    language: axonlanguage,
+    pii: axonpii,
+    gibberish: axongibberish,
   },
   aporia: {
     validateProject: aporiavalidateProject,

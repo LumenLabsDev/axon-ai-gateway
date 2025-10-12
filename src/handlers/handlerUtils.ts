@@ -27,6 +27,7 @@ import { ConditionalRouter } from '../services/conditionalRouter';
 import { RouterError } from '../errors/RouterError';
 import { GatewayError } from '../errors/GatewayError';
 import { HookType } from '../middlewares/hooks/types';
+import { decryptProviderKey } from '../services/encryptionService';
 
 // Services
 import { CacheResponseObject, CacheService } from './services/cacheService';
@@ -666,7 +667,7 @@ export async function tryTargetsRecursively(
         );
         const codes = currentTarget.strategy?.onStatusCodes;
         const gatewayException =
-          response?.headers.get('x-portkey-gateway-exception') === 'true';
+          response?.headers.get('x-axon-gateway-exception') === 'true';
         if (
           // If onStatusCodes is provided, and the response status is not in the list
           (Array.isArray(codes) && !codes.includes(response?.status)) ||
@@ -813,7 +814,7 @@ export async function tryTargetsRecursively(
             headers: {
               'content-type': 'application/json',
               // Add this header so that the fallback loop can be interrupted if its an exception.
-              'x-portkey-gateway-exception': 'true',
+              'x-axon-gateway-exception': 'true',
             },
           }
         );
@@ -822,6 +823,44 @@ export async function tryTargetsRecursively(
   }
 
   return response!;
+}
+
+/**
+ * Resolve provider API key from context
+ * If virtualKey is specified, lookup from database and decrypt
+ * Priority: explicit apiKey > virtualKey from context > config apiKey
+ */
+export function resolveProviderApiKey(
+  config: Options | Targets,
+  context?: Context
+): string | undefined {
+  // If explicit API key is provided, use it
+  if ('apiKey' in config && config.apiKey) {
+    return config.apiKey;
+  }
+  
+  // If virtualKey is specified and we have context with provider keys
+  if ('virtualKey' in config && config.virtualKey && context) {
+    const providerKeys = context.get('providerKeys');
+    const provider = 'provider' in config ? config.provider : undefined;
+    
+    if (providerKeys && provider) {
+      // Find matching provider key by name (virtualKey) and provider type
+      const matchingKey = providerKeys.find(
+        (pk: any) => pk.name === config.virtualKey && pk.provider === provider
+      );
+      
+      if (matchingKey) {
+        try {
+          return decryptProviderKey(matchingKey.encryptedKey);
+        } catch (error) {
+          console.error('Failed to decrypt provider key:', error);
+        }
+      }
+    }
+  }
+  
+  return undefined;
 }
 
 export function constructConfigFromRequestHeaders(
@@ -971,11 +1010,11 @@ export function constructConfigFromRequestHeaders(
   };
 
   const defaultsConfig = {
-    input_guardrails: requestHeaders[`x-portkey-default-input-guardrails`]
-      ? JSON.parse(requestHeaders[`x-portkey-default-input-guardrails`])
+    input_guardrails: requestHeaders[`x-axon-default-input-guardrails`]
+      ? JSON.parse(requestHeaders[`x-axon-default-input-guardrails`])
       : [],
-    output_guardrails: requestHeaders[`x-portkey-default-output-guardrails`]
-      ? JSON.parse(requestHeaders[`x-portkey-default-output-guardrails`])
+    output_guardrails: requestHeaders[`x-axon-default-output-guardrails`]
+      ? JSON.parse(requestHeaders[`x-axon-default-output-guardrails`])
       : [],
   };
 

@@ -7,7 +7,7 @@
 </div>
 <br><br>
 
-[Portkey's AI Gateway](https://portkey.ai/features/ai-gateway) is the interface between your app and hosted LLMs. It streamlines API requests to OpenAI, Anthropic, Mistral, LLama2, Anyscale, Google Gemini and more with a unified API.
+[Portkey's AI Gateway](https://axon.ai/features/ai-gateway) is the interface between your app and hosted LLMs. It streamlines API requests to OpenAI, Anthropic, Mistral, LLama2, Anyscale, Google Gemini and more with a unified API.
 
 ✅&nbsp; Blazing **fast** (9.9x faster) with a **tiny footprint** (~45kb installed) <br>
 ✅&nbsp; **Load balance** across multiple models, providers, and keys <br>
@@ -31,7 +31,7 @@ Let's try making a chat completions call to OpenAI through the AI gateway:
 
 ```sh
 curl 'https://chosen-subdomain.replit.app/v1/chat/completions' \
-  -H 'x-portkey-provider: openai' \
+  -H 'x-axon-provider: openai' \
   -H "Authorization: Bearer $OPENAI_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"messages": [{"role": "user","content": "Say this is test."}], "max_tokens": 20, "model": "gpt-4"}'
@@ -40,5 +40,5 @@ curl 'https://chosen-subdomain.replit.app/v1/chat/completions' \
 
 ### Portkey
 
-- Read the [AI gateway documentation](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations).
-- Explore Oberservability Suite to build reliable gen-AI apps for production. [Try Portkey](https://portkey.ai/).
+- Read the [AI gateway documentation](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations).
+- Explore Oberservability Suite to build reliable gen-AI apps for production. [Try Portkey](https://axon.ai/).

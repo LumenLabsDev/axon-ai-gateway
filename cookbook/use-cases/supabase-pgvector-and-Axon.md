@@ -8,7 +8,7 @@ A quick disclaimer:
 
 This article is meant to give you a map that can help you get started and navigate the solutions against similar problem statements.
 
-Please explore codebase on [this Repl](https://replit.com/@portkey/Store-Embeddings-To-Supabase-From-Portkey), if you are interested to start with code tinkering.
+Please explore codebase on [this Repl](https://replit.com/@axon/Store-Embeddings-To-Supabase-From-Portkey), if you are interested to start with code tinkering.
 
 ### What makes vector similarity special?
 
@@ -41,8 +41,8 @@ Get going by setting up 3 things for this tutorial — NodeJS project, Portkey a
 
 <span style="text-decoration:underline;">Portkey</span>
 
-1. [Sign up](https://portkey.ai/) and login into Portkey dashboard.
-2. Copy your OpenAI API key and add it to [Portkey Vault](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+1. [Sign up](https://axon.ai/) and login into Portkey dashboard.
+2. Copy your OpenAI API key and add it to [Portkey Vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
 This will give you a unique identifier, virtual key, that you can reference in the code. More on this later on.
 
@@ -86,7 +86,7 @@ Open the `index.js` and you are ready. Let’s start writing code.
 Since our app is set to interact with OpenAI (via Portkey) and Supabase pgvector database, let’s import the necessary SDK clients to run operations on them.
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 
@@ -94,7 +94,7 @@ const USER_QUERY = 'How to update my laptop?';
 
 const supabase = createClient('https://rbhjxxxxxxxxxkr.supabase.co', process.env['SUPABASE_PROJECT_API_KEY']);
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env['PORTKEY_API_KEY'],
   virtualKey: process.env['OPENAI_VIRTUAL_KEY']
 });
@@ -128,7 +128,7 @@ You can verify that the table has been created by navigating to Database > Table
 We will use the `fs` library to read the `articles.txt` and convert every title on the list into embeddings. With Portkey, generating embeddings is straightforward and same as working with OpenAI SDK and no additional code changes required.
 
 ```js
-const response = await portkey.embeddings.create({
+const response = await axon.embeddings.create({
   input: String(text),
   model: 'text-embedding-ada-002'
 });
@@ -148,7 +148,7 @@ To put everything together — reading from the file, generating embeddings, and
 
 ```js
 async function convertToEmbeddings(text) {
-  const response = await portkey.embeddings.create({
+  const response = await axon.embeddings.create({
     input: String(text),
     model: 'text-embedding-ada-002'
   });

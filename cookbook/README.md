@@ -4,8 +4,8 @@
 
 #### Strategies and examples for tackling the production challenges of LLMs with Portkey Gateway
 
-[![Discord](https://img.shields.io/discord/1143393887742861333)](https://portkey.ai/community)
-[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/portkeyai?style=social&label=Follow%20%40PortkeyAI)](https://twitter.com/portkeyai)
+[![Discord](https://img.shields.io/discord/1143393887742861333)](https://axon.ai/community)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/axonai?style=social&label=Follow%20%40PortkeyAI)](https://twitter.com/axonai)
 
 ## Table of Contents
 
@@ -20,14 +20,14 @@ Please use the below table of contents to navigate through the cookbook.
 
 
 ## getting-started
-* [Gentle introduction to Portkey Gateway](./getting-started/gentle-introduction-to-portkey-gateway.ipynb)
+* [Gentle introduction to Portkey Gateway](./getting-started/gentle-introduction-to-axon-gateway.ipynb)
 * [Use Portkey cache to save LLM cost & time](./getting-started/enable-cache.md)
 * [Retry automatically on LLM failures](./getting-started/automatic-retries-on-failures.md)
 * [Image generation with Gateway](./getting-started/image-generation.ipynb)
 * [Writing your first Gateway Config](./getting-started/writing-your-first-gateway-config.md)
 * [Automatically Fallback from OpenAI to Azure](./getting-started/fallback-from-openai-to-azure.ipynb)
 
-View the [official docs](https://portkey.ai/docs)
+View the [official docs](https://axon.ai/docs)
 
 ## providers
 * [OpenAI](./providers/openai.ipynb)
@@ -40,7 +40,7 @@ View the [official docs](https://portkey.ai/docs)
 * [Segmind](./providers/segmind.ipynb)
 * [Nvidia](./providers/nvidia.ipynb)
 
-View the [full list of providers here](https://portkey.ai/docs/welcome/integration-guides).
+View the [full list of providers here](https://axon.ai/docs/welcome/integration-guides).
 
 ## integrations
 * [Langchain](./integrations/langchain.ipynb)
@@ -48,7 +48,7 @@ View the [full list of providers here](https://portkey.ai/docs/welcome/integrati
 * [Instructor](./integrations/Instructor_with_Portkey.ipynb)
 * [Phidata](./integrations/Phidata_with_Portkey.ipynb)
 
-View the [full list of integrations here](https://portkey.ai/docs/welcome/integration-guides).
+View the [full list of integrations here](https://axon.ai/docs/welcome/integration-guides).
 
 ## monitoring-agents
 * [Autogen](./monitoring-agents/Autogen_with_Telemetry.ipynb)
@@ -61,4 +61,4 @@ View the [full list of integrations here](https://portkey.ai/docs/welcome/integr
 
 This is a community-driven resource! We welcome ideas, improvements, quick fixes, and deeper contributions that help the community.
 
-[Request Cookbooks here](https://github.com/portkey-ai/gateway/issues). Check out our contribution [guidelines here](../.github/CONTRIBUTING.md).
+[Request Cookbooks here](https://github.com/axon-ai/gateway/issues). Check out our contribution [guidelines here](../.github/CONTRIBUTING.md).

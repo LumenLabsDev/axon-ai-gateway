@@ -68,7 +68,7 @@ import {
 } from './constants';
 
 export const getRandomId = () => {
-  return 'portkey_cache_' + crypto.randomUUID();
+  return 'axon_cache_' + crypto.randomUUID();
 };
 
 export const getResponseErrorEvent = (error: ResponseError): string => {

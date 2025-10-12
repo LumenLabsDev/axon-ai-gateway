@@ -43,7 +43,7 @@ export const handler: PluginHandler = async (
       },
       metadata: {
         ai_model: params.ai_model ?? 'unknown-model',
-        app_user: params.app_user ?? 'portkey-gateway',
+        app_user: params.app_user ?? 'axon-gateway',
       },
       contents: [
         { [hook === 'beforeRequestHook' ? 'prompt' : 'response']: text },

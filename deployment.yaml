@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: portkeyai
+  name: axonai
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portkeyai
-  namespace: portkeyai
+  name: axonai
+  namespace: axonai
 spec:
   replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:
-      app: portkeyai
+      app: axonai
       version: v1
   strategy:
     rollingUpdate:
@@ -23,13 +23,13 @@ spec:
   template:
     metadata:
       labels:
-        app: portkeyai
+        app: axonai
         version: v1
     spec:
       containers:
-      - image: portkeyai/gateway
+      - image: axonai/gateway
         imagePullPolicy: IfNotPresent
-        name: portkeyai
+        name: axonai
         ports:
         - containerPort: 8787
           protocol: TCP
@@ -42,15 +42,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: portkeyai
-  namespace: portkeyai
+  name: axonai
+  namespace: axonai
 spec:
   ports:
   - port: 8787
     protocol: TCP
     targetPort: 8787
   selector:
-    app: portkeyai
+    app: axonai
     version: v1
   sessionAffinity: None
   type: NodePort

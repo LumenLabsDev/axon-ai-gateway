@@ -29,7 +29,7 @@ Copyhttp://localhost:3000
 ### 1. Installation
 
 ```sh
-npm install @portkey-ai/vercel-provider
+npm install @axon-ai/vercel-provider
 npm install
 ```
 
@@ -42,9 +42,9 @@ Start the App
 Sign up for Portkey and get your API key, and configure Portkey provider in your Vercel app:
 
 ```javascript
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 
-const portkeyConfig = {
+const axonConfig = {
       "provider": "openai", // Choose your provider (e.g., 'anthropic')
       "api_key": "OPENAI_API_KEY",
       "override_params": {
@@ -52,9 +52,9 @@ const portkeyConfig = {
         }
 };
 
-const portkey = createPortkey({
+const axon = createPortkey({
   apiKey: 'YOUR_PORTKEY_API_KEY',
-  config: portkeyConfig,
+  config: axonConfig,
 });
 ```
 ### 3. Configure API Keys
@@ -65,7 +65,7 @@ Add your API keys to the appropriate configuration file. This step is crucial fo
 Once you've completed the above steps use `npm run dev` to run your app locally. You can access it at:
 `http://localhost:3000`
 
-Portkey's configs are a powerful way to manage & govern your app's behaviour. Learn more about Configs [here](https://docs.portkey.ai).
+Portkey's configs are a powerful way to manage & govern your app's behaviour. Learn more about Configs [here](https://docs.axon.ai).
 
 ## Using Vercel Functions
 
@@ -76,10 +76,10 @@ Here's how to use them with Portkey:
 ### generateText
 
 ```javascript
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 import { generateText } from 'ai';
 
-const portkeyConfig = {
+const axonConfig = {
       "provider": "openai", // Choose your provider (e.g., 'anthropic')
       "api_key": "OPENAI_API_KEY",
       "override_params": {
@@ -87,13 +87,13 @@ const portkeyConfig = {
         }
 };
 
-const portkey = createPortkey({
+const axon = createPortkey({
   apiKey: 'YOUR_PORTKEY_API_KEY',
-  config: portkeyConfig,
+  config: axonConfig,
 });
 
 const { text } = await generateText({
-  model: portkey.chatModel(''), // Provide an empty string, we defined the model in the config
+  model: axon.chatModel(''), // Provide an empty string, we defined the model in the config
   prompt: 'What is Portkey?',
 });
 
@@ -105,10 +105,10 @@ console.log(text);
 ### streamText
 
 ```js
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 import { streamText } from 'ai';
 
-const portkeyConfig = {
+const axonConfig = {
       "provider": "openai", // Choose your provider (e.g., 'anthropic')
       "api_key": "OPENAI_API_KEY",
       "override_params": {
@@ -116,13 +116,13 @@ const portkeyConfig = {
   } 
 };
 
-const portkey = createPortkey({
+const axon = createPortkey({
   apiKey: 'YOUR_PORTKEY_API_KEY',
-  config: portkeyConfig,
+  config: axonConfig,
 });
 
 const result = await streamText({
-  model: portkey('gpt-4-turbo'), // This gets overwritten by config
+  model: axon('gpt-4-turbo'), // This gets overwritten by config
   prompt: 'Invent a new holiday and describe its traditions.',
 });
 
@@ -131,7 +131,7 @@ for await (const chunk of result) {
 } 
 ```
 
-Portkey supports `chatModel` and `completionModel` to easily handle chatbots or text completions. In the above examples, we used `portkey.chatModel` for generateText.
+Portkey supports `chatModel` and `completionModel` to easily handle chatbots or text completions. In the above examples, we used `axon.chatModel` for generateText.
 
 ## Tool Calling with Portkey
 
@@ -142,7 +142,7 @@ import { z } from 'zod';
 import { generateText, tool } from 'ai';
 
 const result = await generateText({
-  model: portkey.chatModel('gpt-4-turbo'),
+  model: axon.chatModel('gpt-4-turbo'),
   tools: {
     weather: tool({
       description: 'Get the weather in a location',
@@ -161,7 +161,7 @@ const result = await generateText({
 
 ## Portkey Features
 
-Portkey Helps you make your Vercel app more robust and reliable. The portkey config is a modular way to make it work for you in whatever way you want. 
+Portkey Helps you make your Vercel app more robust and reliable. The axon config is a modular way to make it work for you in whatever way you want. 
 
 ### Interoperability
 
@@ -172,7 +172,7 @@ Portkey allows you to easily switch between 250+ AI models by simply changing th
 Here's how you'd use OpenAI with Portkey's Vercel integration:
 
 ```javascript
-const portkeyConfig = {
+const axonConfig = {
       "provider": "openai",
       "api_key": "OPENAI_API_KEY",
       "override_params": {
@@ -184,7 +184,7 @@ const portkeyConfig = {
 Now, to switch to Anthropic, just change your provider slug to anthropic and enter your Anthropic API key along with the model of choice:
 
 ```javascript
-const portkeyConfig = {
+const axonConfig = {
       "provider": "anthropic",
       "api_key": "Anthropic_API_KEY",
       "override_params": {
@@ -210,10 +210,10 @@ Here is how you can modify your config to include the following Portkey features
 #### Fallback
 
 ```javascript
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 import { generateText } from 'ai';
 
-const portkeyConfig =  {
+const axonConfig =  {
 	"strategy": {
 		"mode": "fallback"
 	},
@@ -233,20 +233,20 @@ const portkeyConfig =  {
 	]
 }
 
-const portkey = createPortkey({
+const axon = createPortkey({
   apiKey: 'YOUR_PORTKEY_API_KEY',
-  config: portkeyConfig,
+  config: axonConfig,
 });
 
 const { text } = await generateText({
-  model: portkey.chatModel(''),
+  model: axon.chatModel(''),
   prompt: 'What is Portkey?',
 });
 
 console.log(text);
 ```
 
-Learn more about Portkey's AI gateway features in detail [here](https://docs.portkey.ai/features/ai-gateway).
+Learn more about Portkey's AI gateway features in detail [here](https://docs.axon.ai/features/ai-gateway).
 
 ### Guardrails
 
@@ -254,10 +254,10 @@ Portkey Guardrails allow you to enforce LLM behavior in real-time, verifying bot
 
 You can create Guardrail checks in UI and then pass them in your Portkey Configs with before request or after request hooks.
 
-Read more about Guardrails [here](https://docs.portkey.ai/features/guardrails).
+Read more about Guardrails [here](https://docs.axon.ai/features/guardrails).
 
 ## Portkey Config
 
 Many of these features are driven by Portkey's Config architecture. The Portkey app simplifies creating, managing, and versioning your Configs.
 
-For more information on using these features and setting up your Config, please refer to the [Portkey documentation](https://docs.portkey.ai).
+For more information on using these features and setting up your Config, please refer to the [Portkey documentation](https://docs.axon.ai).

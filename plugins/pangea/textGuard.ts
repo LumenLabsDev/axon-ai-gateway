@@ -46,7 +46,7 @@ export const handler: PluginHandler = async (
   const requestOptions = {
     headers: {
       'Content-Type': 'application/json',
-      'User-Agent': 'portkey-ai-plugin/' + VERSION,
+      'User-Agent': 'axon-ai-plugin/' + VERSION,
       Authorization: `Bearer ${parameters.credentials.apiKey}`,
     },
   };

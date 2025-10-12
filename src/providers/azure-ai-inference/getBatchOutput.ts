@@ -85,7 +85,7 @@ export const AzureAIInferenceGetBatchOutputRequestHandler = async ({
         }
       );
     }
-    const retrieveFileContentRequestURL = `https://api.portkey.ai/v1/files/${outputFileId}/content`; // construct the entire url instead of the path of sanity sake
+    const retrieveFileContentRequestURL = `https://api.axon.ai/v1/files/${outputFileId}/content`; // construct the entire url instead of the path of sanity sake
     const retrieveFileContentURL =
       baseUrl +
       AzureAIInferenceAPI.getEndpoint({

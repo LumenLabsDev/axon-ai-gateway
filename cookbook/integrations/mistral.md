@@ -5,16 +5,16 @@ Portkey helps bring Mistral's APIs to production with its observability suite & 
 3. **Continuous Improvement**: Collect and apply user feedback.
 
 ### 1.1 Setup & Logging
-1. Obtain your [**Portkey API Key**](https://app.portkey.ai/).
+1. Obtain your [**Portkey API Key**](https://app.axon.ai/).
 2. Set `$ export PORTKEY_API_KEY=PORTKEY_API_KEY`
 3. Set `$ export MISTRAL_API_KEY=MISTRAL_API_KEY`
-4. `pip install portkey-ai` or `npm i portkey-ai`
+4. `pip install axon-ai` or `npm i axon-ai`
 
 ```py
 """ OPENAI PYTHON SDK """
-from portkey_ai import Portkey
+from axon_ai import Portkey
 
-portkey = Portkey(
+axon = Portkey(
     api_key="PORTKEY_API_KEY",
     # ************************************
     provider="mistral-ai",
@@ -22,16 +22,16 @@ portkey = Portkey(
     # ************************************
 )
 
-response = portkey.chat.completions.create(
+response = axon.chat.completions.create(
     model="mistral-tiny",
     messages = [{ "role": "user", "content": "c'est la vie" }]
 )
 ```
 
 ```javascript
-import Portkey from 'portkey-ai';
+import Portkey from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
     apiKey: "PORTKEY_API_KEY",
     // ***********************************
     provider: "mistral-ai",
@@ -40,7 +40,7 @@ const portkey = new Portkey({
 })
 
 async function main(){
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
       model: "mistral-tiny",
       messages: [{ role: 'user', content: "c'est la vie" }]
   });
@@ -56,15 +56,15 @@ main()
 Just add their relevant headers to your request:
 
 ```py
-from portkey_ai import Portkey
+from axon_ai import Portkey
 
-portkey = Portkey(
+axon = Portkey(
     api_key="PORTKEY_API_KEY",
     provider="mistral-ai",
     Authorization="Bearer MISTRAL_API_KEY"
 )
 
-response = portkey.with_options(
+response = axon.with_options(
     # ************************************
     trace_id="ux5a7",
     metadata={"user": "john_doe"}
@@ -76,16 +76,16 @@ response = portkey.with_options(
 ```
 
 ```javascript
-import Portkey from 'portkey-ai';
+import Portkey from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
     apiKey: "PORTKEY_API_KEY",
     provider: "mistral-ai",
     Authorization: "Bearer MISTRAL_API_KEH"
 })
 
 async function main(){
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
       model: "mistral-tiny",
       messages: [{ role: 'user', content: "c'est la vie" }]
   },{
@@ -100,7 +100,7 @@ main()
 
 Here’s how your logs will appear on your Portkey dashboard:
 
-<img src="https://portkey.ai/blog/content/images/2023/11/logsgif.gif" />
+<img src="https://axon.ai/blog/content/images/2023/11/logsgif.gif" />
 
 ### 2. Caching, Fallbacks, Load Balancing
 * **Fallbacks**: Ensure your application remains functional even if a primary service fails.
@@ -131,25 +131,25 @@ Now, just set the Config ID while instantiating Portkey:
 
 ```py
 """ OPENAI PYTHON SDK """
-from portkey_ai import Portkey
+from axon_ai import Portkey
 
-portkey = Portkey(
+axon = Portkey(
     api_key="PORTKEY_API_KEY",
     # ************************************
     config="pp-mistral-cache-xx"
     # ************************************
 )
 
-response = portkey.chat.completions.create(
+response = axon.chat.completions.create(
     model="mistral-tiny",
     messages = [{ "role": "user", "content": "c'est la vie" }]
 )
 ```
 
 ```javascript
-import Portkey from 'portkey-ai';
+import Portkey from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
     apiKey: "PORTKEY_API_KEY",
     // ***********************************
     config: "pp-mistral-cache-xx"
@@ -157,7 +157,7 @@ const portkey = new Portkey({
 })
 
 async function main(){
-  const response = await portkey.chat.completions.create({
+  const response = await axon.chat.completions.create({
       model: "mistral-tiny",
       messages: [{ role: 'user', content: "c'est la vie" }]
   });
@@ -166,20 +166,20 @@ async function main(){
 main()
 ```
 
-For more on Configs and other gateway feature like Load Balancing, [check out the docs.](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations)
+For more on Configs and other gateway feature like Load Balancing, [check out the docs.](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations)
 
 ### 3. Collect Feedback
 Gather weighted feedback from users and improve your app:
 
 ```py
-from portkey import Portkey
+from axon import Portkey
 
-portkey = Portkey(
+axon = Portkey(
     api_key="PORTKEY_API_KEY"
 )
 
 def send_feedback():
-    portkey.feedback.create(
+    axon.feedback.create(
         'trace_id'= 'REQUEST_TRACE_ID',
         'value'= 0  # For thumbs down
     )
@@ -188,14 +188,14 @@ send_feedback()
 ```
 
 ```javascript
-import Portkey from 'portkey-ai';
+import Portkey from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
     apiKey: "PORTKEY_API_KEY"
 });
 
 const sendFeedback = async () => {
-    await portkey.feedback.create({
+    await axon.feedback.create({
         traceID: "REQUEST_TRACE_ID",
         value: 1  // For thumbs up
     });
@@ -207,4 +207,4 @@ await sendFeedback();
 
 Integrating Portkey with Mistral helps you build resilient LLM apps from the get-go. With features like semantic caching, observability, load balancing, feedback, and fallbacks, you can ensure optimal performance and continuous improvement.
 
-[Read full Portkey docs here.](https://portkey.ai/docs/) | [Reach out to the Portkey team.](https://discord.gg/sDk9JaNfK8)
+[Read full Portkey docs here.](https://axon.ai/docs/) | [Reach out to the Portkey team.](https://discord.gg/sDk9JaNfK8)

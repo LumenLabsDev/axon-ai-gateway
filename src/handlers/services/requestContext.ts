@@ -12,12 +12,15 @@ import { HEADER_KEYS, RETRY_STATUS_CODES } from '../../globals';
 import { HookObject } from '../../middlewares/hooks/types';
 import { HooksManager } from '../../middlewares/hooks';
 import { transformToProviderRequest } from '../../services/transformToProviderRequest';
+import { getHooksForContext } from '../../services/guardrailService';
 
 export class RequestContext {
   private _params: Params | null = null;
   private _transformedRequestBody: any;
   public readonly providerOption: Options;
   private _requestURL: string = ''; // Is set at the beginning of tryPost()
+  private _dbGuardrails: { beforeRequestHooks: HookObject[]; afterRequestHooks: HookObject[] } | null = null;
+  private _dbGuardrailsLoaded = false;
 
   constructor(
     public readonly honoContext: Context,
@@ -34,6 +37,29 @@ export class RequestContext {
   ) {
     this.providerOption = providerOption;
     this.providerOption.retry = this.normalizeRetryConfig(providerOption.retry);
+    // Load database guardrails asynchronously
+    this.loadDatabaseGuardrails();
+  }
+  
+  private async loadDatabaseGuardrails() {
+    if (this._dbGuardrailsLoaded) return;
+    
+    try {
+      const workspace = this.honoContext.get('workspace');
+      const apiKey = this.honoContext.get('apiKey');
+      
+      if (workspace) {
+        this._dbGuardrails = await getHooksForContext(
+          workspace.id,
+          apiKey?.id
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load database guardrails:', error);
+      this._dbGuardrails = { beforeRequestHooks: [], afterRequestHooks: [] };
+    }
+    
+    this._dbGuardrailsLoaded = true;
   }
 
   get requestURL(): string {
@@ -185,6 +211,7 @@ export class RequestContext {
     return [
       ...(this.providerOption?.beforeRequestHooks || []),
       ...(this.providerOption?.defaultInputGuardrails || []),
+      ...(this._dbGuardrails?.beforeRequestHooks || []),
     ];
   }
 
@@ -192,6 +219,7 @@ export class RequestContext {
     return [
       ...(this.providerOption?.afterRequestHooks || []),
       ...(this.providerOption?.defaultOutputGuardrails || []),
+      ...(this._dbGuardrails?.afterRequestHooks || []),
     ];
   }
 

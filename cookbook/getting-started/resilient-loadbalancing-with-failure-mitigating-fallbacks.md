@@ -8,22 +8,22 @@ This cookbook will teach you how to utilize Portkey to distribute traffic across
 
 <span style="text-decoration:underline;">Prerequisites:</span>
 
-You should have the [Portkey API Key](https://portkey.ai/docs/api-reference/authentication#obtaining-your-api-key). Please sign up to obtain it. Additionally, you should have stored the OpenAI, Azure OpenAI, and Anthropic details in the [Portkey vault](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+You should have the [Portkey API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key). Please sign up to obtain it. Additionally, you should have stored the OpenAI, Azure OpenAI, and Anthropic details in the [Portkey vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
 ## 1. Import the SDK and authenticate Portkey
 
-Start by installing the `portkey-ai` to your NodeJS project.
+Start by installing the `axon-ai` to your NodeJS project.
 
 ```sh
-npm i --save portkey-ai
+npm i --save axon-ai
 ```
 
 Once installed, you can import it and instantiate it with the API key to your Portkey account.
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env['PORTKEYAI_API_KEY']
 });
 ```
@@ -33,7 +33,7 @@ const portkey = new Portkey({
 Portkey acts as AI gateway to all of your requests to LLMs. It follows the OpenAI SDK signature in all of it’s methods and interfaces making it easy to use and switch. Here is an example of an chat completions requests through Portkey.
 
 ```js
-const response = await portkey.chat.completions.create({
+const response = await axon.chat.completions.create({
   messages,
   model: 'gpt-3.5-turbo'
 });
@@ -76,7 +76,7 @@ const config = {
   ]
 };
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env['PORTKEYAI_API_KEY'],
   config // pass configs as argument
 });
@@ -86,7 +86,7 @@ We apply the `loadbalance` strategy across _Anthropic and OpenAI._ `weight` desc
 
 Let’s take this a step further to apply a fallback mechanism for the requests from* OpenAI* to fallback to _Azure OpenAI_. This nested mechanism among the `targets` will ensure our app is reliable in the production in great confidence.
 
-See the documentation for Portkey [Fallbacks](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks) and [Loadbalancing](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing).
+See the documentation for Portkey [Fallbacks](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks) and [Loadbalancing](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing).
 
 ## 3. Make a Request
 
@@ -104,7 +104,7 @@ const messages = [
   }
 ];
 
-const response = await portkey.chat.completions.create({
+const response = await axon.chat.completions.create({
   messages,
   model: 'gpt-3.5-turbo'
 });
@@ -120,7 +120,7 @@ Next, we will examine how to identify load-balanced requests or those that have 
 It can be challenging to identify particular requests from the thousands that are received every day, similar to trying to find a needle in a haystack. However, Portkey offers a solution by enabling us to attach a desired trace ID. Here `request-loadbalance-fallback`.
 
 ```js
-const response = await portkey.chat.completions.create(
+const response = await axon.chat.completions.create(
   {
     messages,
     model: 'gpt-3.5-turbo'
@@ -137,7 +137,7 @@ This trace ID can be used to filter requests from the Portkey Dashboard (>Logs) 
 
 In addition to activating Loadbalance (icon), the logs provide essential observability information, including tokens, cost, and model.
 
-Are the configs growing and becoming harder to manage in the code? [Try creating them from Portkey UI](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/configs#creating-configs) and reference the configs ID in your code. It will make it significantly easier to maintain.
+Are the configs growing and becoming harder to manage in the code? [Try creating them from Portkey UI](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/configs#creating-configs) and reference the configs ID in your code. It will make it significantly easier to maintain.
 
 ## 5. Advanced: Canary Testing
 
@@ -165,12 +165,12 @@ const config = {
   ]
 };
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env['PORTKEYAI_API_KEY'],
   config
 });
 
-const response = await portkey.chat.completions.create(
+const response = await axon.chat.completions.create(
   {
     messages,
     model: 'gpt-3.5-turbo'
@@ -201,7 +201,7 @@ Happy Coding!
 <summary>See the entire code</summary>
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
 const config = {
   strategy: {
@@ -233,7 +233,7 @@ const config = {
   ]
 };
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env['PORTKEYAI_API_KEY'],
   config
 });
@@ -249,7 +249,7 @@ const messages = [
   }
 ];
 
-const response = await portkey.chat.completions.create(
+const response = await axon.chat.completions.create(
   {
     messages,
     model: 'gpt-3.5-turbo'

@@ -1,0 +1,39 @@
+---
+description: Source structure, entrypoints, and handlers
+globs:
+  - "src/**/*"
+alwaysApply: true
+---
+
+- Entrypoints
+  - Prefer `src/start-server.ts` for the HTTP/worker entry. Keep it lightweight.
+  - `src/index.ts` should export library-level constructs and types, not boot code.
+
+- Handlers
+  - Store HTTP route logic in `src/handlers/**`. Keep small and composable.
+  - Validate input early; convert to internal types. Return typed results.
+  - Streaming endpoints should surface AbortSignal and backpressure-friendly APIs.
+
+- Middlewares
+  - Place cross-cutting concerns in `src/middlewares/**` (auth, rate limit, logging, cache, guardrails).
+  - Keep middleware pure with explicit dependencies via parameters.
+
+- Services
+  - `src/services/**` hosts orchestration and provider composition logic.
+  - Avoid circular deps. Depend downwards: handlers → services → providers.
+
+- Providers
+  - `src/providers/**` are adapters. Map to internal types; isolate provider quirks.
+
+- Types and utils
+  - `src/types/**` for shared types. `src/utils.ts` and `src/utils/**` for pure utilities.
+
+@src/start-server.ts
+@src/index.ts
+@src/handlers/**
+@src/middlewares/**
+@src/services/**
+@src/providers/**
+@src/types/**
+@src/utils/**
+

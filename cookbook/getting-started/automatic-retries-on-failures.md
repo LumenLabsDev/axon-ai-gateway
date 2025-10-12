@@ -18,21 +18,21 @@ Portkey forwards your requests to your desired model and relays the response to 
 To install it, type the following in your NodeJS environment:
 
 ```sh
-npm install portkey-ai
+npm install axon-ai
 ```
 
 Import `Portkey` and instantiate it using the Portkey API Key
 
 ```js
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxrk',
   virtualKey: 'maixxx4d'
 });
 ```
 
-At this point, it’s essential to understand that you instantiate the `portkey` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Portkey Dashboard.
+At this point, it’s essential to understand that you instantiate the `axon` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Portkey Dashboard.
 
-Visit the reference to [obtain the Portkey API key](https://portkey.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+Visit the reference to [obtain the Portkey API key](https://axon.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 ## 2. Gateway Configs to Automatically Retry
 
@@ -51,14 +51,14 @@ A typical Gateway Config to automatically retry three times when you hit rate-li
 
 You created a `retry` object with `attempts` and `on_status_codes` keys. The value of `attempts` can be bumped up to `5` times to retry automatically, while `on_status_codes` is an optional key. By default, Portkey will attempt to retry on the status codes `[429, 500, 502, 503, 504]`.
 
-Refer to the [101 on Gateway Configs](https://github.com/Portkey-AI/portkey-cookbook/blob/main/product/101-portkey-gateway-configs.md#a-reference-gateway-configs-from-the-ui) and [Automatic Retries](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries).
+Refer to the [101 on Gateway Configs](https://github.com/Portkey-AI/axon-cookbook/blob/main/product/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui) and [Automatic Retries](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/automatic-retries).
 
 ## 3. Make API calls using Portkey Client SDK
 
 You are now ready to make an API call through Portkey. While there are several ways to make API calls, in this cookbook, let’s pass the gateway configuration during the chat completion call.
 
 ```js
-let response = await portkey.chat.completions.create(
+let response = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [
@@ -84,7 +84,7 @@ console.log(response.choices[0].message.content);
 The Portkey SDK adds the configs in the HTTP headers to apply automatic retries to our requests. Broadly, the signature of the chat completion method:
 
 ```js
-await portkey.chat.completions.create( modelParmeters [, gatewayConfigs])
+await axon.chat.completions.create( modelParmeters [, gatewayConfigs])
 ```
 
 ## 4. View the Logs
@@ -100,14 +100,14 @@ Instead of using your own application-level looping or control structures to imp
 <summary>See the full code</summary>
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: xxxx,
   virtualKey: 'xaixxxxxxx2xx4d'
 });
 
-let response = await portkey.chat.completions.create(
+let response = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [

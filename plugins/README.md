@@ -1,7 +1,7 @@
 # Portkey Gateway Plugins
 
 ## Table of Contents
-- [Portkey Gateway Plugins](#portkey-gateway-plugins)
+- [Portkey Gateway Plugins](#axon-gateway-plugins)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [What are Plugins?](#what-are-plugins)

@@ -1,4 +1,4 @@
-import retry from 'async-retry';
+import retry from '@lumenlabs-dev/fast-async-retry';
 import { MAX_RETRY_LIMIT_MS, POSSIBLE_RETRY_STATUS_HEADERS } from '../globals';
 
 async function fetchWithTimeout(

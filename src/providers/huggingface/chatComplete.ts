@@ -103,7 +103,7 @@ export const HuggingfaceChatCompleteResponseTransform: (
   if ('choices' in response) {
     return {
       ...response,
-      id: 'portkey-' + crypto.randomUUID(),
+      id: 'axon-' + crypto.randomUUID(),
       provider: HUGGING_FACE,
     };
   }
@@ -128,7 +128,7 @@ export const HuggingfaceChatCompleteStreamChunkTransform: (
   return (
     `data: ${JSON.stringify({
       ...parsedChunk,
-      id: 'portkey-' + crypto.randomUUID(),
+      id: 'axon-' + crypto.randomUUID(),
       provider: HUGGING_FACE,
     })}` + '\n\n'
   );

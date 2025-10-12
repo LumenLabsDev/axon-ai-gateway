@@ -8,6 +8,8 @@ import { Context } from 'hono';
 import { createNodeWebSocket } from '@hono/node-ws';
 import { realTimeHandlerNode } from './handlers/realtimeHandlerNode';
 import { requestValidator } from './middlewares/requestValidator';
+import { initializeDatabase, closeDatabase } from './db';
+import { cleanupOldRecords } from './services/rateLimitService';
 
 // Extract the port number from the command line arguments
 const defaultPort = 8787;
@@ -143,6 +145,34 @@ app.get(
   upgradeWebSocket(realTimeHandlerNode)
 );
 
+// Initialize database before starting the server
+await initializeDatabase();
+
+// Run initial cleanup
+await cleanupOldRecords();
+
+// Schedule periodic cleanup (every hour)
+const cleanupInterval = setInterval(async () => {
+  await cleanupOldRecords();
+}, 60 * 60 * 1000); // 1 hour
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  const timestamp = new Date().toISOString();
+  console.log(`\n[${timestamp}] [Server] [INFO] SIGTERM received, shutting down gracefully`);
+  clearInterval(cleanupInterval);
+  closeDatabase();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  const timestamp = new Date().toISOString();
+  console.log(`\n[${timestamp}] [Server] [INFO] SIGINT received, shutting down gracefully`);
+  clearInterval(cleanupInterval);
+  closeDatabase();
+  process.exit(0);
+});
+
 const server = serve({
   fetch: app.fetch,
   port: port,
@@ -184,7 +214,7 @@ console.log('   ' + '\x1b[1;4;32m%s\x1b[0m', `${url}`);
 if (!isHeadless) {
   console.log('\n\x1b[90m📱 UI:\x1b[0m \x1b[36m%s\x1b[0m', `${url}/public/`);
 }
-// console.log('\x1b[90m📚 Docs:\x1b[0m \x1b[36m%s\x1b[0m', 'https://portkey.ai/docs');
+// console.log('\x1b[90m📚 Docs:\x1b[0m \x1b[36m%s\x1b[0m', 'https://axon.ai/docs');
 
 // Single-line ready message
 console.log('\n\x1b[32m✨ Ready for connections!\x1b[0m');

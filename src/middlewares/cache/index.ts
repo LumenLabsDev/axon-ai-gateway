@@ -35,7 +35,7 @@ export const getFromCache = async (
   cacheMode: string,
   cacheMaxAge: number | null
 ) => {
-  if ('x-portkey-cache-force-refresh' in requestHeaders) {
+  if ('x-axon-cache-force-refresh' in requestHeaders) {
     return [null, CACHE_STATUS.REFRESH, null];
   }
   try {

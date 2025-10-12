@@ -13,14 +13,14 @@ Let’s get started
 Start by importing Portkey SDK into your NodeJS project using npm and authenticate by passing the Portkey API Key.
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: process.env.PORTKEYAI_API_KEY
 });
 ```
 
-You are now ready to access methods on `portkey` instance to trigger a prompt completions API.
+You are now ready to access methods on `axon` instance to trigger a prompt completions API.
 
 ## 2. The Limitation with the Traditional Fallbacks
 
@@ -95,7 +95,7 @@ Now, create another prompt template that can act as a fallback.
 
 You can create the same prompt this time but use a different model, such as `gpt-4`. You have created two prompt templates by now. You must have noticed each prompt has a slightly different `system` message based on the model. After experimenting with each model, the above prompt was best suited for suggesting actionable steps to reach the goal.
 
-The models on this page require you to save OpenAI and Anthropic API keys to the Portkey Vault. For more information about Portkey Vault, [read more on Virtual Keys](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+The models on this page require you to save OpenAI and Anthropic API keys to the Portkey Vault. For more information about Portkey Vault, [read more on Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 For further exploration, [Try learning about OpenAI SDK to work with Prompt Templates](../ai-gateway/).
 
@@ -124,7 +124,7 @@ The `targets` is an array of objects ordered by preference in favor of _Anthropi
 Pass these `config`s at instance creation from Portkey
 
 ```js
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: PORTKEY_API_KEY,
   config: {
     strategy: {
@@ -142,16 +142,16 @@ const portkey = new Portkey({
 });
 ```
 
-With this step done, moving forward the methods on `portkey` will have the context of above gateway configs for every request sent through portkey.
+With this step done, moving forward the methods on `axon` will have the context of above gateway configs for every request sent through axon.
 
-Read more about different [ways to work with Gateway Configs](../product/101-portkey-gateway-configs.md).
+Read more about different [ways to work with Gateway Configs](../product/101-axon-gateway-configs.md).
 
 ## Trigger Prompt Completions to Activate Smart Fallbacks
 
 The prompt templates are prepared to be triggered while the Portkey client SDK waits to trigger the prompt completions API.
 
 ```js
-const response = await portkey.prompts.completions.create({
+const response = await axon.prompts.completions.create({
   promptID: 'pp-test-811461',
   variables: { goal: 'I want to acquire an AI engineering skills' }
 });
@@ -163,7 +163,7 @@ The `promptID` invokes the prompt template you want to trigger on a prompt compl
 
 Notice how `variables` hold the information to be substituted in the prompt templates at runtime. Also, even when the `promptID` is valid, the gateway configs will be respected in precedence.
 
-See the [reference](https://portkey.ai/docs/api-reference/prompts/prompt-completion) to learn more.
+See the [reference](https://axon.ai/docs/api-reference/prompts/prompt-completion) to learn more.
 
 ## View Fallback status in the Logs
 
@@ -173,7 +173,7 @@ Here is a screenshot of a log:
 
 ![alt text](./images/smart-fallback-with-model-optimized-prompts/3-smart-fallback-with-model-optimized-prompts.png)
 
-[Refer to the Logs documentation](https://portkey.ai/docs/product/observability-modern-monitoring-for-llms/logs).
+[Refer to the Logs documentation](https://axon.ai/docs/product/observability-modern-monitoring-for-llms/logs).
 
 Great job! You learned how to create prompt templates in Portkey and set up fallbacks for thousands of requests from your app, all with just a few lines of code.
 
@@ -184,7 +184,7 @@ Loadbalancing can split the volume of requests to both prompts separately, respe
 Here is how you can update the gateway configs:
 
 ```js
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: PORTKEY_API_KEY,
   config: {
     strategy: {
@@ -213,11 +213,11 @@ Happy Coding!
 See the full code:
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
 const PORTKEY_API_KEY = 'xssxxrk';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: PORTKEY_API_KEY,
   config: {
     strategy: {
@@ -234,7 +234,7 @@ const portkey = new Portkey({
   }
 });
 
-const response = await portkey.prompts.completions.create({
+const response = await axon.prompts.completions.create({
   promptID: 'pp-test-811461',
   variables: { goal: 'I want to acquire an AI engineering skills' }
 });

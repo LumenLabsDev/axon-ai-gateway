@@ -129,7 +129,7 @@ describe.skip('tryPost-provider-specific', () => {
       .provider('azure-openai')
       .apiKey(creds.azure.apiKey)
       .providerHeaders({
-        resource_name: 'portkey',
+        resource_name: 'axon',
         deployment_id: 'turbo-16k',
         api_version: '2023-03-15-preview',
       }).options;
@@ -221,7 +221,7 @@ describe('tryPost-error-handling', () => {
     const response = await fetch(url, options);
     const data: any = await response.json();
 
-    expect(response.headers.get('x-portkey-retry-attempt-count')).toBe('-1');
+    expect(response.headers.get('x-axon-retry-attempt-count')).toBe('-1');
 
     expect(response.status).toBe(401);
     expect(data.error.message).toMatch(/invalid/i);
@@ -429,7 +429,7 @@ describe('tryPost-hooks-and-guardrails', () => {
     const data: any = await response.json();
 
     expect(response.status).toBe(446);
-    expect(response.headers.get('x-portkey-retry-attempt-count')).toBe('-1');
+    expect(response.headers.get('x-axon-retry-attempt-count')).toBe('-1');
     expect(data.hook_results.after_request_hooks[0].checks[0]).toBeDefined();
   });
 
@@ -476,7 +476,7 @@ describe('tryPost-caching', () => {
     const nonCachedData: any = await nonCachedResponse.json();
 
     expect(nonCachedResponse.status).toBe(200);
-    expect(nonCachedResponse.headers.get('x-portkey-cache-status')).toBe(
+    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe(
       'MISS'
     );
 
@@ -485,7 +485,7 @@ describe('tryPost-caching', () => {
     const data: any = await response.json();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('x-portkey-cache-status')).toBe('HIT');
+    expect(response.headers.get('x-axon-cache-status')).toBe('HIT');
     expect(data.choices[0].message.content).toBeDefined();
   });
 
@@ -505,7 +505,7 @@ describe('tryPost-caching', () => {
 
     const response = await fetch(url, options);
 
-    expect(response.headers.get('x-portkey-cache-status')).toBe('DISABLED');
+    expect(response.headers.get('x-axon-cache-status')).toBe('DISABLED');
   });
 
   it('should respect cache TTL when configured', async () => {
@@ -527,7 +527,7 @@ describe('tryPost-caching', () => {
     const response1 = await fetch(url, options);
     const data1: any = await response1.json();
 
-    expect(response1.headers.get('x-portkey-cache-status')).toBe('HIT');
+    expect(response1.headers.get('x-axon-cache-status')).toBe('HIT');
 
     // Wait 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -537,7 +537,7 @@ describe('tryPost-caching', () => {
     const data2: any = await response2.json();
 
     expect(response2.status).toBe(200);
-    expect(response2.headers.get('x-portkey-cache-status')).toBe('MISS');
+    expect(response2.headers.get('x-axon-cache-status')).toBe('MISS');
     expect(data2.choices[0].message.content).toBeDefined();
   });
 
@@ -559,7 +559,7 @@ describe('tryPost-caching', () => {
     expect(nonCachedResponse.body).toBeInstanceOf(ReadableStream);
 
     expect(nonCachedResponse.status).toBe(200);
-    expect(nonCachedResponse.headers.get('x-portkey-cache-status')).toBe(
+    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe(
       'MISS'
     );
 
@@ -569,6 +569,6 @@ describe('tryPost-caching', () => {
     expect(response.body).toBeInstanceOf(ReadableStream);
 
     expect(response.status).toBe(200);
-    expect(response.headers.get('x-portkey-cache-status')).toBe('HIT');
+    expect(response.headers.get('x-axon-cache-status')).toBe('HIT');
   });
 });

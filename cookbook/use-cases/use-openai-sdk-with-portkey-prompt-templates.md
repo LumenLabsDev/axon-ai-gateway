@@ -10,7 +10,7 @@ Portkey's quick playground enables you to experiment with various LLM providers.
 
 To do this:
 
-1. Go to **www.portkey.ai**
+1. Go to **www.axon.ai**
 2. Opens a Dashboard
    1. Click on **Prompts** and then the **Create** button.
 3. You are now on Prompt Playground.
@@ -38,9 +38,9 @@ Next up, let’s see how to use the created prompt template to generate chat com
 
 Fire up your code editor and import the request client, `axios`. This will allow you to POST to the Portkey's render endpoint and retrieve prompt details that can be used with OpenAI SDK.
 
-We will use `axios` to make a `POST` call to `/prompts/${PROMPT_ID}/render` endpoint along with headers (includes [Portkey API Key](https://portkey.ai/docs/api-reference/authentication#obtaining-your-api-key)) and body that includes the prompt variables required in the prompt template.
+We will use `axios` to make a `POST` call to `/prompts/${PROMPT_ID}/render` endpoint along with headers (includes [Portkey API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)) and body that includes the prompt variables required in the prompt template.
 
-For more information about Render API, refer to the [docs](https://portkey.ai/docs/api-reference/prompts/render).
+For more information about Render API, refer to the [docs](https://axon.ai/docs/api-reference/prompts/render).
 
 ```js
 import axios from 'axios';
@@ -48,11 +48,11 @@ import axios from 'axios';
 const PROMPT_ID = '<prompt-id>';
 const PORTKEYAI_API_KEY = '<api_key>';
 
-const url = `https://api.portkey.ai/v1/prompts/${PROMPT_ID}/render`;
+const url = `https://api.axon.ai/v1/prompts/${PROMPT_ID}/render`;
 
 const headers = {
   'Content-Type': 'application/json',
-  'x-portkey-api-key': PORTKEYAI_API_KEY
+  'x-axon-api-key': PORTKEYAI_API_KEY
 };
 
 const data = {
@@ -95,7 +95,7 @@ Let’s import the necessary libraries and create a client instance from the Ope
 
 ```js
 import OpenAI from 'openai';
-import { createHeaders, PORTKEY_GATEWAY_URL } from 'portkey-ai';
+import { createHeaders, PORTKEY_GATEWAY_URL } from 'axon-ai';
 
 const client = new OpenAI({
   apiKey: 'USES_VIRTUAL_KEY',
@@ -108,7 +108,7 @@ const client = new OpenAI({
 });
 ```
 
-We are importing `portkey-ai` to use its utilities to change the base URL and the default headers. If you are wondering what virtual keys are, refer to [Portkey Vault documentation](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+We are importing `axon-ai` to use its utilities to change the base URL and the default headers. If you are wondering what virtual keys are, refer to [Portkey Vault documentation](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
 The prompt details we retrieved are passed as an argument to the chat completions creation method.
 
@@ -142,7 +142,7 @@ In the heart of a bustling city, lived an eccentric cat named Tom and a witty li
 The official Portkey Client SDK has a prompts completions method that is similar to chat completions’ OpenAI signature. You can invoke a prompt template just by passing arguments to `promptID` and `variables` parameters.
 
 ```js
-const promptCompletion = await portkey.prompts.completions.create({
+const promptCompletion = await axon.prompts.completions.create({
   promptID: 'Your Prompt ID',
   variables: {
     topic: 'Tom and Jerry'
@@ -164,17 +164,17 @@ We can use this approach to focus on improving prompt quality with all the LLMs 
 ```js
 import axios from 'axios';
 import OpenAI from 'openai';
-import { createHeaders, PORTKEY_GATEWAY_URL } from 'portkey-ai';
+import { createHeaders, PORTKEY_GATEWAY_URL } from 'axon-ai';
 
 const PROMPT_ID = 'xxxxxx';
 const PORTKEYAI_API_KEY = 'xxxxx';
 const OPENAI_VIRTUAL_KEY = 'xxxx';
 
-const url = `https://api.portkey.ai/v1/prompts/${PROMPT_ID}/render`;
+const url = `https://api.axon.ai/v1/prompts/${PROMPT_ID}/render`;
 
 const headers = {
   'Content-Type': 'application/json',
-  'x-portkey-api-key': PORTKEYAI_API_KEY
+  'x-axon-api-key': PORTKEYAI_API_KEY
 };
 
 const client = new OpenAI({

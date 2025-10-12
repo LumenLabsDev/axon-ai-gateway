@@ -34,7 +34,7 @@ const getValue = (configParam: string, params: Params, paramConfig: any) => {
   }
 
   if (
-    value === 'portkey-default' &&
+    value === 'axon-default' &&
     paramConfig &&
     paramConfig.default !== undefined
   ) {

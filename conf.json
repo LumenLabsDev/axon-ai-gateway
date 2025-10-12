@@ -1,7 +1,7 @@
 {
   "plugins_enabled": [
     "default",
-    "portkey",
+    "axon",
     "aporia",
     "sydelabs",
     "pillar",
@@ -12,7 +12,7 @@
     "walledai"
   ],
   "credentials": {
-    "portkey": {
+    "axon": {
       "apiKey": "..."
     }
   },

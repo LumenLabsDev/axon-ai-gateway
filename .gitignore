@@ -143,3 +143,11 @@ plugins/**/.creds.json
 plugins/**/creds.json
 plugins/**/.parameters.json
 src/handlers/tests/.creds.json
+
+# Database files
+data/
+*.db
+*.db-shm
+*.db-wal
+
+node_modules_bak/

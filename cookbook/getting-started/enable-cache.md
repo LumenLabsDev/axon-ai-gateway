@@ -8,7 +8,7 @@ To avoid such unnecessary LLM requests, you can use Portkey as your first line o
 
 All requests that have caching enabled on them will serve the subsequent responses from the Portkey’s cache.
 
-![prevent-unnecessary-llm-requests-with-the-portkey-cache](../../docs/images/cookbooks/cache-1.png)
+![prevent-unnecessary-llm-requests-with-the-axon-cache](../../docs/images/cookbooks/cache-1.png)
 
 Portkey offers two main ways of Caching techniques to enable on your requests — Simple and Semantic.
 
@@ -17,7 +17,7 @@ In short:
 - Simple caching refers for identical input prompts to serve from cache.
 - Semantic caching refers to an similarity threshold (uses cosine similarity) to serve from cache.
 
-For detailed information, check out [this](https://portkey.ai/blog/reducing-llm-costs-and-latency-semantic-cache/) blog post.
+For detailed information, check out [this](https://axon.ai/blog/reducing-llm-costs-and-latency-semantic-cache/) blog post.
 
 ## 1. Import and Authenticate Portkey Client SDK
 
@@ -28,21 +28,21 @@ Let's utilize the Portkey Client SDK to send chat completion requests and attach
 To install it, type the following in your NodeJS environment:
 
 ```sh
-npm install portkey-ai
+npm install axon-ai
 ```
 
 Instantiate Portkey instance
 
 ```js
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxrk',
   virtualKey: 'maixxx4d'
 });
 ```
 
-At this point, it’s essential to understand that you instantiate the `portkey` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Portkey Dashboard.
+At this point, it’s essential to understand that you instantiate the `axon` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Portkey Dashboard.
 
-Visit the reference to [obtain the Portkey API key](https://portkey.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+Visit the reference to [obtain the Portkey API key](https://axon.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 ## 2. Use Gateway Configs to enable Caching
 
@@ -59,7 +59,7 @@ The `mode` key specifies the desired strategy of caching you want for your app.
 
 ```
 
-Next up, attach these configs to the request using Portkey SDK. The SDK accepts an `config` parameter that can accept these configurations as an argument. To learn about more ways, refer to the [101 on Gateway Configs](https://github.com/Portkey-AI/portkey-cookbook/blob/main/product/101-portkey-gateway-configs.md#a-reference-gateway-configs-from-the-ui).
+Next up, attach these configs to the request using Portkey SDK. The SDK accepts an `config` parameter that can accept these configurations as an argument. To learn about more ways, refer to the [101 on Gateway Configs](https://github.com/Portkey-AI/axon-cookbook/blob/main/product/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui).
 
 ## 3. Make API calls, Serve from Cache
 
@@ -67,7 +67,7 @@ We are now ready to put what we’ve learned so far into action. We plan on maki
 
 ```js
 // Simple Cache
-let simpleCacheResponse = await portkey.chat.completions.create(
+let simpleCacheResponse = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [
@@ -92,7 +92,7 @@ console.log('Simple Cached Response:\n', simpleCacheResponse.choices[0].message.
 Whereas for semantic caching,
 
 ```js
-let semanticCacheResponse = await portkey.chat.completions.create(
+let semanticCacheResponse = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [
@@ -140,7 +140,7 @@ Can you refresh the cache on demand? Yes, you can!
 
 Can you control how long the cache remains active? Absolutely!
 
-Explore the [docs](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic) on caching to know all the features available to control how you cache the LLM responses.
+Explore the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic) on caching to know all the features available to control how you cache the LLM responses.
 
 ## 4. View Analytics and Logs
 
@@ -158,22 +158,22 @@ By leveraging simple and semantic caching, you can avoid unnecessary LLM request
 
 Some suggestions to experiment:
 
-- Try using the configs from the [Portkey UI](https://github.com/Portkey-AI/portkey-cookbook/blob/main/ai-gateway/101-portkey-gateway-configs.md#a-reference-gateway-configs-from-the-ui) as a reference.
+- Try using the configs from the [Portkey UI](https://github.com/Portkey-AI/axon-cookbook/blob/main/ai-gateway/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui) as a reference.
 
-- Implement caching when there are [multiple targets](https://github.com/Portkey-AI/portkey-cookbook/blob/main/ai-gateway/how-to-setup-fallback-from-openai-to-azure-openai.md#2-creating-fallback-configs) in your gateway configs. (Here’s a [clue](https://portkey.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic#how-cache-works-with-configs))
+- Implement caching when there are [multiple targets](https://github.com/Portkey-AI/axon-cookbook/blob/main/ai-gateway/how-to-setup-fallback-from-openai-to-azure-openai.md#2-creating-fallback-configs) in your gateway configs. (Here’s a [clue](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic#how-cache-works-with-configs))
 
 <details>
 <summary>See the full code</summary>
 
 ```js
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 
-const portkey = new Portkey({
+const axon = new Portkey({
   apiKey: 'xxxxxk',
   virtualKey: 'mxxxxxxxxd'
 });
 
-let simpleCacheResponse = await portkey.chat.completions.create(
+let simpleCacheResponse = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [
@@ -194,7 +194,7 @@ let simpleCacheResponse = await portkey.chat.completions.create(
 
 console.log('Simple Cached Response:\n', simpleCacheResponse.choices[0].message.content);
 
-let semanticCacheResponse = await portkey.chat.completions.create(
+let semanticCacheResponse = await axon.chat.completions.create(
   {
     model: 'gpt-4',
     messages: [

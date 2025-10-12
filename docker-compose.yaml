@@ -3,5 +3,5 @@ services:
   web:
     ports:
       - "8787:8787"
-    image: "portkeyai/gateway:latest"
+    image: "axonai/gateway:latest"
     restart: always

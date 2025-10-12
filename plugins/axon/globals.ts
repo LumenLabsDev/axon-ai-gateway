@@ -2,7 +2,7 @@ import { getRuntimeKey } from 'hono/adapter';
 import { post, postWithCloudflareServiceBinding } from '../utils';
 import { PluginParameters } from '../types';
 
-export const BASE_URL = 'https://api.portkey.ai/v1/execute-guardrails';
+export const BASE_URL = 'https://api.axon.ai/v1/execute-guardrails';
 
 export const PORTKEY_ENDPOINTS = {
   MODERATIONS: '/moderations',
@@ -73,7 +73,7 @@ export const fetchPortkey = async (
 ): Promise<{ response: PIIResponse[]; log: LogObject }> => {
   const options = {
     headers: {
-      'x-portkey-api-key': credentials.apiKey,
+      'x-axon-api-key': credentials.apiKey,
     },
   };
 
@@ -85,11 +85,11 @@ export const fetchPortkey = async (
   let error: any = null;
 
   try {
-    if (getRuntimeKey() === 'workerd' && env.portkeyGuardrails) {
+    if (getRuntimeKey() === 'workerd' && env.axonGuardrails) {
       responseData = await postWithCloudflareServiceBinding(
         url,
         data,
-        env.portkeyGuardrails,
+        env.axonGuardrails,
         options,
         timeout
       );

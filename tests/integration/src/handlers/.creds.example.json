@@ -13,7 +13,7 @@
   "anthropic": {
     "apiKey": "YOUR_ANTHROPIC_API_KEY"
   },
-  "portkey": {
+  "axon": {
     "apiKey": "YOUR_PORTKEY_API_KEY"
   }
 }

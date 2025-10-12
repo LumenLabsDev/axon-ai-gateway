@@ -1,0 +1,18 @@
+---
+description: Docs and cookbook guidance
+globs:
+  - "docs/**/*.md"
+  - "cookbook/**/*.md"
+  - "cookbook/**/*.ipynb"
+  - "README.md"
+alwaysApply: false
+---
+
+- Keep docs actionable and consistent with code. Update examples with API changes.
+- Provide minimal runnable snippets where feasible; mark provider/env prerequisites.
+- Prefer `.md` for guides and link out to notebooks for longer workflows.
+
+@docs/**
+@cookbook/**
+@README.md
+

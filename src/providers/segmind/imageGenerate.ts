@@ -86,7 +86,7 @@ export const SegmindImageGenerateConfig: ProviderConfig = {
   },
   qr_text: {
     param: 'qr_text',
-    default: 'https://portkey.ai',
+    default: 'https://axon.ai',
   },
   invert: {
     param: 'invert',

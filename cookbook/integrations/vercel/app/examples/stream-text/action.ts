@@ -3,7 +3,7 @@
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { createStreamableValue } from 'ai/rsc';
-import { createPortkey } from '@portkey-ai/vercel-provider';
+import { createPortkey } from '@axon-ai/vercel-provider';
 
 export const streamTextAction = async () => {
   const llmClient = createPortkey({

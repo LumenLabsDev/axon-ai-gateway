@@ -1,0 +1,40 @@
+---
+description: Project basics (dev, build, run, structure recap)
+globs:
+  - "package.json"
+  - "tsconfig.json"
+  - "README.md"
+  - "src/**/*"
+  - "plugins/**/*"
+  - "tests/**/*"
+alwaysApply: true
+---
+
+### Runtime & Modules
+- ESM only (`"type": "module"`). Use `import`/`export`; avoid `require`.
+- Targets Node and Cloudflare Workers. Guard Node-only APIs from worker paths.
+
+### Dev & Run
+- `npm run dev` — Cloudflare Worker at `src/index.ts`
+- `npm run dev:node` — Node server at `src/start-server.ts`
+- `npm run start:node` — Run built Node server `build/start-server.js`
+
+### Build & Deploy
+- `npm run build` — Rollup bundles library and worker
+- `npm run build-plugins` — Build `plugins/**`
+- `npm run deploy` — Deploy Workers (`wrangler deploy src/index.ts`)
+
+### Tests & Quality
+- `npm run test:gateway` — Jest for `src/**`
+- `npm run test:plugins` — Jest for `plugins/**`
+- `npm run format` / `npm run format:check` — Prettier
+
+### Repo Roles (see `02-structure-entrypoints`)
+- `src/index.ts`: Worker entry
+- `src/start-server.ts`: Node entry
+- `src/handlers/**`, `src/middlewares/**`, `src/services/**`, `src/providers/**`, `src/types/**`, `src/utils/**`
+
+@package.json
+@tsconfig.json
+@src/index.ts
+@src/start-server.ts

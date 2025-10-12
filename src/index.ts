@@ -1,5 +1,5 @@
 /**
- * Portkey AI Gateway
+ * Axon AI Gateway
  *
  * @module index
  */
@@ -102,6 +102,71 @@ app.use('*', hooks);
 if (conf.cache === true) {
   app.use('*', memoryCache());
 }
+
+// Use API key authentication middleware for all /v1/* routes
+import { apiKeyAuth, requireAuth, requirePermission } from './middlewares/apiKeyAuth';
+app.use('/v1/*', apiKeyAuth);
+
+// Admin routes
+import * as workspacesHandler from './handlers/admin/workspacesHandler';
+import * as usersHandler from './handlers/admin/usersHandler';
+import * as providerKeysHandler from './handlers/admin/providerKeysHandler';
+import * as apiKeysHandler from './handlers/admin/apiKeysHandler';
+import * as promptsHandler from './handlers/admin/promptsHandler';
+import * as promptPartialsHandler from './handlers/admin/promptPartialsHandler';
+import * as guardrailsHandler from './handlers/admin/guardrailsHandler';
+
+// Workspaces
+app.get('/v1/admin/workspaces', requireAuth, requirePermission('workspaces.read'), workspacesHandler.listWorkspaces);
+app.post('/v1/admin/workspaces', requireAuth, requirePermission('workspaces.write'), workspacesHandler.createWorkspace);
+app.get('/v1/admin/workspaces/:id', requireAuth, requirePermission('workspaces.read'), workspacesHandler.getWorkspace);
+app.patch('/v1/admin/workspaces/:id', requireAuth, requirePermission('workspaces.write'), workspacesHandler.updateWorkspace);
+
+// Users
+app.get('/v1/admin/users', requireAuth, requirePermission('users.read'), usersHandler.listUsers);
+app.post('/v1/admin/users', requireAuth, requirePermission('users.write'), usersHandler.createUser);
+app.get('/v1/admin/users/:id', requireAuth, requirePermission('users.read'), usersHandler.getUser);
+app.patch('/v1/admin/users/:id', requireAuth, requirePermission('users.write'), usersHandler.updateUser);
+app.delete('/v1/admin/users/:id', requireAuth, requirePermission('users.write'), usersHandler.deleteUser);
+
+// Provider Keys
+app.get('/v1/admin/provider-keys', requireAuth, requirePermission('provider_keys.read'), providerKeysHandler.listProviderKeys);
+app.post('/v1/admin/provider-keys', requireAuth, requirePermission('provider_keys.write'), providerKeysHandler.createProviderKey);
+app.get('/v1/admin/provider-keys/:id', requireAuth, requirePermission('provider_keys.read'), providerKeysHandler.getProviderKey);
+app.patch('/v1/admin/provider-keys/:id', requireAuth, requirePermission('provider_keys.write'), providerKeysHandler.updateProviderKey);
+app.delete('/v1/admin/provider-keys/:id', requireAuth, requirePermission('provider_keys.write'), providerKeysHandler.deleteProviderKey);
+
+// API Keys
+app.get('/v1/admin/api-keys', requireAuth, requirePermission('api_keys.read'), apiKeysHandler.listApiKeys);
+app.post('/v1/admin/api-keys', requireAuth, requirePermission('api_keys.write'), apiKeysHandler.createApiKey);
+app.get('/v1/admin/api-keys/:id', requireAuth, requirePermission('api_keys.read'), apiKeysHandler.getApiKey);
+app.patch('/v1/admin/api-keys/:id', requireAuth, requirePermission('api_keys.write'), apiKeysHandler.updateApiKey);
+app.delete('/v1/admin/api-keys/:id', requireAuth, requirePermission('api_keys.write'), apiKeysHandler.deleteApiKey);
+
+// Prompts
+app.get('/v1/admin/prompts', requireAuth, requirePermission('prompts.read'), promptsHandler.listPrompts);
+app.post('/v1/admin/prompts', requireAuth, requirePermission('prompts.write'), promptsHandler.createPrompt);
+app.get('/v1/admin/prompts/:id', requireAuth, requirePermission('prompts.read'), promptsHandler.getPrompt);
+app.get('/v1/admin/prompts/:id/versions/:version', requireAuth, requirePermission('prompts.read'), promptsHandler.getPromptVersion);
+app.post('/v1/admin/prompts/:id/versions', requireAuth, requirePermission('prompts.write'), promptsHandler.createPromptVersion);
+app.patch('/v1/admin/prompts/:id/versions/:version', requireAuth, requirePermission('prompts.write'), promptsHandler.updatePromptVersion);
+app.delete('/v1/admin/prompts/:id', requireAuth, requirePermission('prompts.write'), promptsHandler.deletePrompt);
+
+// Prompt Partials
+app.get('/v1/admin/prompt-partials', requireAuth, requirePermission('prompts.read'), promptPartialsHandler.listPromptPartials);
+app.post('/v1/admin/prompt-partials', requireAuth, requirePermission('prompts.write'), promptPartialsHandler.createPromptPartial);
+app.get('/v1/admin/prompt-partials/:id', requireAuth, requirePermission('prompts.read'), promptPartialsHandler.getPromptPartial);
+app.patch('/v1/admin/prompt-partials/:id', requireAuth, requirePermission('prompts.write'), promptPartialsHandler.updatePromptPartial);
+app.delete('/v1/admin/prompt-partials/:id', requireAuth, requirePermission('prompts.write'), promptPartialsHandler.deletePromptPartial);
+
+// Guardrails
+app.get('/v1/admin/guardrails', requireAuth, requirePermission('guardrails.read'), guardrailsHandler.listGuardrails);
+app.post('/v1/admin/guardrails', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.createGuardrail);
+app.get('/v1/admin/guardrails/:id', requireAuth, requirePermission('guardrails.read'), guardrailsHandler.getGuardrail);
+app.patch('/v1/admin/guardrails/:id', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.updateGuardrail);
+app.delete('/v1/admin/guardrails/:id', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.deleteGuardrail);
+app.post('/v1/admin/guardrails/:id/bind', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.bindGuardrail);
+app.delete('/v1/admin/guardrails/:id/bind/:bindingId', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.unbindGuardrail);
 
 /**
  * Default route when no other route matches.
@@ -254,7 +319,7 @@ app.all(
 
 /**
  * POST route for '/v1/prompts/:id/completions'.
- * Handles portkey prompt completions route
+ * Handles axon prompt completions route
  */
 app.post('/v1/prompts/*', requestValidator, (c) => {
   if (c.req.url.endsWith('/v1/chat/completions')) {

@@ -1,4 +1,4 @@
-import { Portkey } from 'portkey-ai';
+import { Portkey } from 'axon-ai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -18,9 +18,9 @@ export class RequestBuilder {
     };
     this.requestHeaders = {
       'Content-Type': 'application/json',
-      'x-portkey-provider': 'anthropic',
+      'x-axon-provider': 'anthropic',
       Authorization: `Bearer ${creds.anthropic.apiKey}`,
-      'x-portkey-api-key': creds.portkey.apiKey,
+      'x-axon-api-key': creds.axon.apiKey,
     };
     this._method = 'POST';
     this._client = new Portkey({
@@ -95,7 +95,7 @@ export class RequestBuilder {
   }
 
   provider(provider: string) {
-    this.requestHeaders['x-portkey-provider'] = provider;
+    this.requestHeaders['x-axon-provider'] = provider;
     if (provider === 'openai') {
       this.apiKey(creds.openai.apiKey);
     } else if (provider === 'anthropic') {
@@ -106,10 +106,10 @@ export class RequestBuilder {
 
   providerHeaders(providerHeaders: Record<string, string>) {
     // for each key, switch all underscores to hyphens
-    // and prepend with x-portkey-
+    // and prepend with x-axon-
     const _providerHeaders: any = {};
     for (const [key, value] of Object.entries(providerHeaders)) {
-      _providerHeaders[`x-portkey-${key.replace(/_/g, '-')}`] = value;
+      _providerHeaders[`x-axon-${key.replace(/_/g, '-')}`] = value;
     }
     this.requestHeaders = {
       ...this.requestHeaders,
@@ -148,7 +148,7 @@ export class RequestBuilder {
     this._client.config = config;
     // Create headers for this config
     const configHeader = {
-      'x-portkey-config': JSON.stringify(config),
+      'x-axon-config': JSON.stringify(config),
     };
     this.requestHeaders = {
       ...this.requestHeaders,

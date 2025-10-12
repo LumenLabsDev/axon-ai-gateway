@@ -1,0 +1,21 @@
+---
+description: Operational Playbook — retro (Retrospective & Doctrine Evolution)
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+## Playbook: retro
+
+PHASE 0 — Session Analysis (Internal)
+- Review the full session; list key insights (successes, failures, actionable lessons).
+
+PHASE 1 — Lesson Distillation & Abstraction
+- Filter to durable, universal principles; categorize to Global vs Project Doctrine.
+
+PHASE 2 — Doctrine Integration
+- Prefer project-level rules first; refine existing rules or add new ones to integrate the lessons.
+
+PHASE 3 — Final Report
+- Doctrine update summary with diff, plus session learnings list. If none, state informational notice.
+

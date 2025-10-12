@@ -94,7 +94,7 @@ export const handler: PluginHandler<{
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'User-Agent': 'portkey-ai-plugin/',
+    'User-Agent': 'axon-ai-plugin/',
     'Ocp-Apim-Subscription-Key': token,
   };
 
