@@ -1,7 +1,7 @@
 import { getDb } from '../db';
 import { guardrails, workspaceGuardrails } from '../db/schema';
-import { eq, and, or } from 'drizzle-orm';
-import { HookObject } from '../middlewares/hooks/types';
+import { eq, and, or, isNull } from 'drizzle-orm';
+import { HookObject, HookType } from '../middlewares/hooks/types';
 
 /**
  * Guardrail Service
@@ -33,12 +33,12 @@ export async function getGuardrailsForContext(
       queryConditions.push(
         or(
           eq(workspaceGuardrails.apiKeyId, apiKeyId),
-          eq(workspaceGuardrails.apiKeyId, null)
+          isNull(workspaceGuardrails.apiKeyId)
         )!
       );
     } else {
       // Only workspace-wide bindings
-      queryConditions.push(eq(workspaceGuardrails.apiKeyId, null));
+      queryConditions.push(isNull(workspaceGuardrails.apiKeyId));
     }
     
     const bindings = await db
@@ -90,29 +90,24 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
 } {
   const timestamp = new Date().toISOString();
   
-  const beforeRequestHooks: HookObject[] = [];
-  const afterRequestHooks: HookObject[] = [];
+  const beforeChecks: any[] = [];
+  const afterChecks: any[] = [];
   
-  // Convert each check to a hook
+  // Convert each check and categorize
   for (const check of guardrail.checks) {
     if (check.enabled === false) {
       continue; // Skip disabled checks
     }
     
-    const hookObject: HookObject = {
+    const checkObject = {
       id: check.id,
-      parameters: check.parameters || {},
+      parameters: {
+        ...(check.parameters || {}),
+        ...(check.inverse ? { inverse: check.inverse } : {}),
+        ...(check.timeout ? { timeout: check.timeout } : {}),
+      },
+      is_enabled: true,
     };
-    
-    // Add timeout if specified
-    if (check.timeout) {
-      hookObject.timeout = check.timeout;
-    }
-    
-    // Add inverse if specified
-    if (check.inverse) {
-      hookObject.parameters.inverse = check.inverse;
-    }
     
     // Determine if this is a before or after request hook based on check ID
     // Checks that operate on input go in beforeRequestHooks
@@ -122,57 +117,76 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
                          check.id.includes('scan.response');
     
     if (isOutputCheck) {
-      afterRequestHooks.push(hookObject);
+      afterChecks.push(checkObject);
     } else {
-      beforeRequestHooks.push(hookObject);
+      beforeChecks.push(checkObject);
     }
   }
   
-  // Add actions as callbacks
-  if (guardrail.actions) {
-    const actions = guardrail.actions as any;
+  // Create hook objects
+  const beforeRequestHooks: HookObject[] = [];
+  const afterRequestHooks: HookObject[] = [];
+  
+  if (beforeChecks.length > 0) {
+    const hookObject: HookObject = {
+      type: HookType.GUARDRAIL,
+      id: `${guardrail.id}-before`,
+      checks: beforeChecks,
+      async: false,
+      deny: false,
+      eventType: 'beforeRequestHook',
+    };
     
-    // Add feedback on success
-    if (actions.onSuccess?.addFeedback) {
-      // This would be handled by the hooks system
-      // For now, we can add it as metadata to the hooks
-      beforeRequestHooks.forEach((hook) => {
-        hook.parameters._guardrailActions = {
-          onSuccess: actions.onSuccess,
-        };
-      });
-      afterRequestHooks.forEach((hook) => {
-        hook.parameters._guardrailActions = {
-          onSuccess: actions.onSuccess,
-        };
-      });
-    }
-    
-    // Add feedback on failure / deny request
-    if (actions.onFailure) {
-      beforeRequestHooks.forEach((hook) => {
-        hook.parameters._guardrailActions = {
-          ...(hook.parameters._guardrailActions || {}),
-          onFailure: actions.onFailure,
-        };
-      });
-      afterRequestHooks.forEach((hook) => {
-        hook.parameters._guardrailActions = {
-          ...(hook.parameters._guardrailActions || {}),
-          onFailure: actions.onFailure,
-        };
-      });
+    // Add actions as callbacks
+    if (guardrail.actions) {
+      const actions = guardrail.actions as any;
       
-      // If denyRequest is true, mark all checks to fail the request
-      if (actions.onFailure.denyRequest) {
-        beforeRequestHooks.forEach((hook) => {
-          hook.parameters.failOnError = true;
-        });
-        afterRequestHooks.forEach((hook) => {
-          hook.parameters.failOnError = true;
-        });
+      if (actions.onSuccess) {
+        hookObject.onSuccess = { feedback: actions.onSuccess };
+      }
+      
+      if (actions.onFailure) {
+        hookObject.onFail = { feedback: actions.onFailure };
+        
+        // If denyRequest is true, mark to fail the request
+        if (actions.onFailure.denyRequest) {
+          hookObject.deny = true;
+        }
       }
     }
+    
+    beforeRequestHooks.push(hookObject);
+  }
+  
+  if (afterChecks.length > 0) {
+    const hookObject: HookObject = {
+      type: HookType.GUARDRAIL,
+      id: `${guardrail.id}-after`,
+      checks: afterChecks,
+      async: false,
+      deny: false,
+      eventType: 'afterRequestHook',
+    };
+    
+    // Add actions as callbacks
+    if (guardrail.actions) {
+      const actions = guardrail.actions as any;
+      
+      if (actions.onSuccess) {
+        hookObject.onSuccess = { feedback: actions.onSuccess };
+      }
+      
+      if (actions.onFailure) {
+        hookObject.onFail = { feedback: actions.onFailure };
+        
+        // If denyRequest is true, mark to fail the request
+        if (actions.onFailure.denyRequest) {
+          hookObject.deny = true;
+        }
+      }
+    }
+    
+    afterRequestHooks.push(hookObject);
   }
   
   console.log(
@@ -206,12 +220,20 @@ export async function getHooksForContext(
   for (const { guardrail, mode } of guardrailsWithMode) {
     const { beforeRequestHooks, afterRequestHooks } = guardrailToHooks(guardrail);
     
-    // Add mode to each hook
+    // Add mode to each hook's checks
     beforeRequestHooks.forEach((hook) => {
-      hook.parameters._guardrailMode = mode;
+      if (hook.checks) {
+        hook.checks.forEach((check) => {
+          (check.parameters as any)._guardrailMode = mode;
+        });
+      }
     });
     afterRequestHooks.forEach((hook) => {
-      hook.parameters._guardrailMode = mode;
+      if (hook.checks) {
+        hook.checks.forEach((check) => {
+          (check.parameters as any)._guardrailMode = mode;
+        });
+      }
     });
     
     allBeforeHooks.push(...beforeRequestHooks);

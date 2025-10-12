@@ -81,9 +81,9 @@ if (runtime === 'node') {
 
 /**
  * GET route for the root path.
- * Returns a greeting message.
+ * Redirects to admin dashboard.
  */
-app.get('/', (c) => c.text('AI Gateway says hey!'));
+app.get('/', (c) => c.redirect('/public/'));
 
 // Use prettyJSON middleware for all routes
 app.use('*', prettyJSON());
@@ -115,6 +115,7 @@ import * as apiKeysHandler from './handlers/admin/apiKeysHandler';
 import * as promptsHandler from './handlers/admin/promptsHandler';
 import * as promptPartialsHandler from './handlers/admin/promptPartialsHandler';
 import * as guardrailsHandler from './handlers/admin/guardrailsHandler';
+import * as analyticsHandler from './handlers/admin/analyticsHandler';
 
 // Workspaces
 app.get('/v1/admin/workspaces', requireAuth, requirePermission('workspaces.read'), workspacesHandler.listWorkspaces);
@@ -167,6 +168,9 @@ app.patch('/v1/admin/guardrails/:id', requireAuth, requirePermission('guardrails
 app.delete('/v1/admin/guardrails/:id', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.deleteGuardrail);
 app.post('/v1/admin/guardrails/:id/bind', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.bindGuardrail);
 app.delete('/v1/admin/guardrails/:id/bind/:bindingId', requireAuth, requirePermission('guardrails.write'), guardrailsHandler.unbindGuardrail);
+
+// Analytics
+app.get('/v1/admin/analytics', requireAuth, requirePermission('api_keys.read'), analyticsHandler.getAnalytics);
 
 /**
  * Default route when no other route matches.

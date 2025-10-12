@@ -1,0 +1,159 @@
+<!-- Settings Section -->
+<div x-show="$store.app.currentSection === 'settings'" x-data="settingsManager" style="display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Settings & Preferences</h2>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-primary" @click="savePreferences()">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Save Settings
+        </button>
+        <button class="btn btn-secondary" @click="resetToDefaults()">Reset</button>
+      </div>
+    </div>
+    
+    <div x-show="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <div x-show="!loading" style="max-width: 600px;">
+      <!-- Theme -->
+      <div class="form-group">
+        <label class="form-label" for="setting-theme">Theme</label>
+        <select id="setting-theme" class="form-select" x-model="preferences.theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="auto">Auto (System)</option>
+        </select>
+        <p class="form-help">Choose your preferred color theme</p>
+      </div>
+      
+      <!-- Items Per Page -->
+      <div class="form-group">
+        <label class="form-label" for="setting-items-per-page">Items Per Page</label>
+        <select id="setting-items-per-page" class="form-select" x-model.number="preferences.itemsPerPage">
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <p class="form-help">Number of items to show in tables</p>
+      </div>
+      
+      <!-- Auto Refresh -->
+      <div class="form-group">
+        <label class="checkbox-item">
+          <input type="checkbox" x-model="preferences.autoRefresh" />
+          <span>Enable Auto-Refresh</span>
+        </label>
+        <p class="form-help">Automatically refresh data at regular intervals</p>
+      </div>
+      
+      <!-- Refresh Interval -->
+      <div class="form-group" x-show="preferences.autoRefresh">
+        <label class="form-label" for="setting-refresh-interval">Refresh Interval (seconds)</label>
+        <input 
+          type="number" 
+          id="setting-refresh-interval" 
+          class="form-input" 
+          x-model.number="preferences.refreshInterval"
+          min="5"
+          max="300"
+        />
+        <p class="form-help">How often to refresh data (5-300 seconds)</p>
+      </div>
+      
+      <!-- Notifications -->
+      <div class="form-group">
+        <label class="checkbox-item">
+          <input type="checkbox" x-model="preferences.notifications" />
+          <span>Enable Notifications</span>
+        </label>
+        <p class="form-help">Show toast notifications for actions</p>
+      </div>
+      
+      <!-- API Key Management -->
+      <div class="form-group" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
+        <label class="form-label">API Key Management</label>
+        <button class="btn btn-secondary" @click="$store.app.showApiKeySetup = true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          Change Admin API Key
+        </button>
+        <p class="form-help">Update the API key used to access this dashboard</p>
+      </div>
+      
+      <!-- Danger Zone -->
+      <div style="margin-top: 2rem; padding: 1.5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem;">
+        <h3 style="color: #dc2626; font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem;">Danger Zone</h3>
+        <p style="font-size: 0.875rem; color: #991b1b; margin-bottom: 1rem;">
+          These actions are irreversible. Please be certain.
+        </p>
+        <button class="btn btn-danger" @click="$store.app.clearApiKey()">
+          Clear API Key & Log Out
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Keyboard Shortcuts Help -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Keyboard Shortcuts</h2>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Shortcut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Go to Dashboard</td>
+            <td><code>Ctrl/Cmd + 1</code></td>
+          </tr>
+          <tr>
+            <td>Go to API Keys</td>
+            <td><code>Ctrl/Cmd + 2</code></td>
+          </tr>
+          <tr>
+            <td>Go to Provider Keys</td>
+            <td><code>Ctrl/Cmd + 3</code></td>
+          </tr>
+          <tr>
+            <td>Go to Prompts</td>
+            <td><code>Ctrl/Cmd + 4</code></td>
+          </tr>
+          <tr>
+            <td>Go to Logs</td>
+            <td><code>Ctrl/Cmd + 5</code></td>
+          </tr>
+          <tr>
+            <td>Go to Analytics</td>
+            <td><code>Ctrl/Cmd + 6</code></td>
+          </tr>
+          <tr>
+            <td>Go to Playground</td>
+            <td><code>Ctrl/Cmd + 7</code></td>
+          </tr>
+          <tr>
+            <td>Search / Focus Search</td>
+            <td><code>Ctrl/Cmd + K</code></td>
+          </tr>
+          <tr>
+            <td>Refresh Current View</td>
+            <td><code>Ctrl/Cmd + R</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+

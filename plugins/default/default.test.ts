@@ -11,7 +11,7 @@ import { handler as logHandler } from './log';
 import { handler as allUppercaseHandler } from './alluppercase';
 import { handler as endsWithHandler } from './endsWith';
 import { handler as allLowerCaseHandler } from './alllowercase';
-import { handler as modelWhitelistHandler } from './modelwhitelist';
+import { handler as modelWhitelistHandler } from './modelWhitelist';
 import { handler as characterCountHandler } from './characterCount';
 import { handler as jwtHandler } from './jwt';
 import { handler as allowedRequestTypesHandler } from './allowedRequestTypes';

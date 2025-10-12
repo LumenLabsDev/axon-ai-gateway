@@ -1,0 +1,270 @@
+<!-- API Keys Section -->
+<div x-show="$store.app.currentSection === 'api-keys'" x-data="apiKeysManager" style="display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">API Keys</h2>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-secondary btn-sm" @click="loadKeys()" title="Refresh">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+        <button class="btn btn-primary" @click="showCreateModal = true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create API Key
+        </button>
+      </div>
+    </div>
+    
+    <div x-show="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <div x-show="error" class="form-error" x-text="error" style="padding: 1rem;"></div>
+    
+    <div x-show="!loading && keys.length === 0" class="empty-state">
+      <div class="empty-state-title">No API Keys</div>
+      <p class="empty-state-text">Create your first API key to get started</p>
+      <button class="btn btn-primary" @click="showCreateModal = true">Create API Key</button>
+    </div>
+    
+    <div x-show="!loading && keys.length > 0">
+      <!-- Toolbar -->
+      <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <input 
+          type="text" 
+          class="form-input" 
+          placeholder="Search keys..." 
+          x-model="searchTerm"
+          style="max-width: 300px;"
+        />
+        <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+          <span x-show="selectedItems.size > 0" style="font-size: 0.875rem; color: #6b7280;">
+            <span x-text="selectedItems.size"></span> selected
+          </span>
+          <button 
+            x-show="selectedItems.size > 0" 
+            class="btn btn-danger btn-sm" 
+            @click="bulkDelete()"
+          >
+            Delete Selected
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">
+              <input 
+                type="checkbox" 
+                @change="toggleSelectAll()"
+                :checked="selectedItems.size > 0 && selectedItems.size === paginatedData.length"
+              />
+            </th>
+            <th @click="sortBy('name')" style="cursor: pointer;">
+              Name
+              <span x-show="sortKey === 'name'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
+            <th>Key</th>
+            <th>RPM / TPM</th>
+            <th @click="sortBy('isActive')" style="cursor: pointer;">
+              Status
+              <span x-show="sortKey === 'isActive'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
+            <th @click="sortBy('createdAt')" style="cursor: pointer;">
+              Created
+              <span x-show="sortKey === 'createdAt'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="key in paginatedData" :key="key.id">
+            <tr>
+              <td>
+                <input 
+                  type="checkbox" 
+                  :checked="isSelected(key.id)"
+                  @change="toggleSelect(key.id)"
+                />
+              </td>
+              <td>
+                <div><strong x-text="key.name"></strong></div>
+                <div style="font-size: 0.813rem; color: #6b7280;" x-text="key.description"></div>
+              </td>
+              <td>
+                <code style="font-size: 0.813rem;" x-text="key.keyHash"></code>
+              </td>
+              <td x-text="(key.rateLimitRpm || '-') + ' / ' + (key.rateLimitTpm || '-')"></td>
+              <td>
+                <span class="badge" :class="key.isActive ? 'badge-green' : 'badge-gray'" x-text="key.isActive ? 'Active' : 'Inactive'"></span>
+              </td>
+              <td x-text="new Date(key.createdAt).toLocaleDateString()"></td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn btn-secondary btn-sm" @click="editKey(key)">Edit</button>
+                  <button class="btn btn-danger btn-sm" @click="deleteKey(key)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div x-show="totalPages > 1" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 1rem; border-top: 1px solid #e5e7eb;">
+        <div style="font-size: 0.875rem; color: #6b7280;">
+          Showing <span x-text="(currentPage - 1) * perPage + 1"></span> to 
+          <span x-text="Math.min(currentPage * perPage, filteredData.length)"></span> of 
+          <span x-text="filteredData.length"></span> results
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="prevPage()" 
+            :disabled="currentPage === 1"
+          >
+            Previous
+          </button>
+          <template x-for="page in pageNumbers" :key="page">
+            <button 
+              class="btn btn-sm" 
+              :class="page === currentPage ? 'btn-primary' : 'btn-secondary'"
+              @click="goToPage(page)"
+              x-text="page"
+            ></button>
+          </template>
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="nextPage()" 
+            :disabled="currentPage === totalPages"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div x-show="showCreateModal || showEditModal" class="modal-overlay" x-cloak style="display: none;">
+    <div class="modal" @click.away="showCreateModal = false; showEditModal = false;">
+      <div class="modal-header">
+        <h2 class="modal-title" x-text="showEditModal ? 'Edit API Key' : 'Create API Key'"></h2>
+        <button class="modal-close" @click="showCreateModal = false; showEditModal = false;">&times;</button>
+      </div>
+      <form @submit.prevent="showEditModal ? updateKey() : createKey()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="api-key-name">Name *</label>
+            <input type="text" id="api-key-name" class="form-input" x-model="formData.name" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="api-key-description">Description</label>
+            <input type="text" id="api-key-description" class="form-input" x-model="formData.description" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="api-key-rpm">Rate Limit (RPM)</label>
+            <input type="number" id="api-key-rpm" class="form-input" x-model.number="formData.rateLimitRpm" placeholder="Requests per minute" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="api-key-tpm">Rate Limit (TPM)</label>
+            <input type="number" id="api-key-tpm" class="form-input" x-model.number="formData.rateLimitTpm" placeholder="Tokens per minute" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Permissions</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.completions.create" />
+                <span>Create Completions</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.api_keys.read" />
+                <span>Read API Keys</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.api_keys.write" />
+                <span>Write API Keys</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.provider_keys.read" />
+                <span>Read Provider Keys</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.provider_keys.write" />
+                <span>Write Provider Keys</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.prompts.read" />
+                <span>Read Prompts</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="formData.permissions.prompts.write" />
+                <span>Write Prompts</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group" x-show="showEditModal">
+            <label class="form-label" for="api-key-status">Status</label>
+            <select id="api-key-status" class="form-select" x-model="formData.isActive">
+              <option :value="true">Active</option>
+              <option :value="false">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="showCreateModal = false; showEditModal = false;">Cancel</button>
+          <button type="submit" class="btn btn-primary" :disabled="submitting">
+            <span x-show="!submitting" x-text="showEditModal ? 'Update' : 'Create'"></span>
+            <span x-show="submitting">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Created Key Display Modal -->
+  <div x-show="showCreatedKey" class="modal-overlay" x-cloak style="display: none;">
+    <div class="modal" @click.away="showCreatedKey = false; createdKeyValue = ''">
+      <div class="modal-header">
+        <h2 class="modal-title">API Key Created</h2>
+        <button class="modal-close" @click="showCreatedKey = false; createdKeyValue = ''">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #dc2626; margin-bottom: 1rem;">
+          <strong>Important:</strong> Save this key now. You won't be able to see it again!
+        </p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span>API Key</span>
+            <button class="btn btn-sm btn-secondary" @click="Utils.copyToClipboard(createdKeyValue)">Copy</button>
+          </div>
+          <code x-text="createdKeyValue"></code>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" @click="showCreatedKey = false; createdKeyValue = ''">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+

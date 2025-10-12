@@ -55,6 +55,7 @@
     "avsc": "^5.7.9",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.4.1",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.6",
     "hono": "^4.9.11",
     "jose": "^6.1.0",

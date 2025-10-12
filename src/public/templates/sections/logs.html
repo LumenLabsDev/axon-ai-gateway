@@ -1,0 +1,96 @@
+<!-- Logs Section -->
+<div x-show="$store.app.currentSection === 'logs'" x-data="logsManager" style="display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Request Logs</h2>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-secondary btn-sm" @click="exportLogs('json')">Export JSON</button>
+        <button class="btn btn-secondary btn-sm" @click="exportLogs('csv')">Export CSV</button>
+        <button class="btn btn-danger btn-sm" @click="clearLogs()">Clear</button>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 1rem; display: flex; gap: 1rem;">
+      <input 
+        type="text" 
+        class="form-input" 
+        placeholder="Search endpoint..." 
+        x-model="searchTerm"
+        style="max-width: 300px;"
+      />
+      <select class="form-select" x-model="filterStatus" style="max-width: 150px;">
+        <option value="">All Status</option>
+        <option value="2xx">Success (2xx)</option>
+        <option value="4xx">Client Error (4xx)</option>
+        <option value="5xx">Server Error (5xx)</option>
+      </select>
+    </div>
+    
+    <div x-show="filteredLogs.length === 0" class="empty-state">
+      <p>No logs to display. Logs will appear here as requests are made.</p>
+    </div>
+    
+    <div x-show="filteredLogs.length > 0" class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="log in filteredLogs.slice(0, 100)" :key="log.id">
+            <tr>
+              <td x-text="log.time" style="font-size: 0.813rem; font-family: monospace;"></td>
+              <td><span class="badge badge-gray" x-text="log.method"></span></td>
+              <td x-text="log.endpoint" style="font-size: 0.813rem;"></td>
+              <td>
+                <span class="badge" :class="log.status < 300 ? 'badge-green' : (log.status < 500 ? 'badge-yellow' : 'badge-red')" x-text="log.status"></span>
+              </td>
+              <td x-text="log.duration + 'ms'"></td>
+              <td>
+                <button class="btn btn-secondary btn-sm" @click="viewLogDetails(log)">Details</button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <p x-show="filteredLogs.length > 100" style="padding: 1rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
+        Showing 100 of <span x-text="filteredLogs.length"></span> logs
+      </p>
+    </div>
+  </div>
+
+  <!-- Log Details Modal -->
+  <div x-show="showDetailsModal" class="modal-overlay" x-cloak style="display: none;">
+    <div class="modal" @click.away="showDetailsModal = false" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Log Details</h2>
+        <button class="modal-close" @click="showDetailsModal = false">&times;</button>
+      </div>
+      <div class="modal-body" x-show="selectedLog">
+        <div style="margin-bottom: 1.5rem;">
+          <strong>Time:</strong> <span x-text="selectedLog?.time"></span><br/>
+          <strong>Method:</strong> <span x-text="selectedLog?.method"></span><br/>
+          <strong>Endpoint:</strong> <span x-text="selectedLog?.endpoint"></span><br/>
+          <strong>Status:</strong> <span x-text="selectedLog?.status"></span><br/>
+          <strong>Duration:</strong> <span x-text="selectedLog?.duration + 'ms'"></span>
+        </div>
+        <div x-show="selectedLog?.requestOptions">
+          <label class="form-label">Request</label>
+          <div class="code-block">
+            <pre x-text="selectedLog?.requestOptions ? JSON.stringify(selectedLog.requestOptions, null, 2) : ''" style="margin: 0;"></pre>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="showDetailsModal = false">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

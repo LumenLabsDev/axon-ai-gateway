@@ -9,6 +9,9 @@ import { workspaces, users, apiKeys } from '../src/db/schema';
 import { hashSync } from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { exit } from 'process';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 async function bootstrap() {
   console.log('🚀 Starting bootstrap process...\n');

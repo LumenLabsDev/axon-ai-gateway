@@ -1,0 +1,32 @@
+<!-- API Key Setup Modal -->
+<div x-show="$store.app.showApiKeySetup" class="modal-overlay" x-cloak style="display: none;">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">API Key Required</h2>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 1rem; color: #6b7280;">
+        Please enter your Axon API key to access the admin dashboard. 
+        You can get this from running <code style="background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 0.25rem;">npm run db:bootstrap</code>
+      </p>
+      <form @submit.prevent="$store.app.setApiKey($refs.apiKeyInput.value)">
+        <div class="form-group">
+          <label class="form-label" for="setup-api-key">API Key</label>
+          <input 
+            x-ref="apiKeyInput"
+            type="password" 
+            id="setup-api-key" 
+            class="form-input" 
+            placeholder="pk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            autocomplete="off"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Save API Key
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+

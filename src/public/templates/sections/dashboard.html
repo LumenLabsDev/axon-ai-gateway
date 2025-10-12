@@ -1,0 +1,60 @@
+<!-- Dashboard Section -->
+<div x-show="$store.app.currentSection === 'dashboard'" x-data="dashboardManager">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">API Keys</div>
+      <div class="stat-value" x-text="stats.apiKeys"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Provider Keys</div>
+      <div class="stat-value" x-text="stats.providerKeys"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Prompts</div>
+      <div class="stat-value" x-text="stats.prompts"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Requests</div>
+      <div class="stat-value" x-text="stats.totalRequests"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Activity</h2>
+    </div>
+    <div x-show="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+    <div x-show="!loading && recentLogs.length === 0" class="empty-state">
+      <p>No recent activity</p>
+    </div>
+    <div x-show="!loading && recentLogs.length > 0" class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Status</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="log in recentLogs" :key="log.time">
+            <tr>
+              <td x-text="log.time"></td>
+              <td><span class="badge badge-gray" x-text="log.method"></span></td>
+              <td x-text="log.endpoint"></td>
+              <td>
+                <span class="badge" :class="log.status < 300 ? 'badge-green' : 'badge-red'" x-text="log.status"></span>
+              </td>
+              <td x-text="log.duration + 'ms'"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

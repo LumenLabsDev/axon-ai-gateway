@@ -1,4 +1,4 @@
-import { Portkey } from 'axon-ai';
+import { Portkey } from 'portkey-ai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

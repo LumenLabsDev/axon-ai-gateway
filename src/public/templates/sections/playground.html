@@ -1,0 +1,232 @@
+<!-- Playground Section -->
+<div x-show="$store.app.currentSection === 'playground'" x-data="playgroundManager" style="display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">API Playground</h2>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-secondary btn-sm" @click="loadExample('chat')">Load Chat Example</button>
+        <button class="btn btn-secondary btn-sm" @click="loadExample('completion')">Load Completion</button>
+        <button class="btn btn-secondary btn-sm" @click="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <!-- Request Configuration -->
+      <div>
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Request Configuration</h3>
+        
+        <!-- API Key Selection -->
+        <div class="form-group">
+          <label class="form-label" for="pg-api-key">API Key</label>
+          <select id="pg-api-key" class="form-select" x-model="selectedApiKey">
+            <option value="">Select API Key</option>
+            <template x-for="key in apiKeys" :key="key.id">
+              <option :value="key.id" x-text="key.name"></option>
+            </template>
+          </select>
+          <p class="form-help">Select an API key to authenticate the request</p>
+        </div>
+
+        <!-- Endpoint Selection -->
+        <div class="form-group">
+          <label class="form-label" for="pg-endpoint">Endpoint</label>
+          <select id="pg-endpoint" class="form-select" x-model="endpoint">
+            <option value="/v1/chat/completions">Chat Completions</option>
+            <option value="/v1/completions">Completions</option>
+            <option value="/v1/embeddings">Embeddings</option>
+            <option value="/v1/images/generations">Image Generation</option>
+          </select>
+        </div>
+
+        <!-- Model Selection -->
+        <div class="form-group">
+          <label class="form-label" for="pg-model">Model</label>
+          <input type="text" id="pg-model" class="form-input" x-model="requestBody.model" placeholder="gpt-4o" />
+        </div>
+
+        <!-- Messages (for chat) -->
+        <div class="form-group" x-show="endpoint === '/v1/chat/completions'">
+          <label class="form-label">Messages</label>
+          <template x-for="(message, index) in requestBody.messages" :key="index">
+            <div style="margin-bottom: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 0.75rem;">
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <select class="form-select" x-model="message.role" style="width: 120px;">
+                  <option value="system">System</option>
+                  <option value="user">User</option>
+                  <option value="assistant">Assistant</option>
+                </select>
+                <button class="btn btn-danger btn-sm" @click="removeMessage(index)">Remove</button>
+              </div>
+              <textarea 
+                class="form-textarea" 
+                x-model="message.content" 
+                rows="3"
+                :placeholder="`${message.role} message...`"
+              ></textarea>
+            </div>
+          </template>
+          <button class="btn btn-secondary btn-sm" @click="addMessage()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Message
+          </button>
+        </div>
+
+        <!-- Prompt (for completions) -->
+        <div class="form-group" x-show="endpoint === '/v1/completions'">
+          <label class="form-label" for="pg-prompt">Prompt</label>
+          <textarea id="pg-prompt" class="form-textarea" x-model="requestBody.prompt" rows="6" placeholder="Enter your prompt..."></textarea>
+        </div>
+
+        <!-- Parameters -->
+        <div style="margin-top: 1rem;">
+          <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.75rem;">Parameters</h4>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label" for="pg-temperature">Temperature</label>
+              <input type="number" id="pg-temperature" class="form-input" x-model.number="requestBody.temperature" step="0.1" min="0" max="2" />
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label" for="pg-max-tokens">Max Tokens</label>
+              <input type="number" id="pg-max-tokens" class="form-input" x-model.number="requestBody.max_tokens" />
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label" for="pg-top-p">Top P</label>
+              <input type="number" id="pg-top-p" class="form-input" x-model.number="requestBody.top_p" step="0.1" min="0" max="1" />
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label">Stream</label>
+              <label class="checkbox-item">
+                <input type="checkbox" x-model="requestBody.stream" />
+                <span>Enable streaming</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Send Button -->
+        <div style="margin-top: 1.5rem;">
+          <button 
+            class="btn btn-primary" 
+            @click="sendRequest()" 
+            :disabled="loading || !selectedApiKey"
+            style="width: 100%;"
+          >
+            <span x-show="!loading">Send Request</span>
+            <span x-show="loading">Sending...</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Response -->
+      <div>
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Response</h3>
+        
+        <!-- Tabs -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
+          <button 
+            class="btn btn-sm" 
+            :class="responseTab === 'formatted' ? 'btn-primary' : 'btn-secondary'"
+            @click="responseTab = 'formatted'"
+            style="border-radius: 0; border-bottom: none;"
+          >
+            Formatted
+          </button>
+          <button 
+            class="btn btn-sm" 
+            :class="responseTab === 'raw' ? 'btn-primary' : 'btn-secondary'"
+            @click="responseTab = 'raw'"
+            style="border-radius: 0; border-bottom: none;"
+          >
+            Raw JSON
+          </button>
+          <button 
+            class="btn btn-sm" 
+            :class="responseTab === 'curl' ? 'btn-primary' : 'btn-secondary'"
+            @click="responseTab = 'curl'"
+            style="border-radius: 0; border-bottom: none;"
+          >
+            cURL
+          </button>
+        </div>
+
+        <!-- Response Content -->
+        <div x-show="!response && !error" class="empty-state">
+          <p style="color: #9ca3af; font-size: 0.875rem;">Response will appear here after sending a request</p>
+        </div>
+
+        <div x-show="error" style="padding: 1rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 0.5rem; margin-bottom: 1rem;">
+          <strong style="color: #dc2626;">Error:</strong>
+          <pre style="margin: 0.5rem 0 0 0; color: #991b1b; font-size: 0.813rem; white-space: pre-wrap;" x-text="error"></pre>
+        </div>
+
+        <!-- Formatted Response -->
+        <div x-show="responseTab === 'formatted' && response" style="max-height: 600px; overflow-y: auto;">
+          <div style="padding: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem;">
+            <!-- Response Metadata -->
+            <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.813rem;">
+                <div><strong>Model:</strong> <span x-text="response?.model || 'N/A'"></span></div>
+                <div><strong>Duration:</strong> <span x-text="responseTime + 'ms'"></span></div>
+                <div><strong>Tokens:</strong> <span x-text="response?.usage?.total_tokens || 'N/A'"></span></div>
+                <div><strong>ID:</strong> <span x-text="response?.id || 'N/A'" style="font-family: monospace;"></span></div>
+              </div>
+            </div>
+            
+            <!-- Chat Response -->
+            <div x-show="response?.choices" style="margin-top: 1rem;">
+              <strong style="display: block; margin-bottom: 0.5rem;">Response:</strong>
+              <template x-for="(choice, index) in response?.choices" :key="index">
+                <div style="padding: 1rem; background: white; border-radius: 0.375rem; margin-bottom: 0.5rem;">
+                  <div x-show="choice.message">
+                    <div style="font-size: 0.75rem; color: #6b7280; text-transform: uppercase; margin-bottom: 0.5rem;" x-text="choice.message?.role"></div>
+                    <div style="white-space: pre-wrap;" x-text="choice.message?.content || choice.text"></div>
+                  </div>
+                  <div x-show="choice.text && !choice.message" style="white-space: pre-wrap;" x-text="choice.text"></div>
+                  <div x-show="choice.finish_reason" style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280;">
+                    Finish reason: <span x-text="choice.finish_reason"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw JSON -->
+        <div x-show="responseTab === 'raw' && response" style="position: relative;">
+          <button 
+            class="btn btn-sm btn-secondary" 
+            @click="Utils.copyToClipboard(JSON.stringify(response, null, 2))"
+            style="position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1;"
+          >
+            Copy
+          </button>
+          <div class="code-block" style="max-height: 600px; overflow-y: auto;">
+            <pre x-text="JSON.stringify(response, null, 2)" style="margin: 0;"></pre>
+          </div>
+        </div>
+
+        <!-- cURL Command -->
+        <div x-show="responseTab === 'curl'" style="position: relative;">
+          <button 
+            class="btn btn-sm btn-secondary" 
+            @click="Utils.copyToClipboard(curlCommand)"
+            style="position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1;"
+          >
+            Copy
+          </button>
+          <div class="code-block" style="max-height: 600px; overflow-y: auto;">
+            <pre x-text="curlCommand" style="margin: 0; white-space: pre-wrap;"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+

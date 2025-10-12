@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axon AI Gateway - Admin Dashboard</title>
+  <link rel="stylesheet" href="/public/css/admin.css">
+</head>
+<body x-data x-cloak>
+  <!-- Toast Container -->
+  <div class="toast-container">
+    <template x-for="toast in $store.toasts.items" :key="toast.id">
+      <div class="toast" :class="`toast-${toast.type}`" x-show="true" x-transition>
+        <span x-text="toast.message"></span>
+        <button class="toast-close" @click="$store.toasts.remove(toast.id)">&times;</button>
+      </div>
+    </template>
+  </div>
+
+  <!-- API Key Setup Modal -->
+  <div data-template="modals/api-key-setup"></div>
+
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <div data-template="sidebar"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <h1 class="top-bar-title" x-text="$store.app.currentSection.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')"></h1>
+        <div class="top-bar-actions">
+          <!-- Workspace Selector -->
+          <div x-data="workspacesManager" style="margin-right: 1rem;">
+            <select 
+              x-show="workspaces.length > 0"
+              class="form-select" 
+              style="min-width: 150px;"
+              @change="switchWorkspace(workspaces.find(w => w.id === $event.target.value))"
+              :value="currentWorkspace?.id"
+            >
+              <template x-for="workspace in workspaces" :key="workspace.id">
+                <option :value="workspace.id" x-text="workspace.name"></option>
+              </template>
+            </select>
+          </div>
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>Gateway Running</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-area">
+        <!-- Dashboard Section -->
+        <div data-template="sections/dashboard"></div>
+
+        <!-- API Keys Section -->
+        <div data-template="sections/api-keys"></div>
+
+        <!-- Provider Keys Section -->
+        <div data-template="sections/provider-keys"></div>
+
+        <!-- Prompts Section -->
+        <div data-template="sections/prompts"></div>
+
+        <!-- Logs Section -->
+        <div data-template="sections/logs"></div>
+
+        <!-- Analytics Section -->
+        <div data-template="sections/analytics"></div>
+
+        <!-- Playground Section -->
+        <div data-template="sections/playground"></div>
+
+        <!-- Settings Section -->
+        <div data-template="sections/settings"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script defer src="/public/js/utils.js"></script>
+  <script defer src="/public/js/api-service.js"></script>
+  <script defer src="/public/js/template-loader.js"></script>
+  <script defer src="/public/js/app-init.js"></script>
+  <script defer src="/public/js/components.js"></script>
+  <script defer src="/public/js/alpine.min.js"></script>
+</body>
+</html>

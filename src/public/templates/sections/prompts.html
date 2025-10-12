@@ -1,0 +1,153 @@
+<!-- Prompts Section -->
+<div x-show="$store.app.currentSection === 'prompts'" x-data="promptsManager" style="display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Prompts</h2>
+      <button class="btn btn-primary" @click="showCreateModal = true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Create Prompt
+      </button>
+    </div>
+    
+    <div x-show="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <div x-show="!loading && prompts.length === 0" class="empty-state">
+      <div class="empty-state-title">No Prompts</div>
+      <p class="empty-state-text">Create reusable prompt templates with version control</p>
+      <button class="btn btn-primary" @click="showCreateModal = true">Create Prompt</button>
+    </div>
+    
+    <div x-show="!loading && prompts.length > 0" class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Version</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="prompt in prompts" :key="prompt.id">
+            <tr>
+              <td><strong x-text="prompt.name"></strong></td>
+              <td><span class="badge badge-gray" x-text="'v' + prompt.currentVersion"></span></td>
+              <td>
+                <span class="badge" 
+                  :class="{
+                    'badge-green': prompt.status === 'production',
+                    'badge-blue': prompt.status === 'staging',
+                    'badge-yellow': prompt.status === 'development',
+                    'badge-gray': prompt.status === 'draft'
+                  }" 
+                  x-text="prompt.status">
+                </span>
+              </td>
+              <td x-text="prompt.model || 'N/A'"></td>
+              <td x-text="new Date(prompt.createdAt).toLocaleDateString()"></td>
+              <td>
+                <div class="table-actions">
+                  <button class="btn btn-secondary btn-sm" @click="viewPrompt(prompt)">View</button>
+                  <button class="btn btn-danger btn-sm" @click="deletePrompt(prompt)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div x-show="showCreateModal" class="modal-overlay" x-cloak style="display: none;">
+    <div class="modal" @click.away="showCreateModal = false">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Prompt</h2>
+        <button class="modal-close" @click="showCreateModal = false">&times;</button>
+      </div>
+      <form @submit.prevent="createPrompt()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="prompt-name">Name *</label>
+            <input type="text" id="prompt-name" class="form-input" x-model="formData.name" required />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="prompt-template">Template *</label>
+            <textarea id="prompt-template" class="form-textarea" x-model="formData.template" required rows="8" 
+              placeholder='[{"role":"user","content":"Say hello to {{name}}"}]'></textarea>
+            <p class="form-help">JSON array of messages or plain text. Use {{variable}} for variables.</p>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="prompt-model">Model</label>
+            <input type="text" id="prompt-model" class="form-input" x-model="formData.model" placeholder="gpt-4o" />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="prompt-status">Status</label>
+            <select id="prompt-status" class="form-select" x-model="formData.status">
+              <option value="draft">Draft</option>
+              <option value="development">Development</option>
+              <option value="staging">Staging</option>
+              <option value="production">Production</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="showCreateModal = false">Cancel</button>
+          <button type="submit" class="btn btn-primary" :disabled="submitting">
+            <span x-show="!submitting">Create</span>
+            <span x-show="submitting">Creating...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Prompt Modal -->
+  <div x-show="showViewModal" class="modal-overlay" x-cloak style="display: none;">
+    <div class="modal" @click.away="showViewModal = false" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title" x-text="selectedPrompt?.name || ''"></h2>
+        <button class="modal-close" @click="showViewModal = false">&times;</button>
+      </div>
+      <div class="modal-body" x-show="selectedPrompt">
+        <div class="form-group">
+          <label class="form-label">Template</label>
+          <div class="code-block">
+            <pre x-text="selectedPrompt?.template || ''" style="margin: 0; white-space: pre-wrap;"></pre>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label class="form-label">Version</label>
+            <p x-text="selectedPrompt?.currentVersion ? 'v' + selectedPrompt.currentVersion : 'N/A'"></p>
+          </div>
+          <div>
+            <label class="form-label">Status</label>
+            <p><span class="badge badge-green" x-text="selectedPrompt?.status || 'N/A'"></span></p>
+          </div>
+          <div>
+            <label class="form-label">Model</label>
+            <p x-text="selectedPrompt?.model || 'N/A'"></p>
+          </div>
+          <div>
+            <label class="form-label">Created</label>
+            <p x-text="selectedPrompt?.createdAt ? new Date(selectedPrompt.createdAt).toLocaleString() : 'N/A'"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" @click="showViewModal = false">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+

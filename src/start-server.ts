@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// Load environment variables from .env file
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig();
+
 import { serve } from '@hono/node-server';
 
 import app from './index';
@@ -30,25 +34,71 @@ if (
   const setupStaticServing = async () => {
     const { join, dirname } = await import('path');
     const { fileURLToPath } = await import('url');
-    const { readFileSync } = await import('fs');
+    const { readFileSync, existsSync } = await import('fs');
 
     const scriptDir = dirname(fileURLToPath(import.meta.url));
 
-    // Serve the index.html content directly for both routes
-    const indexPath = join(scriptDir, 'public/index.html');
-    const indexContent = readFileSync(indexPath, 'utf-8');
+    // Serve admin.html for main routes
+    const adminPath = join(scriptDir, 'public/admin.html');
+    const adminContent = readFileSync(adminPath, 'utf-8');
 
-    const serveIndex = (c: Context) => {
-      return c.html(indexContent);
+    const serveAdmin = (c: Context) => {
+      return c.html(adminContent);
     };
 
-    // Set up routes
-    app.get('/public/logs', serveIndex);
-    app.get('/public/', serveIndex);
-
-    // Redirect `/public` to `/public/`
+    // Set up HTML routes
+    app.get('/public/', serveAdmin);
     app.get('/public', (c: Context) => {
       return c.redirect('/public/');
+    });
+    
+    // Root route redirects to admin
+    app.get('/', (c: Context) => {
+      return c.redirect('/public/');
+    });
+
+    // Serve static assets (JS, CSS)
+    app.get('/public/js/:filename', (c: Context) => {
+      const filename = c.req.param('filename');
+      const filePath = join(scriptDir, 'public/js', filename);
+      
+      if (!existsSync(filePath)) {
+        return c.notFound();
+      }
+      
+      const content = readFileSync(filePath, 'utf-8');
+      return c.text(content, 200, {
+        'Content-Type': 'application/javascript',
+      });
+    });
+
+    app.get('/public/css/:filename', (c: Context) => {
+      const filename = c.req.param('filename');
+      const filePath = join(scriptDir, 'public/css', filename);
+      
+      if (!existsSync(filePath)) {
+        return c.notFound();
+      }
+      
+      const content = readFileSync(filePath, 'utf-8');
+      return c.text(content, 200, {
+        'Content-Type': 'text/css',
+      });
+    });
+
+    // Serve template files
+    app.get('/public/templates/*', (c: Context) => {
+      const templatePath = c.req.path.replace('/public/templates/', '');
+      const filePath = join(scriptDir, 'public/templates', templatePath);
+      
+      if (!existsSync(filePath)) {
+        return c.notFound();
+      }
+      
+      const content = readFileSync(filePath, 'utf-8');
+      return c.text(content, 200, {
+        'Content-Type': 'text/html; charset=utf-8',
+      });
     });
   };
 
@@ -212,7 +262,7 @@ console.log('   ' + '\x1b[1;4;32m%s\x1b[0m', `${url}`);
 
 // Secondary information on single lines
 if (!isHeadless) {
-  console.log('\n\x1b[90m📱 UI:\x1b[0m \x1b[36m%s\x1b[0m', `${url}/public/`);
+  console.log('\n\x1b[90m📱 Admin Dashboard:\x1b[0m \x1b[36m%s\x1b[0m', `${url}/public/`);
 }
 // console.log('\x1b[90m📚 Docs:\x1b[0m \x1b[36m%s\x1b[0m', 'https://axon.ai/docs');
 
