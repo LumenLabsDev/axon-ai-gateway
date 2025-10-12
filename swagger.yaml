@@ -1,0 +1,1254 @@
+openapi: 3.0.3
+info:
+  title: Axon AI Gateway API
+  description: |
+    Unified API gateway for routing to 250+ LLMs with built-in reliability, security, and cost controls.
+    
+    ## Authentication
+    
+    The gateway uses two types of authentication:
+    
+    - **Admin Key** (`x-axon-admin-key`): For managing resources via admin endpoints
+    - **Virtual Key** (`x-axon-api-key`): For making AI requests through the gateway
+    
+    ## Rate Limiting
+    
+    Virtual keys support optional rate limiting:
+    - **RPM**: Requests per minute
+    - **TPM**: Tokens per minute
+    
+  version: 2.0.0
+  contact:
+    name: Axon AI Gateway
+    url: https://axon.ai
+  license:
+    name: MIT
+    url: https://github.com/axon-ai/gateway/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:8787
+    description: Local development server
+  - url: https://your-gateway.example.com
+    description: Production server
+
+tags:
+  - name: Gateway
+    description: AI model endpoints (requires Virtual Key)
+  - name: Admin - Keys
+    description: Manage admin and virtual keys
+  - name: Admin - Provider Keys
+    description: Manage encrypted provider API keys
+  - name: Admin - Workspaces
+    description: Manage workspaces
+  - name: Admin - Users
+    description: Manage workspace users
+  - name: Admin - Prompts
+    description: Manage prompt templates
+  - name: Admin - Guardrails
+    description: Manage input/output guardrails
+  - name: Admin - Analytics
+    description: View usage analytics
+
+paths:
+  # ============================================
+  # Gateway Endpoints
+  # ============================================
+  
+  /v1/chat/completions:
+    post:
+      tags:
+        - Gateway
+      summary: Create chat completion
+      description: |
+        Create a chat completion using any supported LLM provider.
+        Supports streaming and non-streaming responses.
+      operationId: createChatCompletion
+      security:
+        - VirtualKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatCompletionRequest'
+            examples:
+              basic:
+                summary: Basic chat completion
+                value:
+                  model: gpt-4o-mini
+                  messages:
+                    - role: user
+                      content: Hello, how are you?
+              streaming:
+                summary: Streaming response
+                value:
+                  model: gpt-4o-mini
+                  messages:
+                    - role: user
+                      content: Tell me a story
+                  stream: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatCompletionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /v1/completions:
+    post:
+      tags:
+        - Gateway
+      summary: Create text completion
+      description: Create a text completion using legacy completion endpoint
+      operationId: createCompletion
+      security:
+        - VirtualKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /v1/embeddings:
+    post:
+      tags:
+        - Gateway
+      summary: Create embeddings
+      description: Create vector embeddings for text input
+      operationId: createEmbeddings
+      security:
+        - VirtualKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingRequest'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmbeddingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # Admin - Admin Keys
+  # ============================================
+
+  /v1/admin/admin-keys:
+    get:
+      tags:
+        - Admin - Keys
+      summary: List admin keys
+      description: Get all admin keys (hashes only, not plain keys)
+      operationId: listAdminKeys
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminKey'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Admin - Keys
+      summary: Create admin key
+      description: |
+        Create a new admin key. Returns the plain key only once.
+        **Important:** Save the returned key - it cannot be retrieved later.
+      operationId: createAdminKey
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Production Admin Key
+                description:
+                  type: string
+                  example: For production admin access
+      responses:
+        '201':
+          description: Admin key created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/AdminKey'
+                      - type: object
+                        properties:
+                          plainKey:
+                            type: string
+                            example: ak_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                  message:
+                    type: string
+                    example: Admin key created. Save the plainKey now - it will not be shown again.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/admin/admin-keys/{id}:
+    get:
+      tags:
+        - Admin - Keys
+      summary: Get admin key details
+      operationId: getAdminKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/AdminKey'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Admin - Keys
+      summary: Update admin key
+      operationId: updateAdminKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                active:
+                  type: boolean
+      responses:
+        '200':
+          description: Admin key updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/AdminKey'
+
+    delete:
+      tags:
+        - Admin - Keys
+      summary: Delete admin key
+      operationId: deleteAdminKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Admin key deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Admin key deleted successfully
+
+  # ============================================
+  # Admin - Virtual Keys
+  # ============================================
+
+  /v1/admin/virtual-keys:
+    get:
+      tags:
+        - Admin - Keys
+      summary: List virtual keys
+      description: Get all virtual keys with usage statistics
+      operationId: listVirtualKeys
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: string
+          description: Filter by workspace ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VirtualKey'
+
+    post:
+      tags:
+        - Admin - Keys
+      summary: Create virtual key
+      description: |
+        Create a new virtual key linked to a provider key.
+        Returns the plain key only once.
+        **Important:** Save the returned key - it cannot be retrieved later.
+      operationId: createVirtualKey
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - workspaceId
+                - providerKeyId
+              properties:
+                name:
+                  type: string
+                  example: Production API Key
+                description:
+                  type: string
+                  example: For production use
+                workspaceId:
+                  type: string
+                  example: ws_123456
+                providerKeyId:
+                  type: string
+                  example: pk_123456
+                rateLimitRpm:
+                  type: integer
+                  nullable: true
+                  example: 100
+                  description: Requests per minute limit
+                rateLimitTpm:
+                  type: integer
+                  nullable: true
+                  example: 50000
+                  description: Tokens per minute limit
+                allowedModels:
+                  type: array
+                  items:
+                    type: string
+                  nullable: true
+                  example: ["gpt-4o", "gpt-4o-mini"]
+                  description: Restrict to specific models (null allows all)
+      responses:
+        '201':
+          description: Virtual key created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/VirtualKey'
+                      - type: object
+                        properties:
+                          plainKey:
+                            type: string
+                            example: vk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                  message:
+                    type: string
+                    example: Virtual key created. Save the plainKey now - it will not be shown again.
+
+  /v1/admin/virtual-keys/{id}:
+    get:
+      tags:
+        - Admin - Keys
+      summary: Get virtual key details
+      operationId: getVirtualKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/VirtualKey'
+
+    patch:
+      tags:
+        - Admin - Keys
+      summary: Update virtual key
+      operationId: updateVirtualKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                active:
+                  type: boolean
+                rateLimitRpm:
+                  type: integer
+                  nullable: true
+                rateLimitTpm:
+                  type: integer
+                  nullable: true
+                allowedModels:
+                  type: array
+                  items:
+                    type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Virtual key updated
+
+    delete:
+      tags:
+        - Admin - Keys
+      summary: Delete virtual key
+      operationId: deleteVirtualKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Virtual key deleted
+
+  # ============================================
+  # Admin - Provider Keys
+  # ============================================
+
+  /v1/admin/provider-keys:
+    get:
+      tags:
+        - Admin - Provider Keys
+      summary: List provider keys
+      description: Get all provider keys (API keys are masked)
+      operationId: listProviderKeys
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: string
+          description: Filter by workspace ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProviderKey'
+
+    post:
+      tags:
+        - Admin - Provider Keys
+      summary: Create provider key
+      description: Store an encrypted provider API key (OpenAI, Anthropic, etc.)
+      operationId: createProviderKey
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - provider
+                - apiKey
+                - workspaceId
+              properties:
+                name:
+                  type: string
+                  example: openai-main
+                provider:
+                  type: string
+                  example: openai
+                  description: Provider name (openai, anthropic, gemini, etc.)
+                apiKey:
+                  type: string
+                  example: sk-...
+                  description: The actual provider API key (will be encrypted)
+                workspaceId:
+                  type: string
+                  example: ws_123456
+      responses:
+        '201':
+          description: Provider key created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/ProviderKey'
+
+  /v1/admin/provider-keys/{id}:
+    get:
+      tags:
+        - Admin - Provider Keys
+      summary: Get provider key details
+      operationId: getProviderKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/ProviderKey'
+
+    patch:
+      tags:
+        - Admin - Provider Keys
+      summary: Update provider key
+      operationId: updateProviderKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                apiKey:
+                  type: string
+                  description: New API key (will be re-encrypted)
+      responses:
+        '200':
+          description: Provider key updated
+
+    delete:
+      tags:
+        - Admin - Provider Keys
+      summary: Delete provider key
+      description: Deletes provider key if no virtual keys depend on it
+      operationId: deleteProviderKey
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '200':
+          description: Provider key deleted
+        '400':
+          description: Cannot delete - virtual keys depend on this provider key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  error:
+                    type: string
+                    example: Cannot delete provider key with 3 dependent virtual keys
+
+  # ============================================
+  # Admin - Workspaces
+  # ============================================
+
+  /v1/admin/workspaces:
+    get:
+      tags:
+        - Admin - Workspaces
+      summary: List workspaces
+      operationId: listWorkspaces
+      security:
+        - AdminKeyAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Workspace'
+
+    post:
+      tags:
+        - Admin - Workspaces
+      summary: Create workspace
+      operationId: createWorkspace
+      security:
+        - AdminKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Production Workspace
+                description:
+                  type: string
+                  example: Main production environment
+      responses:
+        '201':
+          description: Workspace created
+
+  /v1/admin/workspaces/{id}:
+    get:
+      tags:
+        - Admin - Workspaces
+      summary: Get workspace details
+      operationId: getWorkspace
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+
+    patch:
+      tags:
+        - Admin - Workspaces
+      summary: Update workspace
+      operationId: updateWorkspace
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Workspace updated
+
+  # ============================================
+  # Admin - Analytics
+  # ============================================
+
+  /v1/admin/analytics:
+    get:
+      tags:
+        - Admin - Analytics
+      summary: Get usage analytics
+      description: Retrieve usage statistics and analytics data
+      operationId: getAnalytics
+      security:
+        - AdminKeyAuth: []
+      parameters:
+        - name: workspaceId
+          in: query
+          schema:
+            type: string
+          description: Filter by workspace
+        - name: virtualKeyId
+          in: query
+          schema:
+            type: string
+          description: Filter by virtual key
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start date for analytics
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End date for analytics
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      totalRequests:
+                        type: integer
+                      totalTokens:
+                        type: integer
+                      estimatedCost:
+                        type: number
+                        format: float
+                      requestsByModel:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                      requestsByDay:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            requests:
+                              type: integer
+                            tokens:
+                              type: integer
+
+components:
+  securitySchemes:
+    AdminKeyAuth:
+      type: apiKey
+      in: header
+      name: x-axon-admin-key
+      description: Admin key for managing gateway resources (starts with 'ak_')
+
+    VirtualKeyAuth:
+      type: apiKey
+      in: header
+      name: x-axon-api-key
+      description: Virtual key for making AI requests (starts with 'vk_')
+
+  parameters:
+    KeyId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Resource ID
+
+  schemas:
+    # ============================================
+    # Gateway Request/Response Schemas
+    # ============================================
+
+    ChatCompletionRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+          example: gpt-4o-mini
+          description: Model identifier
+        messages:
+          type: array
+          items:
+            type: object
+            required:
+              - role
+              - content
+            properties:
+              role:
+                type: string
+                enum: [system, user, assistant]
+              content:
+                type: string
+          example:
+            - role: user
+              content: Hello!
+        temperature:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2
+          default: 1
+        max_tokens:
+          type: integer
+          minimum: 1
+        stream:
+          type: boolean
+          default: false
+        top_p:
+          type: number
+          format: float
+        frequency_penalty:
+          type: number
+          format: float
+        presence_penalty:
+          type: number
+          format: float
+
+    ChatCompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          example: chat.completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+              message:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  content:
+                    type: string
+              finish_reason:
+                type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            completion_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    CompletionRequest:
+      type: object
+      required:
+        - model
+        - prompt
+      properties:
+        model:
+          type: string
+        prompt:
+          type: string
+        max_tokens:
+          type: integer
+        temperature:
+          type: number
+          format: float
+        stream:
+          type: boolean
+
+    CompletionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          example: text_completion
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+              index:
+                type: integer
+              finish_reason:
+                type: string
+
+    EmbeddingRequest:
+      type: object
+      required:
+        - model
+        - input
+      properties:
+        model:
+          type: string
+          example: text-embedding-ada-002
+        input:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+
+    EmbeddingResponse:
+      type: object
+      properties:
+        object:
+          type: string
+          example: list
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              object:
+                type: string
+                example: embedding
+              embedding:
+                type: array
+                items:
+                  type: number
+                  format: float
+              index:
+                type: integer
+        model:
+          type: string
+        usage:
+          type: object
+          properties:
+            prompt_tokens:
+              type: integer
+            total_tokens:
+              type: integer
+
+    # ============================================
+    # Admin Resource Schemas
+    # ============================================
+
+    AdminKey:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ak_123456
+        name:
+          type: string
+          example: Production Admin Key
+        description:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VirtualKey:
+      type: object
+      properties:
+        id:
+          type: string
+          example: vk_123456
+        name:
+          type: string
+          example: Production API Key
+        description:
+          type: string
+          nullable: true
+        workspaceId:
+          type: string
+        providerKeyId:
+          type: string
+        providerKeyName:
+          type: string
+          description: Name of the linked provider key
+        provider:
+          type: string
+          description: Provider from the linked provider key
+        rateLimitRpm:
+          type: integer
+          nullable: true
+          description: Requests per minute limit
+        rateLimitTpm:
+          type: integer
+          nullable: true
+          description: Tokens per minute limit
+        allowedModels:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: List of allowed models (null = all models allowed)
+        active:
+          type: boolean
+          default: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        usage:
+          type: object
+          properties:
+            totalRequests:
+              type: integer
+            totalTokens:
+              type: integer
+
+    ProviderKey:
+      type: object
+      properties:
+        id:
+          type: string
+          example: pk_123456
+        name:
+          type: string
+          example: openai-main
+        provider:
+          type: string
+          example: openai
+        workspaceId:
+          type: string
+        apiKey:
+          type: string
+          example: sk-***...***
+          description: Masked API key (actual key is encrypted)
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ws_123456
+        name:
+          type: string
+          example: Production Workspace
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: Invalid request parameters
+            code: BAD_REQUEST
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: Invalid or missing API key
+            code: UNAUTHORIZED
+
+    Forbidden:
+      description: Forbidden - model not allowed or insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: Model 'gpt-4' is not allowed for this virtual key
+            code: FORBIDDEN
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: Resource not found
+            code: NOT_FOUND
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: Rate limit exceeded. Limit is 100 requests per minute.
+            code: RATE_LIMIT_EXCEEDED
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: error
+            error: An internal error occurred
+            code: INTERNAL_SERVER_ERROR
+

@@ -283,6 +283,7 @@ You can do a lot more stuff with configs in your AI gateway. [Jump to examples  
 
 ## Documentation
 
+- [API Reference (Swagger)](./swagger.yaml) - Complete OpenAPI/Swagger specification
 - [Database Setup Guide](./docs/DATABASE_SETUP.md) - Complete guide for workspaces, keys, and rate limits
 - [Environment Setup](./docs/ENVIRONMENT_SETUP.md) - Configuration and security best practices
 - [Installation & Deployments](./docs/installation-deployments.md) - Deploy to Docker, Kubernetes, cloud platforms
