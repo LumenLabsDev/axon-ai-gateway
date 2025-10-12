@@ -472,14 +472,15 @@ For more details, refer to [Fastly’s official](https://www.fastly.com/products
 ---
 
 ## Enterprise Deployment
-Make your AI app more <ins>reliable</ins> and <ins>forward compatible</ins>, while ensuring complete <ins>data security</ins> and <ins>privacy</ins>.
 
-✅&nbsp; Secure Key Management - for role-based access control and tracking <br>
-✅&nbsp; Simple & Semantic Caching - to serve repeat queries faster & save costs <br>
-✅&nbsp; Access Control & Inbound Rules - to control which IPs and Geos can connect to your deployments <br>
-✅&nbsp; PII Redaction - to automatically remove sensitive data from your requests to prevent indavertent exposure <br>
-✅&nbsp; SOC2, ISO, HIPAA, GDPR Compliances - for best security practices <br>
-✅&nbsp; Professional Support - along with feature prioritization <br>
+Make your AI app more reliable and forward compatible, while ensuring complete data security and privacy.
+
+- **Secure Key Management** - for role-based access control and tracking
+- **Simple & Semantic Caching** - to serve repeat queries faster & save costs
+- **Access Control & Inbound Rules** - to control which IPs and Geos can connect to your deployments
+- **PII Redaction** - to automatically remove sensitive data from your requests to prevent inadvertent exposure
+- **SOC2, ISO, HIPAA, GDPR Compliances** - for best security practices
+- **Professional Support** - along with feature prioritization
 
 [Schedule a call to discuss enterprise deployments](https://calendly.com/axon-ai/quick-meeting?utm_source=github&utm_campaign=install_page)
 

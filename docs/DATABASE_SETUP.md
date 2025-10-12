@@ -1,12 +1,41 @@
 # Database Backend Setup Guide
 
-This guide explains how to use the database-backed features of the AI Gateway, including workspaces, API keys, provider keys, prompts, and guardrails.
+This guide explains how to use the database-backed features of Axon AI Gateway, including workspaces, admin keys, virtual keys, provider keys, prompts, and guardrails.
+
+## Overview
+
+Axon AI Gateway uses SQLite with Drizzle ORM to provide:
+
+- **Multi-workspace** architecture for team/project isolation
+- **Two-tier authentication**: Admin keys for management, Virtual keys for API access
+- **Encrypted storage** of provider API keys using AES-256-GCM
+- **Rate limiting** with requests-per-minute (RPM) and tokens-per-minute (TPM)
+- **Model restrictions** per virtual key
+- **Prompt templates** with versioning
+- **Guardrails** for input/output validation
+- **Analytics** and usage tracking
+
+## Key Concepts
+
+The gateway uses two types of keys:
+
+### Admin Keys (`ak_*`)
+- **Purpose**: Authenticate to the admin panel
+- **Header**: `x-axon-admin-key`
+- **Features**: Global access, no rate limits, manage all resources
+- **Used for**: Admin panel, managing workspaces, users, and settings
+
+### Virtual Keys (`vk_*`)
+- **Purpose**: Gateway API access with cost controls
+- **Header**: `x-axon-api-key`
+- **Features**: Rate limits (RPM/TPM), model restrictions, workspace-scoped
+- **Used for**: Making AI requests through the gateway
 
 ## Prerequisites
 
 1. Set the `ENCRYPTION_KEY` environment variable for encrypting provider API keys:
 ```bash
-export ENCRYPTION_KEY="your-secure-encryption-key-here"
+export ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
 ```
 
 2. (Optional) Set custom database path:
@@ -14,31 +43,46 @@ export ENCRYPTION_KEY="your-secure-encryption-key-here"
 export DATABASE_PATH="./data/gateway.db"  # Default path
 ```
 
-## Database Initialization
+## Quick Start
 
-The database is automatically initialized when you start the server:
+### 1. Bootstrap Your Gateway
+
+Run the bootstrap script to create initial workspace and keys:
+
+```bash
+npx tsx scripts/bootstrap.ts
+```
+
+This creates:
+- Default workspace
+- Admin user
+- **Admin key** for admin panel access
+- **Virtual key** for gateway requests
+
+**Important:** Save both keys from the output - they won't be shown again!
+
+### 2. Start the Server
 
 ```bash
 npm run dev:node
 ```
 
 The server will:
-- Create the database file if it doesn't exist
-- Apply the schema
-- Start periodic cleanup jobs (runs every hour)
+- Initialize database if needed
+- Apply schema migrations
+- Start periodic cleanup jobs
+- Be ready at `http://localhost:8787`
 
-## Getting Started
+## Getting Started (Manual Setup)
 
-### 1. Create a Workspace
+If you prefer manual setup instead of bootstrap:
 
-First, you need to create a workspace. For the initial setup, you'll need to bootstrap by creating a workspace and initial API key directly in the database or through a one-time setup script.
-
-**Bootstrap Script Example:**
+**Manual Setup Script:**
 
 ```javascript
-// bootstrap.js
+// manual-setup.js
 import { initializeDatabase, getDb } from './src/db/index.ts';
-import { workspaces, users, apiKeys } from './src/db/schema.ts';
+import { workspaces, users, adminKeys, virtualKeys } from './src/db/schema.ts';
 import { hashSync } from 'bcryptjs';
 import { randomBytes } from 'crypto';
 
@@ -59,71 +103,66 @@ const user = await db.insert(users).values({
   role: 'admin',
 }).returning().get();
 
-// Generate API key
-const plainKey = `pk_${randomBytes(32).toString('base64url')}`;
-const keyHash = hashSync(plainKey, 10);
+// Generate Admin Key (for admin panel)
+const adminKeyPlain = `ak_${randomBytes(32).toString('base64url')}`;
+const adminKeyHash = hashSync(adminKeyPlain, 10);
 
-const apiKey = await db.insert(apiKeys).values({
+const adminKey = await db.insert(adminKeys).values({
+  keyHash: adminKeyHash,
+  name: 'Admin Panel Key',
+  description: 'For accessing admin panel',
+}).returning().get();
+
+// Generate Virtual Key (for gateway API)
+const virtualKeyPlain = `vk_${randomBytes(32).toString('base64url')}`;
+const virtualKeyHash = hashSync(virtualKeyPlain, 10);
+
+const virtualKey = await db.insert(virtualKeys).values({
   workspaceId: workspace.id,
-  keyHash,
-  name: 'Admin Key',
-  permissions: {
-    'workspaces.read': true,
-    'workspaces.write': true,
-    'users.read': true,
-    'users.write': true,
-    'provider_keys.read': true,
-    'provider_keys.write': true,
-    'api_keys.read': true,
-    'api_keys.write': true,
-    'prompts.read': true,
-    'prompts.write': true,
-    'guardrails.read': true,
-    'guardrails.write': true,
-  },
-  rateLimitRpm: null, // No rate limit
+  keyHash: virtualKeyHash,
+  name: 'Main Virtual Key',
+  description: 'For gateway requests',
+  rateLimitRpm: null, // No limit
   rateLimitTpm: null,
   createdBy: user.id,
 }).returning().get();
 
-console.log('Workspace created:', workspace.id);
-console.log('User created:', user.id);
-console.log('API Key:', plainKey);
-console.log('SAVE THIS KEY - IT WILL NOT BE SHOWN AGAIN!');
+console.log('Workspace ID:', workspace.id);
+console.log('Admin Key (for panel):', adminKeyPlain);
+console.log('Virtual Key (for API):', virtualKeyPlain);
+console.log('\nIMPORTANT: SAVE THESE KEYS - THEY WILL NOT BE SHOWN AGAIN!');
 ```
 
-Run with: `tsx bootstrap.js`
+Run with: `tsx manual-setup.js`
 
 ### 2. Add Provider Keys
 
-Store encrypted provider API keys (OpenAI, Anthropic, Gemini, etc.):
+Store encrypted provider API keys (OpenAI, Anthropic, Gemini, etc.) using your **admin key**:
 
 ```bash
 curl -X POST http://localhost:8787/v1/admin/provider-keys \
-  -H "x-axon-api-key: YOUR_API_KEY" \
+  -H "x-axon-admin-key: YOUR_ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "openai-main",
     "provider": "openai",
-    "apiKey": "sk-..."
+    "apiKey": "sk-...",
+    "workspaceId": "YOUR_WORKSPACE_ID"
   }'
 ```
 
-### 3. Create Custom API Keys
+### 3. Create Virtual Keys with Rate Limits
 
-Create API keys with specific permissions and rate limits:
+Create virtual keys with cost controls using your **admin key**:
 
 ```bash
-curl -X POST http://localhost:8787/v1/admin/api-keys \
-  -H "x-axon-api-key: YOUR_API_KEY" \
+curl -X POST http://localhost:8787/v1/admin/virtual-keys \
+  -H "x-axon-admin-key: YOUR_ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Production Key",
     "description": "For production use",
-    "permissions": {
-      "completions.create": true,
-      "prompts.read": true
-    },
+    "workspaceId": "YOUR_WORKSPACE_ID",
     "rateLimitRpm": 100,
     "rateLimitTpm": 50000,
     "allowedModels": ["gpt-4", "gpt-3.5-turbo"]
@@ -136,15 +175,29 @@ curl -X POST http://localhost:8787/v1/admin/api-keys \
   "status": "success",
   "data": {
     "id": "...",
-    "plainKey": "pk_...",
+    "plainKey": "vk_...",
     "name": "Production Key",
     ...
   },
-  "message": "API key created. Save the plainKey now - it will not be shown again."
+  "message": "Virtual key created. Save the plainKey now - it will not be shown again."
 }
 ```
 
-### 4. Create Prompt Templates
+### 4. Use Virtual Keys for Gateway Requests
+
+Make AI requests using your **virtual key**:
+
+```bash
+curl -X POST http://localhost:8787/v1/chat/completions \
+  -H "x-axon-api-key: YOUR_VIRTUAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
+
+### 5. Create Prompt Templates
 
 Create reusable prompt templates with variables:
 
@@ -181,7 +234,7 @@ curl -X POST http://localhost:8787/v1/prompts/PROMPT_ID/v1/chat/completions \
   }'
 ```
 
-### 5. Create Guardrails
+### 6. Create Guardrails
 
 Create guardrails with multiple checks and actions:
 
@@ -244,6 +297,22 @@ curl -X POST http://localhost:8787/v1/admin/guardrails/GUARDRAIL_ID/bind \
 
 ## API Endpoints
 
+**Note:** All admin endpoints require `x-axon-admin-key` header. Gateway endpoints require `x-axon-api-key` header.
+
+### Admin Keys (Panel Access)
+- `GET /v1/admin/admin-keys` - List admin keys
+- `POST /v1/admin/admin-keys` - Create admin key
+- `GET /v1/admin/admin-keys/:id` - Get admin key details
+- `PATCH /v1/admin/admin-keys/:id` - Update admin key
+- `DELETE /v1/admin/admin-keys/:id` - Revoke admin key
+
+### Virtual Keys (Gateway Access with Rate Limits)
+- `GET /v1/admin/virtual-keys` - List virtual keys with usage stats
+- `POST /v1/admin/virtual-keys` - Create virtual key (returns plain key once)
+- `GET /v1/admin/virtual-keys/:id` - Get virtual key details with usage
+- `PATCH /v1/admin/virtual-keys/:id` - Update limits/models
+- `DELETE /v1/admin/virtual-keys/:id` - Revoke virtual key
+
 ### Workspaces
 - `GET /v1/admin/workspaces` - List all workspaces
 - `POST /v1/admin/workspaces` - Create workspace
@@ -251,25 +320,18 @@ curl -X POST http://localhost:8787/v1/admin/guardrails/GUARDRAIL_ID/bind \
 - `PATCH /v1/admin/workspaces/:id` - Update workspace
 
 ### Users
-- `GET /v1/admin/users` - List workspace users
+- `GET /v1/admin/users?workspaceId=xxx` - List workspace users
 - `POST /v1/admin/users` - Create user
 - `GET /v1/admin/users/:id` - Get user details
 - `PATCH /v1/admin/users/:id` - Update user role
 - `DELETE /v1/admin/users/:id` - Delete user
 
 ### Provider Keys
-- `GET /v1/admin/provider-keys` - List provider keys (masked)
+- `GET /v1/admin/provider-keys?workspaceId=xxx` - List provider keys (masked)
 - `POST /v1/admin/provider-keys` - Create provider key
 - `GET /v1/admin/provider-keys/:id` - Get provider key details
 - `PATCH /v1/admin/provider-keys/:id` - Update provider key
 - `DELETE /v1/admin/provider-keys/:id` - Delete provider key
-
-### API Keys
-- `GET /v1/admin/api-keys` - List API keys with usage stats
-- `POST /v1/admin/api-keys` - Create API key (returns plain key once)
-- `GET /v1/admin/api-keys/:id` - Get API key details with usage
-- `PATCH /v1/admin/api-keys/:id` - Update limits/permissions
-- `DELETE /v1/admin/api-keys/:id` - Revoke API key
 
 ### Prompts
 - `GET /v1/admin/prompts` - List prompts
@@ -296,31 +358,9 @@ curl -X POST http://localhost:8787/v1/admin/guardrails/GUARDRAIL_ID/bind \
 - `POST /v1/admin/guardrails/:id/bind` - Bind to workspace/API key
 - `DELETE /v1/admin/guardrails/:id/bind/:bindingId` - Unbind
 
-## Permissions
-
-Available permissions for API keys:
-
-```json
-{
-  "workspaces.read": true,
-  "workspaces.write": true,
-  "users.read": true,
-  "users.write": true,
-  "provider_keys.read": true,
-  "provider_keys.write": true,
-  "api_keys.read": true,
-  "api_keys.write": true,
-  "prompts.read": true,
-  "prompts.write": true,
-  "guardrails.read": true,
-  "guardrails.write": true,
-  "completions.create": true
-}
-```
-
 ## Rate Limiting
 
-API keys support two types of rate limits:
+Virtual keys support two types of rate limits:
 
 1. **Requests Per Minute (RPM)**: Maximum number of requests in a 1-minute window
 2. **Tokens Per Minute (TPM)**: Maximum number of tokens in a 1-minute window
@@ -375,38 +415,46 @@ DATABASE_PATH=./data/gateway.db  # Default path
 ## Security Best Practices
 
 1. **Keep ENCRYPTION_KEY secure** - Store in environment variables, never commit to git
-2. **Rotate API keys regularly** - Create new keys and delete old ones
-3. **Use least privilege** - Only grant necessary permissions to API keys
-4. **Set appropriate rate limits** - Prevent abuse and manage costs
-5. **Monitor usage** - Check API key usage stats regularly
+2. **Separate key types** - Use admin keys only for admin panel, virtual keys for gateway
+3. **Rotate keys regularly** - Create new keys and revoke old ones
+4. **Set appropriate rate limits** - Prevent abuse and manage costs on virtual keys
+5. **Monitor usage** - Check virtual key usage stats regularly
 6. **Backup database** - Regular backups of gateway.db file
 7. **Use guardrails** - Protect against malicious inputs and outputs
+8. **Restrict admin keys** - Only create admin keys for trusted administrators
 
 ## Troubleshooting
+
+### Authentication failed
+- **Admin panel**: Make sure you're using `x-axon-admin-key` header with admin key (`ak_*`)
+- **Gateway API**: Make sure you're using `x-axon-api-key` header with virtual key (`vk_*`)
+- Check that the key is active and not expired
 
 ### Database locked error
 SQLite can have lock issues with concurrent writes. The gateway uses WAL mode to minimize this.
 
 ### Rate limit not working
-Check that `rateLimitRpm` and `rateLimitTpm` are set on the API key. Usage is tracked in 1-minute windows.
+- Check that `rateLimitRpm` and `rateLimitTpm` are set on the **virtual key**
+- Admin keys don't have rate limits
+- Usage is tracked in 1-minute windows
 
 ### Provider key decryption fails
 Ensure `ENCRYPTION_KEY` environment variable is set and matches the key used when creating the provider key.
 
 ### Guardrails not executing
-- Check that the guardrail is bound to the workspace or API key
+- Check that the guardrail is bound to the workspace or virtual key
 - Verify the check IDs are valid (e.g., `default.regex`)
 - Check mode is set to `block` if you want to deny requests
 
 ## Example Workflow
 
-1. **Setup**: Create workspace, admin user, and bootstrap API key
-2. **Configure Providers**: Add OpenAI, Anthropic, Gemini keys
-3. **Create API Keys**: Generate keys for different environments (dev, staging, prod) with appropriate limits
-4. **Build Prompts**: Create versioned prompt templates
+1. **Bootstrap**: Run `npx tsx scripts/bootstrap.ts` to create workspace, admin key, and virtual key
+2. **Configure Providers**: Add OpenAI, Anthropic, Gemini keys using admin key
+3. **Create Virtual Keys**: Generate keys for different environments (dev, staging, prod) with rate limits
+4. **Build Prompts**: Create versioned prompt templates using admin panel
 5. **Add Safety**: Create and bind guardrails for content safety
-6. **Deploy**: Use custom API keys in your applications
-7. **Monitor**: Check usage stats and rate limits via admin API
+6. **Deploy**: Use virtual keys in your applications for gateway access
+7. **Monitor**: Check usage stats and rate limits via admin panel or API
 
 ## Support
 

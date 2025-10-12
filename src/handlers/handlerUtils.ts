@@ -827,8 +827,7 @@ export async function tryTargetsRecursively(
 
 /**
  * Resolve provider API key from context
- * If virtualKey is specified, lookup from database and decrypt
- * Priority: explicit apiKey > virtualKey from context > config apiKey
+ * Priority: explicit apiKey in config > providerKey from virtual key context
  */
 export function resolveProviderApiKey(
   config: Options | Targets,
@@ -839,23 +838,15 @@ export function resolveProviderApiKey(
     return config.apiKey;
   }
   
-  // If virtualKey is specified and we have context with provider keys
-  if ('virtualKey' in config && config.virtualKey && context) {
-    const providerKeys = context.get('providerKeys');
-    const provider = 'provider' in config ? config.provider : undefined;
+  // Use the provider key linked to the virtual key
+  if (context) {
+    const providerKey = context.get('providerKey');
     
-    if (providerKeys && provider) {
-      // Find matching provider key by name (virtualKey) and provider type
-      const matchingKey = providerKeys.find(
-        (pk: any) => pk.name === config.virtualKey && pk.provider === provider
-      );
-      
-      if (matchingKey) {
-        try {
-          return decryptProviderKey(matchingKey.encryptedKey);
-        } catch (error) {
-          console.error('Failed to decrypt provider key:', error);
-        }
+    if (providerKey) {
+      try {
+        return decryptProviderKey(providerKey.encryptedKey);
+      } catch (error) {
+        console.error('Failed to decrypt provider key:', error);
       }
     }
   }
@@ -864,7 +855,8 @@ export function resolveProviderApiKey(
 }
 
 export function constructConfigFromRequestHeaders(
-  requestHeaders: Record<string, any>
+  requestHeaders: Record<string, any>,
+  context?: Context
 ): Options | Targets {
   const azureConfig = {
     resourceName: requestHeaders[`x-${POWERED_BY}-azure-resource-name`],
@@ -1030,6 +1022,23 @@ export function constructConfigFromRequestHeaders(
         'Bearer ',
         ''
       );
+      
+      // If using virtual keys, get provider and API key from context
+      if (context) {
+        const providerKey = context.get('providerKey');
+        if (providerKey) {
+          if (!parsedConfigJson.provider) {
+            parsedConfigJson.provider = providerKey.provider;
+          }
+          // Always use the provider's API key when using virtual keys (decrypt it first)
+          try {
+            parsedConfigJson.api_key = decryptProviderKey(providerKey.encryptedKey);
+          } catch (error: any) {
+            console.error('Failed to decrypt provider API key:', error.message);
+            parsedConfigJson.api_key = undefined;
+          }
+        }
+      }
 
       if (parsedConfigJson.provider === AZURE_OPEN_AI) {
         parsedConfigJson = {
@@ -1132,36 +1141,43 @@ export function constructConfigFromRequestHeaders(
     ]) as any;
   }
 
+  // If no explicit provider is specified, use the one from virtual key's provider key
+  let provider = requestHeaders[`x-${POWERED_BY}-provider`];
+  let apiKey = requestHeaders['authorization']?.replace('Bearer ', '');
+  
+  if (!provider && context) {
+    const providerKey = context.get('providerKey');
+    if (providerKey) {
+      provider = providerKey.provider;
+      // Use the provider's API key instead of the virtual key (decrypt it first)
+      try {
+        apiKey = decryptProviderKey(providerKey.encryptedKey);
+      } catch (error: any) {
+        console.error('Failed to decrypt provider API key:', error.message);
+        apiKey = undefined;
+      }
+    }
+  }
+
   return {
-    provider: requestHeaders[`x-${POWERED_BY}-provider`],
-    apiKey: requestHeaders['authorization']?.replace('Bearer ', ''),
+    provider,
+    apiKey,
     defaultInputGuardrails: defaultsConfig.input_guardrails,
     defaultOutputGuardrails: defaultsConfig.output_guardrails,
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === AZURE_OPEN_AI &&
-      azureConfig),
-    ...([BEDROCK, SAGEMAKER].includes(
-      requestHeaders[`x-${POWERED_BY}-provider`]
-    ) && awsConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === SAGEMAKER &&
-      sagemakerConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === WORKERS_AI &&
-      workersAiConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === GOOGLE_VERTEX_AI &&
-      vertexConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === AZURE_AI_INFERENCE &&
-      azureAiInferenceConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === OPEN_AI && openAiConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === ANTHROPIC &&
-      anthropicConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === HUGGING_FACE &&
-      huggingfaceConfig),
+    ...(provider === AZURE_OPEN_AI && azureConfig),
+    ...([BEDROCK, SAGEMAKER].includes(provider) && awsConfig),
+    ...(provider === SAGEMAKER && sagemakerConfig),
+    ...(provider === WORKERS_AI && workersAiConfig),
+    ...(provider === GOOGLE_VERTEX_AI && vertexConfig),
+    ...(provider === AZURE_AI_INFERENCE && azureAiInferenceConfig),
+    ...(provider === OPEN_AI && openAiConfig),
+    ...(provider === ANTHROPIC && anthropicConfig),
+    ...(provider === HUGGING_FACE && huggingfaceConfig),
     mistralFimCompletion:
       requestHeaders[`x-${POWERED_BY}-mistral-fim-completion`],
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === STABILITY_AI &&
-      stabilityAiConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === FIREWORKS_AI &&
-      fireworksConfig),
-    ...(requestHeaders[`x-${POWERED_BY}-provider`] === CORTEX && cortexConfig),
+    ...(provider === STABILITY_AI && stabilityAiConfig),
+    ...(provider === FIREWORKS_AI && fireworksConfig),
+    ...(provider === CORTEX && cortexConfig),
   };
 }
 

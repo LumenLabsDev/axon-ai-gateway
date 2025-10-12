@@ -1,28 +1,19 @@
-
-<p align="right">
-   <strong>English</strong> | <a href="./.github/README.cn.md">中文</a> | <a href="./.github/README.jp.md">日本語</a>
-</p>
-
 <div align="center">
 
-<a href="https://axon.sh/report-github"><img src="https://raw.githubusercontent.com/siddharthsambharia-axon/Portkey-Product-Images/refs/heads/main/LLM%20Report%20Campaign%20Frame.png"></img></a>
-<br>
-
-# AI Gateway
+# Axon AI Gateway
 #### Route to 250+ LLMs with 1 fast & friendly API
 
-<img src="https://cfassets.axon.ai/sdk.gif" width="550px" alt="Axon AI Gateway Demo showing LLM routing capabilities" style="margin-left:-35px">
 
 [Docs](https://axon.wiki/gh-1) | [Enterprise](https://axon.wiki/gh-2) | [Hosted Gateway](https://axon.wiki/gh-3) | [Changelog](https://axon.wiki/gh-4) | [API Reference](https://axon.wiki/gh-5)
 
 
 [![License](https://img.shields.io/github/license/Ileriayo/markdown-badges)](./LICENSE)
 [![Discord](https://img.shields.io/discord/1143393887742861333)](https://axon.wiki/gh-6)
-[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/axonai?style=social&label=Follow%20%40PortkeyAI)](https://axon.wiki/gh-7)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter/follow/axonai?style=social&label=Follow%20%40AxonAI)](https://axon.wiki/gh-7)
 [![npm version](https://badge.fury.io/js/%40axon-ai%2Fgateway.svg)](https://axon.wiki/gh-8)
 [![Better Stack Badge](https://uptime.betterstack.com/status-badges/v1/monitor/q94g.svg)](https://axon.wiki/gh-9)
 
-<a href="https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?stackName=axon-gateway&templateURL=https://axon-gateway-ec2-quicklaunch.s3.us-east-1.amazonaws.com/axon-gateway-ec2-quicklaunch.template.yaml"><img src="https://img.shields.io/badge/Deploy_to_EC2-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white" alt="Deploy to AWS EC2" width="105"/></a> [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Portkey-AI/gateway)
+<a href="https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/quickcreate?stackName=axon-gateway&templateURL=https://axon-gateway-ec2-quicklaunch.s3.us-east-1.amazonaws.com/axon-gateway-ec2-quicklaunch.template.yaml"><img src="https://img.shields.io/badge/Deploy_to_EC2-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white" alt="Deploy to AWS EC2" width="105"/></a> [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/axon-ai/gateway)
 </div>
 
 <br/>
@@ -46,9 +37,8 @@ The [**AI Gateway**](https://axon.wiki/gh-10) is designed for fast, reliable & s
 <br><br>
 
 > [!TIP]
-> Starring this repo helps more developers discover the AI Gateway 🙏🏻
+> Starring this repo helps more developers discover the AI Gateway
 >
-> ![star-2](https://github.com/user-attachments/assets/53597dce-6333-4ecc-a154-eb05532954e4)
 > 
 <br>
 
@@ -56,8 +46,6 @@ The [**AI Gateway**](https://axon.wiki/gh-10) is designed for fast, reliable & s
 <br>
 
 ## Quickstart (2 mins)
-
-npx drizzle-kit push
 
 ### 1. Setup your AI Gateway
 
@@ -71,7 +59,7 @@ npx @lumenlabs-dev/axon-ai-gateway
 
 **Install dependencies:**
 ```bash
-git clone https://github.com/Portkey-AI/gateway.git
+git clone https://github.com/axon-ai/gateway.git
 cd gateway
 npm install
 ```
@@ -97,9 +85,8 @@ npx tsx scripts/bootstrap.ts
 npm run dev:node
 ```
 
-> ✅ Gateway API: `http://localhost:8787/v1`
-> 
-> ✅ Admin Panel: `http://localhost:8787/public/`
+> Gateway API: `http://localhost:8787/v1`
+> Admin Panel: `http://localhost:8787/public/`
 
 <details>
 <summary><b>🔑 Understanding Keys</b></summary>
@@ -121,7 +108,7 @@ The gateway uses two types of keys:
 
 <sup>
 Deployment guides:
-&nbsp; <a href="https://axon.wiki/gh-18"><img height="12" width="12" src="https://cfassets.axon.ai/logo/dew-color.svg" /> Portkey Cloud (Recommended)</a>
+&nbsp; <a href="https://axon.wiki/gh-18"><img height="12" width="12" src="https://cfassets.axon.ai/logo/dew-color.svg" /> Axon Cloud (Recommended)</a>
 &nbsp; <a href="./docs/installation-deployments.md#docker"><img height="12" width="12" src="https://cdn.simpleicons.org/docker/3776AB" /> Docker</a>
 &nbsp; <a href="./docs/installation-deployments.md#nodejs-server"><img height="12" width="12" src="https://cdn.simpleicons.org/node.js/3776AB" /> Node.js</a>
 &nbsp; <a href="./docs/installation-deployments.md#cloudflare-workers"><img height="12" width="12" src="https://cdn.simpleicons.org/cloudflare/3776AB" /> Cloudflare</a>
@@ -153,10 +140,10 @@ Use your **Virtual Key** to make gateway requests:
 ```python
 # pip install -qU axon-ai
 
-from axon_ai import Portkey
+from axon_ai import Axon
 
 # Configure with your virtual key
-client = Portkey(
+client = Axon(
     api_key="YOUR_VIRTUAL_KEY",  # vk_* from bootstrap
     provider="openai"
 )
@@ -197,13 +184,53 @@ curl http://localhost:8787/v1/chat/completions \
 **Access the Admin Panel:**
 
 Visit `http://localhost:8787/public/` and use your **Admin Key** to:
-- View real-time logs
+- View real-time logs and analytics
 - Manage virtual keys with rate limits
 - Configure provider keys
 - Create prompt templates
 - Set up guardrails
+- Test requests in the playground
 
-<img src="https://github.com/user-attachments/assets/362bc916-0fc9-43f1-a39e-4bd71aac4a3a" width="400" />
+<div align="center">
+<table>
+<tr>
+<td width="50%">
+<img src="./assets/dashboard.png" alt="Admin Dashboard" />
+<p align="center"><em>Dashboard - Monitor usage and performance</em></p>
+</td>
+<td width="50%">
+<img src="./assets/analytics.png" alt="Analytics" />
+<p align="center"><em>Analytics - Track costs and requests</em></p>
+</td>
+</tr>
+<tr>
+<td width="50%">
+<img src="./assets/virtual-keys.png" alt="Virtual Keys" />
+<p align="center"><em>Virtual Keys - Manage rate limits</em></p>
+</td>
+<td width="50%">
+<img src="./assets/provider-keys.png" alt="Provider Keys" />
+<p align="center"><em>Provider Keys - Secure key storage</em></p>
+</td>
+</tr>
+<tr>
+<td width="50%">
+<img src="./assets/prompts.png" alt="Prompts" />
+<p align="center"><em>Prompts - Template management</em></p>
+</td>
+<td width="50%">
+<img src="./assets/playground.png" alt="Playground" />
+<p align="center"><em>Playground - Test API requests</em></p>
+</td>
+</tr>
+<tr>
+<td colspan="2">
+<img src="./assets/logs.png" alt="Logs" />
+<p align="center"><em>Logs - Real-time request monitoring</em></p>
+</td>
+</tr>
+</table>
+</div>
 
 ### 4. Advanced Features
 
@@ -248,14 +275,13 @@ client.chat.completions.create(
 # This would always response with "Bat" as the guardrail denies all replies containing "Apple". The retry config would retry 5 times before giving up.
 ```
 <div align="center">
-<img src="https://axon.ai/blog/content/images/size/w1600/2024/11/image-15.png" width=600 title="Request flow through Portkey's AI gateway with retries and guardrails" alt="Request flow through Portkey's AI gateway with retries and guardrails"/>
 </div>
 
 You can do a lot more stuff with configs in your AI gateway. [Jump to examples  →](https://axon.wiki/gh-27)
 
 <br/>
 
-## 📚 Documentation
+## Documentation
 
 - [Database Setup Guide](./docs/DATABASE_SETUP.md) - Complete guide for workspaces, keys, and rate limits
 - [Environment Setup](./docs/ENVIRONMENT_SETUP.md) - Configuration and security best practices
@@ -265,48 +291,10 @@ You can do a lot more stuff with configs in your AI gateway. [Jump to examples  
 
 ### Enterprise Version (Private deployments)
 
-<sup>
-
-[<img height="12" width="12" src="https://cfassets.axon.ai/amazon-logo.svg" /> AWS](https://axon.wiki/gh-28)
-&nbsp; [<img height="12" width="12" src="https://cfassets.axon.ai/azure-logo.svg" /> Azure](https://axon.wiki/gh-29)
-&nbsp; [<img height="12" width="12" src="https://cdn.simpleicons.org/googlecloud/3776AB" /> GCP](https://axon.wiki/gh-30)
-&nbsp; [<img height="12" width="12" src="https://cdn.simpleicons.org/redhatopenshift/3776AB" /> OpenShift](https://axon.wiki/gh-31)
-&nbsp; [<img height="12" width="12" src="https://cdn.simpleicons.org/kubernetes/3776AB" /> Kubernetes](https://axon.wiki/gh-85)
-
-</sup>
-
 The LLM Gateway's [enterprise version](https://axon.wiki/gh-86) offers advanced capabilities for **org management**, **governance**, **security** and [more](https://axon.wiki/gh-87) out of the box. [View Feature Comparison →](https://axon.wiki/gh-32)
 
 The enterprise deployment architecture for supported platforms is available here - [**Enterprise Private Cloud Deployments**](https://axon.wiki/gh-33)
 
-<a href="https://axon.sh/demo-13"><img src="https://axon.ai/blog/content/images/2024/08/Get-API-Key--5-.png" height=50 alt="Book an enterprise AI gateway demo" /></a><br/>
-
-
-<br>
-
-<hr>
-
-### AI Engineering Hours
-
-Join weekly community calls every Friday (8 AM PT) to kickstart your AI Gateway implementation! [Happening every Friday](https://axon.wiki/gh-35)
-
-<a href="https://axon.wiki/gh-35"><img width="500" src="https://github.com/user-attachments/assets/c2885699-f197-4289-b819-21eb839fbae1" /></a>
-
-Minutes of Meetings [published here](https://axon.wiki/gh-36).
-
-
-<hr>
-
-### LLMs in Prod'25
-
-Insights from analyzing 2 trillion+ tokens, across 90+ regions and 650+ teams in production. What to expect from this report:
-- Trends shaping AI adoption and LLM provider growth.
-- Benchmarks to optimize speed, cost and reliability.
-- Strategies to scale production-grade AI systems.
-
-<a href="https://axon.sh/report-github"><img width="500" src="https://raw.githubusercontent.com/siddharthsambharia-axon/Portkey-Product-Images/refs/heads/main/LLM%20Report%20Campaign%20Image.png" /></a>
-
-<a href="https://axon.sh/report-github">**Get the Report**</a>
 <hr>
 
 
@@ -343,15 +331,15 @@ Insights from analyzing 2 trillion+ tokens, across 90+ regions and 650+ teams in
 
 ## Cookbooks
 
-### ☄️ Trending
+### Trending
 - Use models from [Nvidia NIM](/cookbook/providers/nvidia.ipynb) with AI Gateway
-- Monitor [CrewAI Agents](/cookbook/monitoring-agents/CrewAI_with_Telemetry.ipynb) with Portkey!
+- Monitor [CrewAI Agents](/cookbook/monitoring-agents/CrewAI_with_Telemetry.ipynb) with Axon!
 - Comparing [Top 10 LMSYS Models](/cookbook/use-cases/LMSYS%20Series/comparing-top10-LMSYS-models-with-Portkey.ipynb) with AI Gateway.
 
-### 🚨 Latest
+### Latest
 * [Create Synthetic Datasets using Nemotron](/cookbook/use-cases/Nemotron_GPT_Finetuning_Portkey.ipynb)
 * [Use the LLM Gateway with Vercel's AI SDK](/cookbook/integrations/vercel-ai.md)
-* [Monitor Llama Agents with Portkey's LLM Gateway](/cookbook/monitoring-agents/Llama_Agents_with_Telemetry.ipynb)
+* [Monitor Llama Agents with Axon LLM Gateway](/cookbook/monitoring-agents/Llama_Agents_with_Telemetry.ipynb)
 
 [View all cookbooks →](https://axon.wiki/gh-58)
 <br/><br/>
@@ -447,6 +435,3 @@ Join our growing community around the world, for help, ideas, and discussions on
 - Read the documentation in [Japanese](./.github/README.jp.md)
 - Visit us on [YouTube](https://axon.wiki/gh-103)
 - Join our [Dev community](https://axon.wiki/gh-82)
-<!-- - Questions tagged #axon on [Stack Overflow](https://stackoverflow.com/questions/tagged/axon) -->
-
-![Rubeus Social Share (4)](https://github.com/Portkey-AI/gateway/assets/971978/89d6f0af-a95d-4402-b451-14764c40d03f)

@@ -1,8 +1,10 @@
 # Environment Setup Guide
 
+Welcome to Axon AI Gateway! This guide explains how to configure environment variables for secure operation.
+
 ## Quick Start
 
-The Axon AI Gateway requires an `ENCRYPTION_KEY` environment variable to encrypt provider API keys stored in the database.
+Axon AI Gateway requires an `ENCRYPTION_KEY` environment variable to securely encrypt provider API keys stored in the database.
 
 ### 1. Environment Variables
 
@@ -16,7 +18,7 @@ cat .env
 ### 2. Required Variables
 
 - **ENCRYPTION_KEY**: Used to encrypt provider API keys (32+ character string)
-  - ✅ Already generated and configured
+  - Already generated and configured
   - To generate a new one: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
 ### 3. Optional Variables
@@ -47,7 +49,7 @@ dotenvConfig();
 
 ## Security Notes
 
-⚠️ **Important:**
+**Important:**
 - Never commit `.env` to version control (already in `.gitignore`)
 - Rotate your `ENCRYPTION_KEY` regularly in production
 - Use different keys for development/staging/production
@@ -112,10 +114,10 @@ For new team members:
 
 ## Status
 
-✅ **Setup Complete!** Your encryption key is configured and ready to use.
+**Setup Complete!** Your encryption key is configured and ready to use.
 
 You can now:
-- ✅ Create provider keys (OpenAI, Anthropic, etc.)
-- ✅ Store encrypted API keys securely
-- ✅ Use the admin dashboard at http://localhost:8787/public/
+- Create provider keys (OpenAI, Anthropic, etc.)
+- Store encrypted API keys securely
+- Use the admin dashboard at http://localhost:8787/public/
 
