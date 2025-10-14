@@ -3,12 +3,19 @@
   <div class="card">
     <div class="card-header">
       <h2 class="card-title">Prompts</h2>
-      <button class="btn btn-primary" @click="showCreateModal = true">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Create Prompt
-      </button>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn btn-secondary btn-sm" @click="loadPrompts()" title="Refresh">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+        <button class="btn btn-primary" @click="showCreateModal = true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Create Prompt
+        </button>
+      </div>
     </div>
     
     <div x-show="loading" class="loading-container">
@@ -21,21 +28,77 @@
       <button class="btn btn-primary" @click="showCreateModal = true">Create Prompt</button>
     </div>
     
-    <div x-show="!loading && prompts.length > 0" class="table-container">
+    <div x-show="!loading && prompts.length > 0">
+      <!-- Toolbar -->
+      <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <input 
+          type="text" 
+          class="form-input" 
+          placeholder="Search prompts..." 
+          x-model="searchTerm"
+          style="max-width: 300px;"
+        />
+        <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+          <span x-show="selectedItems.size > 0" style="font-size: 0.875rem; color: #6b7280;">
+            <span x-text="selectedItems.size"></span> selected
+          </span>
+          <button 
+            x-show="selectedItems.size > 0" 
+            class="btn btn-danger btn-sm" 
+            @click="bulkDelete()"
+          >
+            Delete Selected
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th>Name</th>
+            <th style="width: 40px;">
+              <input 
+                type="checkbox" 
+                @change="toggleSelectAll()"
+                :checked="selectedItems.size > 0 && selectedItems.size === paginatedData.length"
+              />
+            </th>
+            <th @click="sortBy('name')" style="cursor: pointer;">
+              Name
+              <span x-show="sortKey === 'name'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
             <th>Version</th>
-            <th>Status</th>
+            <th @click="sortBy('status')" style="cursor: pointer;">
+              Status
+              <span x-show="sortKey === 'status'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
             <th>Model</th>
-            <th>Created</th>
+            <th @click="sortBy('createdAt')" style="cursor: pointer;">
+              Created
+              <span x-show="sortKey === 'createdAt'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <template x-for="prompt in prompts" :key="prompt.id">
+          <template x-for="prompt in paginatedData" :key="prompt.id">
             <tr>
+              <td>
+                <input 
+                  type="checkbox" 
+                  :checked="isSelected(prompt.id)"
+                  @change="toggleSelect(prompt.id)"
+                />
+              </td>
               <td><strong x-text="prompt.name"></strong></td>
               <td><span class="badge badge-gray" x-text="'v' + prompt.currentVersion"></span></td>
               <td>
@@ -61,6 +124,40 @@
           </template>
         </tbody>
       </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div x-show="totalPages > 1" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 1rem; border-top: 1px solid #e5e7eb;">
+        <div style="font-size: 0.875rem; color: #6b7280;">
+          Showing <span x-text="(currentPage - 1) * perPage + 1"></span> to 
+          <span x-text="Math.min(currentPage * perPage, filteredData.length)"></span> of 
+          <span x-text="filteredData.length"></span> results
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="prevPage()" 
+            :disabled="currentPage === 1"
+          >
+            Previous
+          </button>
+          <template x-for="page in pageNumbers" :key="page">
+            <button 
+              class="btn btn-sm" 
+              :class="page === currentPage ? 'btn-primary' : 'btn-secondary'"
+              @click="goToPage(page)"
+              x-text="page"
+            ></button>
+          </template>
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="nextPage()" 
+            :disabled="currentPage === totalPages"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

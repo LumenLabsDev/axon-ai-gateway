@@ -54,6 +54,7 @@ export const providerKeys = sqliteTable('provider_keys', {
  */
 export const adminKeys = sqliteTable('admin_keys', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
   keyHash: text('key_hash').notNull().unique(),
   name: text('name').notNull(),
   description: text('description'),
@@ -62,6 +63,7 @@ export const adminKeys = sqliteTable('admin_keys', {
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 }, (table) => ({
   keyHashIdx: index('admin_keys_key_hash_idx').on(table.keyHash),
+  workspaceIdx: index('admin_keys_workspace_idx').on(table.workspaceId),
 }));
 
 /**
@@ -217,6 +219,30 @@ export const workspaceGuardrails = sqliteTable('workspace_guardrails', {
   guardrailIdx: index('workspace_guardrails_guardrail_idx').on(table.guardrailId),
 }));
 
+/**
+ * Request Logs table
+ * Tracks all API requests for analytics and monitoring
+ */
+export const requestLogs = sqliteTable('request_logs', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  workspaceId: text('workspace_id').notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+  virtualKeyId: text('virtual_key_id').notNull().references(() => virtualKeys.id, { onDelete: 'cascade' }),
+  model: text('model'),
+  provider: text('provider'),
+  endpoint: text('endpoint').notNull(), // e.g., /v1/chat/completions
+  method: text('method').notNull(), // GET, POST, etc.
+  statusCode: integer('status_code').notNull(),
+  tokensUsed: integer('tokens_used').notNull().default(0),
+  responseTime: integer('response_time'), // milliseconds
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+}, (table) => ({
+  workspaceIdx: index('request_logs_workspace_idx').on(table.workspaceId),
+  virtualKeyIdx: index('request_logs_virtual_key_idx').on(table.virtualKeyId),
+  createdAtIdx: index('request_logs_created_at_idx').on(table.createdAt),
+  modelIdx: index('request_logs_model_idx').on(table.model),
+  statusCodeIdx: index('request_logs_status_code_idx').on(table.statusCode),
+}));
+
 // Type exports for use in application code
 export type Workspace = typeof workspaces.$inferSelect;
 export type NewWorkspace = typeof workspaces.$inferInsert;
@@ -250,4 +276,7 @@ export type NewRateLimitUsage = typeof rateLimitUsage.$inferInsert;
 
 export type WorkspaceGuardrail = typeof workspaceGuardrails.$inferSelect;
 export type NewWorkspaceGuardrail = typeof workspaceGuardrails.$inferInsert;
+
+export type RequestLog = typeof requestLogs.$inferSelect;
+export type NewRequestLog = typeof requestLogs.$inferInsert;
 

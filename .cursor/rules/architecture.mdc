@@ -1,0 +1,32 @@
+---
+description: Middlewares, providers, plugins, and system design
+globs:
+  - "src/middlewares/**/*.ts"
+  - "src/providers/**/*.ts"
+  - "plugins/**/*.ts"
+alwaysApply: false
+---
+
+## Middlewares
+- Stateless and composable. Inject dependencies; avoid singletons.
+- Validate payloads early (PII, content safety, prompt injection).
+- Structured logs with telemetry contexts.
+- Deterministic cache keys including relevant headers/body.
+- Make thresholds/limits configurable via env/config.
+
+## Providers
+- Map provider-specific payloads to internal request/response types.
+- Localize provider conditionals. Don't leak provider flags upstream.
+- Normalize streaming events and tokens across providers.
+- Read keys/endpoints from env/config. No hard-coded credentials.
+- Retries with backoff for transient errors (avoid retrying 4xx).
+- Add timeouts. Surface errors with provider context.
+
+## Plugins
+- Follow manifest schema (`manifest.json`).
+- Keep plugins isolated. Export clear interfaces.
+- Document capabilities and configuration requirements.
+
+@src/middlewares/**
+@src/providers/**
+@plugins/**/manifest.json

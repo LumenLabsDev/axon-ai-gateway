@@ -104,7 +104,8 @@ document.addEventListener('alpine:init', () => {
       '4': 'prompts',
       '5': 'logs',
       '6': 'analytics',
-      '7': 'playground'
+      '7': 'playground',
+      '8': 'workspaces'
     };
     
     if (shortcuts[e.key]) {

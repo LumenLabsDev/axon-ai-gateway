@@ -10,8 +10,26 @@ import { hashSync } from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { exit } from 'process';
 import dotenv from 'dotenv';
+import * as readline from 'readline';
 
 dotenv.config();
+
+/**
+ * Prompt user for input with a default value
+ */
+function promptUser(question: string, defaultValue: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(`${question} [${defaultValue}]: `, (answer) => {
+      rl.close();
+      resolve(answer.trim() || defaultValue);
+    });
+  });
+}
 
 async function bootstrap() {
   console.log('🚀 Starting bootstrap process...\n');
@@ -31,10 +49,17 @@ async function bootstrap() {
     const db = getDb();
     console.log('✅ Database initialized\n');
     
+    // Interactive prompts
+    console.log('📝 Please provide the following information (press Enter to use defaults):\n');
+    const workspaceName = await promptUser('Workspace name', 'Default Workspace');
+    const adminEmail = await promptUser('Admin email', 'admin@localhost');
+    const adminName = await promptUser('Admin name', 'Admin User');
+    console.log('');
+    
     // Create workspace
     console.log('🏢 Creating workspace...');
     const workspaceResult = await db.insert(workspaces).values({
-      name: 'Default Workspace',
+      name: workspaceName,
       description: 'Initial workspace created by bootstrap',
       metadata: {},
     }).returning();
@@ -45,8 +70,8 @@ async function bootstrap() {
     console.log('👤 Creating admin user...');
     const userResult = await db.insert(users).values({
       workspaceId: workspace.id,
-      email: 'admin@localhost',
-      name: 'Admin User',
+      email: adminEmail,
+      name: adminName,
       role: 'admin',
     }).returning();
     const user = userResult[0];
@@ -58,6 +83,7 @@ async function bootstrap() {
     const adminKeyHash = hashSync(plainAdminKey, 10);
     
     const adminKeyResult = await db.insert(adminKeys).values({
+      workspaceId: workspace.id,
       keyHash: adminKeyHash,
       name: 'Bootstrap Admin Key',
       description: 'Initial admin key for accessing the admin panel',

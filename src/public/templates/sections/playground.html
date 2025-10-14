@@ -15,40 +15,20 @@
       <div>
         <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem;">Request Configuration</h3>
         
-        <!-- API Key Selection -->
+        <!-- API Key Input -->
         <div class="form-group">
-          <label class="form-label">Virtual Key</label>
-          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-            <label class="checkbox-item" style="margin: 0;">
-              <input type="checkbox" x-model="useManualKey" />
-              <span>Enter Virtual Key Manually</span>
-            </label>
-          </div>
-          
-          <div x-show="!useManualKey">
-            <select id="pg-api-key" class="form-select" x-model="selectedApiKey">
-              <option value="">Select from created keys</option>
-              <template x-for="key in apiKeys" :key="key.id">
-                <option :value="key.id" x-text="key.name"></option>
-              </template>
-            </select>
-            <p class="form-help" style="color: #f59e0b; font-size: 0.813rem; margin-top: 0.25rem;">
-              ⚠️ Note: You need to paste the actual virtual key below (shown only once when created)
-            </p>
-          </div>
-          
-          <div x-show="useManualKey">
-            <input 
-              type="password" 
-              class="form-input" 
-              x-model="manualApiKey" 
-              placeholder="vk_xxxxxxxxxxxxxxxx"
-              :required="useManualKey"
-            />
-            <p class="form-help" style="margin-top: 0.25rem;">
-              Paste your virtual key here (starts with vk_)
-            </p>
-          </div>
+          <label class="form-label" for="pg-api-key">Virtual Key *</label>
+          <input 
+            type="password" 
+            id="pg-api-key"
+            class="form-input" 
+            x-model="apiKey" 
+            placeholder="vk_xxxxxxxxxxxxxxxx"
+            required
+          />
+          <p class="form-help" style="margin-top: 0.25rem;">
+            Paste your virtual key here (starts with vk_)
+          </p>
         </div>
 
         <!-- Endpoint Selection -->
@@ -138,7 +118,7 @@
           <button 
             class="btn btn-primary" 
             @click="sendRequest()" 
-            :disabled="loading || !selectedApiKey"
+            :disabled="loading || !apiKey"
             style="width: 100%;"
           >
             <span x-show="!loading">Send Request</span>

@@ -107,6 +107,8 @@ if (conf.cache === true) {
 import { adminKeyAuth } from './middlewares/adminKeyAuth';
 import { virtualKeyAuth, validateRequestedModel } from './middlewares/virtualKeyAuth';
 import { workspaceContext } from './middlewares/workspaceContext';
+import { workspaceAuth } from './middlewares/workspaceAuth';
+import { usageTracking } from './middlewares/usageTracking';
 
 // Admin routes - use admin key authentication
 import * as workspacesHandler from './handlers/admin/workspacesHandler';
@@ -120,66 +122,67 @@ import * as guardrailsHandler from './handlers/admin/guardrailsHandler';
 import * as analyticsHandler from './handlers/admin/analyticsHandler';
 
 // Admin Keys (admin authentication for admin panel)
-app.get('/v1/admin/admin-keys', adminKeyAuth, workspaceContext, adminKeysHandler.listAdminKeys);
-app.post('/v1/admin/admin-keys', adminKeyAuth, workspaceContext, adminKeysHandler.createAdminKey);
-app.get('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, adminKeysHandler.getAdminKey);
-app.patch('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, adminKeysHandler.updateAdminKey);
-app.delete('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, adminKeysHandler.deleteAdminKey);
+app.get('/v1/admin/admin-keys', adminKeyAuth, workspaceContext, workspaceAuth, adminKeysHandler.listAdminKeys);
+app.post('/v1/admin/admin-keys', adminKeyAuth, workspaceContext, workspaceAuth, adminKeysHandler.createAdminKey);
+app.get('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, adminKeysHandler.getAdminKey);
+app.patch('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, adminKeysHandler.updateAdminKey);
+app.delete('/v1/admin/admin-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, adminKeysHandler.deleteAdminKey);
 
-// Workspaces
+// Workspaces (list and create are global operations, others need workspace auth)
 app.get('/v1/admin/workspaces', adminKeyAuth, workspaceContext, workspacesHandler.listWorkspaces);
 app.post('/v1/admin/workspaces', adminKeyAuth, workspaceContext, workspacesHandler.createWorkspace);
-app.get('/v1/admin/workspaces/:id', adminKeyAuth, workspaceContext, workspacesHandler.getWorkspace);
-app.patch('/v1/admin/workspaces/:id', adminKeyAuth, workspaceContext, workspacesHandler.updateWorkspace);
+app.get('/v1/admin/workspaces/:id', adminKeyAuth, workspaceContext, workspaceAuth, workspacesHandler.getWorkspace);
+app.patch('/v1/admin/workspaces/:id', adminKeyAuth, workspaceContext, workspaceAuth, workspacesHandler.updateWorkspace);
+app.delete('/v1/admin/workspaces/:id', adminKeyAuth, workspaceContext, workspaceAuth, workspacesHandler.deleteWorkspace);
 
 // Users
-app.get('/v1/admin/users', adminKeyAuth, workspaceContext, usersHandler.listUsers);
-app.post('/v1/admin/users', adminKeyAuth, workspaceContext, usersHandler.createUser);
-app.get('/v1/admin/users/:id', adminKeyAuth, workspaceContext, usersHandler.getUser);
-app.patch('/v1/admin/users/:id', adminKeyAuth, workspaceContext, usersHandler.updateUser);
-app.delete('/v1/admin/users/:id', adminKeyAuth, workspaceContext, usersHandler.deleteUser);
+app.get('/v1/admin/users', adminKeyAuth, workspaceContext, workspaceAuth, usersHandler.listUsers);
+app.post('/v1/admin/users', adminKeyAuth, workspaceContext, workspaceAuth, usersHandler.createUser);
+app.get('/v1/admin/users/:id', adminKeyAuth, workspaceContext, workspaceAuth, usersHandler.getUser);
+app.patch('/v1/admin/users/:id', adminKeyAuth, workspaceContext, workspaceAuth, usersHandler.updateUser);
+app.delete('/v1/admin/users/:id', adminKeyAuth, workspaceContext, workspaceAuth, usersHandler.deleteUser);
 
 // Provider Keys
-app.get('/v1/admin/provider-keys', adminKeyAuth, workspaceContext, providerKeysHandler.listProviderKeys);
-app.post('/v1/admin/provider-keys', adminKeyAuth, workspaceContext, providerKeysHandler.createProviderKey);
-app.get('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, providerKeysHandler.getProviderKey);
-app.patch('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, providerKeysHandler.updateProviderKey);
-app.delete('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, providerKeysHandler.deleteProviderKey);
+app.get('/v1/admin/provider-keys', adminKeyAuth, workspaceContext, workspaceAuth, providerKeysHandler.listProviderKeys);
+app.post('/v1/admin/provider-keys', adminKeyAuth, workspaceContext, workspaceAuth, providerKeysHandler.createProviderKey);
+app.get('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, providerKeysHandler.getProviderKey);
+app.patch('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, providerKeysHandler.updateProviderKey);
+app.delete('/v1/admin/provider-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, providerKeysHandler.deleteProviderKey);
 
 // Virtual Keys (gateway access with rate limits)
-app.get('/v1/admin/virtual-keys', adminKeyAuth, workspaceContext, virtualKeysHandler.listVirtualKeys);
-app.post('/v1/admin/virtual-keys', adminKeyAuth, workspaceContext, virtualKeysHandler.createVirtualKey);
-app.get('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, virtualKeysHandler.getVirtualKey);
-app.patch('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, virtualKeysHandler.updateVirtualKey);
-app.delete('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, virtualKeysHandler.deleteVirtualKey);
+app.get('/v1/admin/virtual-keys', adminKeyAuth, workspaceContext, workspaceAuth, virtualKeysHandler.listVirtualKeys);
+app.post('/v1/admin/virtual-keys', adminKeyAuth, workspaceContext, workspaceAuth, virtualKeysHandler.createVirtualKey);
+app.get('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, virtualKeysHandler.getVirtualKey);
+app.patch('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, virtualKeysHandler.updateVirtualKey);
+app.delete('/v1/admin/virtual-keys/:id', adminKeyAuth, workspaceContext, workspaceAuth, virtualKeysHandler.deleteVirtualKey);
 
 // Prompts
-app.get('/v1/admin/prompts', adminKeyAuth, workspaceContext, promptsHandler.listPrompts);
-app.post('/v1/admin/prompts', adminKeyAuth, workspaceContext, promptsHandler.createPrompt);
-app.get('/v1/admin/prompts/:id', adminKeyAuth, workspaceContext, promptsHandler.getPrompt);
-app.get('/v1/admin/prompts/:id/versions/:version', adminKeyAuth, workspaceContext, promptsHandler.getPromptVersion);
-app.post('/v1/admin/prompts/:id/versions', adminKeyAuth, workspaceContext, promptsHandler.createPromptVersion);
-app.patch('/v1/admin/prompts/:id/versions/:version', adminKeyAuth, workspaceContext, promptsHandler.updatePromptVersion);
-app.delete('/v1/admin/prompts/:id', adminKeyAuth, workspaceContext, promptsHandler.deletePrompt);
+app.get('/v1/admin/prompts', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.listPrompts);
+app.post('/v1/admin/prompts', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.createPrompt);
+app.get('/v1/admin/prompts/:id', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.getPrompt);
+app.get('/v1/admin/prompts/:id/versions/:version', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.getPromptVersion);
+app.post('/v1/admin/prompts/:id/versions', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.createPromptVersion);
+app.patch('/v1/admin/prompts/:id/versions/:version', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.updatePromptVersion);
+app.delete('/v1/admin/prompts/:id', adminKeyAuth, workspaceContext, workspaceAuth, promptsHandler.deletePrompt);
 
 // Prompt Partials
-app.get('/v1/admin/prompt-partials', adminKeyAuth, workspaceContext, promptPartialsHandler.listPromptPartials);
-app.post('/v1/admin/prompt-partials', adminKeyAuth, workspaceContext, promptPartialsHandler.createPromptPartial);
-app.get('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, promptPartialsHandler.getPromptPartial);
-app.patch('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, promptPartialsHandler.updatePromptPartial);
-app.delete('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, promptPartialsHandler.deletePromptPartial);
+app.get('/v1/admin/prompt-partials', adminKeyAuth, workspaceContext, workspaceAuth, promptPartialsHandler.listPromptPartials);
+app.post('/v1/admin/prompt-partials', adminKeyAuth, workspaceContext, workspaceAuth, promptPartialsHandler.createPromptPartial);
+app.get('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, workspaceAuth, promptPartialsHandler.getPromptPartial);
+app.patch('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, workspaceAuth, promptPartialsHandler.updatePromptPartial);
+app.delete('/v1/admin/prompt-partials/:id', adminKeyAuth, workspaceContext, workspaceAuth, promptPartialsHandler.deletePromptPartial);
 
 // Guardrails
-app.get('/v1/admin/guardrails', adminKeyAuth, workspaceContext, guardrailsHandler.listGuardrails);
-app.post('/v1/admin/guardrails', adminKeyAuth, workspaceContext, guardrailsHandler.createGuardrail);
-app.get('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, guardrailsHandler.getGuardrail);
-app.patch('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, guardrailsHandler.updateGuardrail);
-app.delete('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, guardrailsHandler.deleteGuardrail);
-app.post('/v1/admin/guardrails/:id/bind', adminKeyAuth, workspaceContext, guardrailsHandler.bindGuardrail);
-app.delete('/v1/admin/guardrails/:id/bind/:bindingId', adminKeyAuth, workspaceContext, guardrailsHandler.unbindGuardrail);
+app.get('/v1/admin/guardrails', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.listGuardrails);
+app.post('/v1/admin/guardrails', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.createGuardrail);
+app.get('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.getGuardrail);
+app.patch('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.updateGuardrail);
+app.delete('/v1/admin/guardrails/:id', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.deleteGuardrail);
+app.post('/v1/admin/guardrails/:id/bind', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.bindGuardrail);
+app.delete('/v1/admin/guardrails/:id/bind/:bindingId', adminKeyAuth, workspaceContext, workspaceAuth, guardrailsHandler.unbindGuardrail);
 
 // Analytics
-app.get('/v1/admin/analytics', adminKeyAuth, workspaceContext, analyticsHandler.getAnalytics);
+app.get('/v1/admin/analytics', adminKeyAuth, workspaceContext, workspaceAuth, analyticsHandler.getAnalytics);
 
 /**
  * Default route when no other route matches.
@@ -208,13 +211,14 @@ app.onError((err, c) => {
 /**
  * POST route for '/v1/messages' in anthropic format
  */
-app.post('/v1/messages', virtualKeyAuth, validateRequestedModel, requestValidator, messagesHandler);
+app.post('/v1/messages', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, messagesHandler);
 
 app.post(
   '/v1/messages/count_tokens',
   virtualKeyAuth,
   validateRequestedModel,
   requestValidator,
+  usageTracking,
   messagesCountTokensHandler
 );
 
@@ -222,37 +226,37 @@ app.post(
  * POST route for '/v1/chat/completions'.
  * Handles requests by passing them to the chatCompletionsHandler.
  */
-app.post('/v1/chat/completions', virtualKeyAuth, validateRequestedModel, requestValidator, chatCompletionsHandler);
+app.post('/v1/chat/completions', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, chatCompletionsHandler);
 
 /**
  * POST route for '/v1/completions'.
  * Handles requests by passing them to the completionsHandler.
  */
-app.post('/v1/completions', virtualKeyAuth, validateRequestedModel, requestValidator, completionsHandler);
+app.post('/v1/completions', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, completionsHandler);
 
 /**
  * POST route for '/v1/embeddings'.
  * Handles requests by passing them to the embeddingsHandler.
  */
-app.post('/v1/embeddings', virtualKeyAuth, validateRequestedModel, requestValidator, embeddingsHandler);
+app.post('/v1/embeddings', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, embeddingsHandler);
 
 /**
  * POST route for '/v1/images/generations'.
  * Handles requests by passing them to the imageGenerations handler.
  */
-app.post('/v1/images/generations', virtualKeyAuth, validateRequestedModel, requestValidator, imageGenerationsHandler);
+app.post('/v1/images/generations', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, imageGenerationsHandler);
 
 /**
  * POST route for '/v1/images/edits'.
  * Handles requests by passing them to the imageGenerations handler.
  */
-app.post('/v1/images/edits', virtualKeyAuth, validateRequestedModel, requestValidator, imageEditsHandler);
+app.post('/v1/images/edits', virtualKeyAuth, validateRequestedModel, requestValidator, usageTracking, imageEditsHandler);
 
 /**
  * POST route for '/v1/audio/speech'.
  * Handles requests by passing them to the createSpeechHandler.
  */
-app.post('/v1/audio/speech', virtualKeyAuth, requestValidator, createSpeechHandler);
+app.post('/v1/audio/speech', virtualKeyAuth, requestValidator, usageTracking, createSpeechHandler);
 
 /**
  * POST route for '/v1/audio/transcriptions'.
@@ -262,6 +266,7 @@ app.post(
   '/v1/audio/transcriptions',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   createTranscriptionHandler
 );
 
@@ -269,22 +274,24 @@ app.post(
  * POST route for '/v1/audio/translations'.
  * Handles requests by passing them to the createTranslationHandler.
  */
-app.post('/v1/audio/translations', virtualKeyAuth, requestValidator, createTranslationHandler);
+app.post('/v1/audio/translations', virtualKeyAuth, requestValidator, usageTracking, createTranslationHandler);
 
 // files
-app.get('/v1/files', virtualKeyAuth, requestValidator, filesHandler('listFiles', 'GET'));
-app.get('/v1/files/:id', virtualKeyAuth, requestValidator, filesHandler('retrieveFile', 'GET'));
+app.get('/v1/files', virtualKeyAuth, requestValidator, usageTracking, filesHandler('listFiles', 'GET'));
+app.get('/v1/files/:id', virtualKeyAuth, requestValidator, usageTracking, filesHandler('retrieveFile', 'GET'));
 app.get(
   '/v1/files/:id/content',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   filesHandler('retrieveFileContent', 'GET')
 );
-app.post('/v1/files', virtualKeyAuth, requestValidator, filesHandler('uploadFile', 'POST'));
+app.post('/v1/files', virtualKeyAuth, requestValidator, usageTracking, filesHandler('uploadFile', 'POST'));
 app.delete(
   '/v1/files/:id',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   filesHandler('deleteFile', 'DELETE')
 );
 
@@ -293,51 +300,59 @@ app.post(
   '/v1/batches',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   batchesHandler('createBatch', 'POST')
 );
 app.get(
   '/v1/batches/:id',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   batchesHandler('retrieveBatch', 'GET')
 );
 app.get(
   '/v1/batches/*/output',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   batchesHandler('getBatchOutput', 'GET')
 );
 app.post(
   '/v1/batches/:id/cancel',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   batchesHandler('cancelBatch', 'POST')
 );
-app.get('/v1/batches', virtualKeyAuth, requestValidator, batchesHandler('listBatches', 'GET'));
+app.get('/v1/batches', virtualKeyAuth, requestValidator, usageTracking, batchesHandler('listBatches', 'GET'));
 
 // responses
 app.post(
   '/v1/responses',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   modelResponsesHandler('createModelResponse', 'POST')
 );
 app.get(
   '/v1/responses/:id',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   modelResponsesHandler('getModelResponse', 'GET')
 );
 app.delete(
   '/v1/responses/:id',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   modelResponsesHandler('deleteModelResponse', 'DELETE')
 );
 app.get(
   '/v1/responses/:id/input_items',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   modelResponsesHandler('listResponseInputItems', 'GET')
 );
 
@@ -345,6 +360,7 @@ app.all(
   '/v1/fine_tuning/jobs/:jobId?/:cancel?',
   virtualKeyAuth,
   requestValidator,
+  usageTracking,
   finetuneHandler
 );
 
@@ -352,7 +368,7 @@ app.all(
  * POST route for '/v1/prompts/:id/completions'.
  * Handles axon prompt completions route
  */
-app.post('/v1/prompts/*', virtualKeyAuth, requestValidator, (c) => {
+app.post('/v1/prompts/*', virtualKeyAuth, requestValidator, usageTracking, (c) => {
   if (c.req.url.endsWith('/v1/chat/completions')) {
     return chatCompletionsHandler(c);
   } else if (c.req.url.endsWith('/v1/completions')) {
@@ -374,15 +390,15 @@ if (runtime === 'workerd') {
  * @deprecated
  * Support the /v1 proxy endpoint
  */
-app.post('/v1/proxy/*', virtualKeyAuth, proxyHandler);
+app.post('/v1/proxy/*', virtualKeyAuth, usageTracking, proxyHandler);
 
 // Support the /v1 proxy endpoint after all defined endpoints so this does not interfere.
-app.post('/v1/*', virtualKeyAuth, requestValidator, proxyHandler);
+app.post('/v1/*', virtualKeyAuth, requestValidator, usageTracking, proxyHandler);
 
 // Support the /v1 proxy endpoint after all defined endpoints so this does not interfere.
-app.get('/v1/:path{(?!realtime).*}', virtualKeyAuth, requestValidator, proxyHandler);
+app.get('/v1/:path{(?!realtime).*}', virtualKeyAuth, requestValidator, usageTracking, proxyHandler);
 
-app.delete('/v1/*', virtualKeyAuth, requestValidator, proxyHandler);
+app.delete('/v1/*', virtualKeyAuth, requestValidator, usageTracking, proxyHandler);
 
 // Export the app
 export default app;

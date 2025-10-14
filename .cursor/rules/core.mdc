@@ -1,0 +1,38 @@
+---
+description: Core project essentials - commands, structure, runtime
+globs:
+  - "package.json"
+  - "tsconfig.json"
+  - "src/**/*"
+alwaysApply: true
+---
+
+## Runtime & Modules
+- ESM only (`"type": "module"`). Use `import`/`export`; no `require`.
+- Targets Node.js and Cloudflare Workers. Guard Node-only APIs from worker paths.
+
+## Commands
+**Dev**: `npm run dev` (Workers) | `npm run dev:node` (Node)
+**Build**: `npm run build` | `npm run build-plugins`
+**Test**: `npm run test:gateway` | `npm run test:plugins`
+**Deploy**: `npm run deploy` (Workers) | `npm run start:node` (Node prod)
+
+## Architecture
+**Entrypoints**
+- `src/index.ts` — Cloudflare Workers entry
+- `src/start-server.ts` — Node.js HTTP server entry
+
+**Core Paths**
+- `src/handlers/**` — Route logic (validate early, return typed results)
+- `src/middlewares/**` — Cross-cutting concerns (auth, cache, logging, guardrails)
+- `src/services/**` — Orchestration and provider composition
+- `src/providers/**` — AI provider adapters (normalize to internal types)
+- `src/types/**` — Shared type definitions
+- `src/utils/**` — Pure utility functions
+- `plugins/**` — Guardrail and validation plugins
+
+**Dependency Flow**: handlers → services → providers (avoid circular deps)
+
+@package.json
+@src/index.ts
+@src/start-server.ts

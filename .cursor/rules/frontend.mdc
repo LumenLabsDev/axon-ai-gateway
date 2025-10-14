@@ -1,0 +1,160 @@
+---
+description: Frontend architecture, patterns, and build process
+globs:
+  - "src/public/**/*.html"
+  - "src/public/**/*.js"
+  - "src/public/**/*.css"
+  - "scripts/build-frontend.ts"
+alwaysApply: false
+---
+
+## Architecture
+- **Framework**: Alpine.js for reactivity and component management
+- **Styling**: Vanilla CSS (no preprocessors)
+- **Template System**: Modular HTML templates loaded via `data-template` attributes
+- **State**: Alpine stores for global state + localStorage for persistence
+- **API Layer**: Centralized API service abstraction (`api-service.js`)
+
+## File Structure
+```
+src/public/
+├── admin.html              # Main entry point
+├── assets/                 # Images, icons, static assets
+├── css/                    # Stylesheets
+│   └── admin.css          # Main stylesheet
+├── js/                     # JavaScript modules
+│   ├── alpine.min.js      # Framework (vendored)
+│   ├── api-service.js     # API abstraction layer
+│   ├── app-init.js        # Alpine stores & global state
+│   ├── components.js      # Alpine.data() components
+│   ├── template-loader.js # Dynamic template loading
+│   └── utils.js           # Utility functions
+└── templates/              # HTML template fragments
+    ├── modals/            # Modal dialogs
+    └── sections/          # Page sections
+```
+
+## Component Patterns
+
+### Alpine.js Components
+- Use `Alpine.data()` for reusable components
+- Initialize with `x-data="componentName"` in templates
+- Implement `init()` lifecycle method for async setup
+- Wait for workspace readiness before loading workspace-scoped data
+
+```javascript
+Alpine.data('componentName', () => ({
+  data: [],
+  loading: false,
+  
+  async init() {
+    await waitForWorkspace();
+    await this.loadData();
+  },
+  
+  async loadData() {
+    this.loading = true;
+    try {
+      const response = await API.resource.list();
+      this.data = response.data || [];
+    } catch (error) {
+      Utils.showToast('Failed to load data', 'error');
+    } finally {
+      this.loading = false;
+    }
+  }
+}));
+```
+
+### Alpine Stores
+- Global state in `Alpine.store()` (defined in `app-init.js`)
+- Access via `$store.storeName` in templates
+- Use for cross-component shared state (auth, current workspace, section routing)
+
+### Template Loading
+- Use `data-template="path/to/template"` attribute for dynamic loading
+- Paths are relative to `src/public/templates/`
+- Template loader replaces elements on DOMContentLoaded
+- Keep templates small and focused (single responsibility)
+
+## API Service Pattern
+- All backend calls go through `API` singleton (`api-service.js`)
+- Methods return consistent shape: `{ success, data, error }`
+- Admin key injected automatically via headers
+- Workspace ID sent via `X-Workspace-Id` header when available
+
+```javascript
+// Good: Use API service
+const response = await API.virtualKeys.list();
+
+// Bad: Direct fetch calls from components
+const response = await fetch('/admin/api/virtual-keys', ...);
+```
+
+## State Management
+- **Session state**: Alpine stores (in-memory, reactive)
+- **Persistent state**: localStorage (admin key, current workspace)
+- **Workspace-scoped data**: Fetch on workspace change, store in component state
+- **Loading states**: Always provide loading indicators for async operations
+
+## Error Handling
+- Catch errors in component methods
+- Show user-friendly messages via `Utils.showToast(message, 'error')`
+- Log detailed errors to console for debugging
+- Never expose sensitive information in user-facing errors
+
+## Build Process
+- **Command**: `npm run build:frontend`
+- **Script**: `scripts/build-frontend.ts`
+- **Operation**: Recursive copy from `src/public/` to `build/public/`
+- **No bundling**: Raw files served as-is (no transpilation, minification, or bundling)
+- **Vendor libraries**: Include directly (e.g., `alpine.min.js`)
+
+## Development Workflow
+1. Edit files in `src/public/`
+2. Run `npm run build:frontend` to copy to `build/public/`
+3. Restart server (`npm run dev:node` or `npm run start:node`) to serve updated files
+4. No hot reload — manual refresh required
+
+## Styling
+- BEM-inspired naming for classes
+- Utility classes for common patterns (e.g., loading states, cards)
+- Scoped styles per section when appropriate
+- Consistent spacing and color variables
+- Responsive breakpoints for mobile support
+
+## Security
+- Admin key stored in localStorage, sent via `X-Admin-Key` header
+- Workspace ID isolation — all API calls scoped to current workspace
+- No sensitive data in client-side code
+- Validate and sanitize user input before sending to backend
+
+## Performance
+- Lazy-load sections (only load templates when navigated to)
+- Debounce search/filter inputs
+- Paginate large lists (logs, analytics)
+- Use event delegation for dynamic lists
+- Minimize DOM manipulations
+
+## Accessibility
+- Semantic HTML (`<button>`, `<form>`, `<label>`)
+- Proper ARIA attributes for dynamic content
+- Keyboard navigation support
+- Focus management for modals
+- Screen reader friendly loading states
+
+## Naming Conventions
+- **Files**: kebab-case (`api-service.js`, `template-loader.js`)
+- **Components**: camelCase (`Alpine.data('dashboardManager', ...)`)
+- **CSS classes**: kebab-case (`.main-content`, `.toast-container`)
+- **Functions**: camelCase (`loadStats()`, `handleSubmit()`)
+
+## Common Pitfalls
+- ❌ Don't mutate Alpine store state directly without triggering reactivity
+- ❌ Don't forget to handle loading/error states
+- ❌ Don't make API calls before workspace is ready
+- ❌ Don't use `any` or ignore TypeScript errors in build scripts
+- ❌ Don't forget to clean up event listeners in components
+
+@src/public/**
+@scripts/build-frontend.ts

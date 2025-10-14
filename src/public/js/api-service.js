@@ -148,6 +148,9 @@ const API = {
     update: (id, data) => API.request(`/workspaces/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data)
+    }),
+    delete: (id) => API.request(`/workspaces/${id}`, {
+      method: 'DELETE'
     })
   },
 

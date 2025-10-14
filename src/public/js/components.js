@@ -101,6 +101,13 @@ Alpine.data('virtualKeysManager', () => ({
   async init() {
     await this.loadKeys();
     await this.loadProviderKeys();
+    
+    // Watch for section changes and reload provider keys when returning to this section
+    this.$watch('$store.app.currentSection', (section) => {
+      if (section === 'api-keys') {
+        this.loadProviderKeys();
+      }
+    });
   },
   
   get filteredData() {
@@ -198,6 +205,8 @@ Alpine.data('virtualKeysManager', () => ({
     try {
       const response = await API.virtualKeys.list();
       this.keys = response.data || [];
+      // Also reload provider keys to ensure button state is current
+      await this.loadProviderKeys();
     } catch (err) {
       this.error = err.message;
       Utils.showToast('Failed to load virtual keys: ' + err.message, 'error');
@@ -505,6 +514,26 @@ Alpine.data('providerKeysManager', () => ({
       Utils.showToast('Failed to delete provider key: ' + err.message, 'error');
     }
   },
+  
+  async bulkDelete() {
+    if (this.selectedItems.size === 0) {
+      Utils.showToast('No items selected', 'error');
+      return;
+    }
+    
+    if (!confirm(`Delete ${this.selectedItems.size} selected provider key(s)?`)) return;
+    
+    try {
+      await Promise.all(
+        Array.from(this.selectedItems).map(id => API.providerKeys.delete(id))
+      );
+      await this.loadKeys();
+      this.clearSelection();
+      Utils.showToast(`Deleted ${this.selectedItems.size} provider key(s)`, 'success');
+    } catch (err) {
+      Utils.showToast('Failed to delete some provider keys: ' + err.message, 'error');
+    }
+  },
 
   resetForm() {
     this.formData = {
@@ -686,6 +715,26 @@ Alpine.data('promptsManager', () => ({
       Utils.showToast('Failed to delete prompt: ' + err.message, 'error');
     }
   },
+  
+  async bulkDelete() {
+    if (this.selectedItems.size === 0) {
+      Utils.showToast('No items selected', 'error');
+      return;
+    }
+    
+    if (!confirm(`Delete ${this.selectedItems.size} selected prompt(s)?`)) return;
+    
+    try {
+      await Promise.all(
+        Array.from(this.selectedItems).map(id => API.prompts.delete(id))
+      );
+      await this.loadPrompts();
+      this.clearSelection();
+      Utils.showToast(`Deleted ${this.selectedItems.size} prompt(s)`, 'success');
+    } catch (err) {
+      Utils.showToast('Failed to delete some prompts: ' + err.message, 'error');
+    }
+  },
 
   resetForm() {
     this.formData = {
@@ -705,9 +754,20 @@ Alpine.data('logsManager', () => ({
   filterStatus: '',
   showDetailsModal: false,
   selectedLog: null,
+  sortKey: '',
+  sortDirection: 'desc',
+  currentPage: 1,
+  perPage: 10,
+  selectedItems: new Set(),
 
   init() {
     this.connectToLogStream();
+  },
+  
+  loadLogs() {
+    // Refresh connection
+    this.logs = [];
+    Utils.showToast('Logs refreshed', 'success');
   },
 
   connectToLogStream() {
@@ -733,7 +793,7 @@ Alpine.data('logsManager', () => ({
     };
   },
 
-  get filteredLogs() {
+  get filteredData() {
     let filtered = this.logs;
 
     // Filter by search term
@@ -752,8 +812,86 @@ Alpine.data('logsManager', () => ({
         String(log.status).startsWith(statusPrefix)
       );
     }
+    
+    // Apply sorting
+    if (this.sortKey) {
+      filtered = Utils.sortBy(filtered, this.sortKey, this.sortDirection);
+    }
 
     return filtered;
+  },
+  
+  get filteredLogs() {
+    return this.filteredData;
+  },
+  
+  get paginatedData() {
+    return Utils.paginate(this.filteredData, this.currentPage, this.perPage);
+  },
+  
+  get totalPages() {
+    return Math.ceil(this.filteredData.length / this.perPage);
+  },
+  
+  get pageNumbers() {
+    const pages = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    
+    pages.push(1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (total > 1) pages.push(total);
+    
+    return [...new Set(pages)].sort((a, b) => a - b);
+  },
+  
+  sortBy(key) {
+    if (this.sortKey === key) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortKey = key;
+      this.sortDirection = 'asc';
+    }
+  },
+  
+  goToPage(page) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  },
+  
+  nextPage() {
+    this.goToPage(this.currentPage + 1);
+  },
+  
+  prevPage() {
+    this.goToPage(this.currentPage - 1);
+  },
+  
+  toggleSelectAll() {
+    if (this.selectedItems.size === this.paginatedData.length) {
+      this.selectedItems.clear();
+    } else {
+      this.paginatedData.forEach(item => this.selectedItems.add(item.id));
+    }
+  },
+  
+  toggleSelect(id) {
+    if (this.selectedItems.has(id)) {
+      this.selectedItems.delete(id);
+    } else {
+      this.selectedItems.add(id);
+    }
+  },
+  
+  isSelected(id) {
+    return this.selectedItems.has(id);
+  },
+  
+  clearSelection() {
+    this.selectedItems.clear();
   },
 
   viewLogDetails(log) {
@@ -764,6 +902,7 @@ Alpine.data('logsManager', () => ({
   clearLogs() {
     if (!confirm('Are you sure you want to clear all logs from the display?')) return;
     this.logs = [];
+    this.clearSelection();
     Utils.showToast('Logs cleared', 'success');
   },
 
@@ -789,6 +928,50 @@ Alpine.data('logsManager', () => ({
     }
 
     Utils.showToast(`Logs exported as ${format.toUpperCase()}`, 'success');
+  },
+  
+  exportSelected(format) {
+    if (this.selectedItems.size === 0) {
+      Utils.showToast('No logs selected', 'error');
+      return;
+    }
+    
+    const selectedLogs = this.logs.filter(log => this.selectedItems.has(log.id));
+    const filename = `axon-logs-selected-${new Date().toISOString().split('T')[0]}.${format}`;
+    
+    if (format === 'csv') {
+      const csvData = selectedLogs.map(log => ({
+        time: log.time,
+        method: log.method,
+        endpoint: log.endpoint,
+        status: log.status,
+        duration: log.duration
+      }));
+      Utils.downloadCSV(csvData, filename);
+    } else if (format === 'json') {
+      Utils.downloadJSON(selectedLogs, filename);
+    }
+    
+    Utils.showToast(`${this.selectedItems.size} log(s) exported as ${format.toUpperCase()}`, 'success');
+  },
+  
+  async bulkDelete() {
+    if (this.selectedItems.size === 0) {
+      Utils.showToast('No items selected', 'error');
+      return;
+    }
+    
+    if (!confirm(`Delete ${this.selectedItems.size} selected log(s)?`)) return;
+    
+    try {
+      // Remove selected logs from display
+      this.logs = this.logs.filter(log => !this.selectedItems.has(log.id));
+      const count = this.selectedItems.size;
+      this.clearSelection();
+      Utils.showToast(`Deleted ${count} log(s)`, 'success');
+    } catch (err) {
+      Utils.showToast('Failed to delete logs: ' + err.message, 'error');
+    }
   }
 }));
 
@@ -935,10 +1118,7 @@ Alpine.data('playgroundManager', () => ({
   response: null,
   responseTime: 0,
   responseTab: 'formatted',
-  selectedApiKey: '',
-  manualApiKey: '',
-  useManualKey: true,
-  apiKeys: [],
+  apiKey: '',
   endpoint: '/v1/chat/completions',
   requestBody: {
     model: 'gpt-4o',
@@ -953,22 +1133,6 @@ Alpine.data('playgroundManager', () => ({
     stream: false
   },
   
-  async init() {
-    await this.loadApiKeys();
-  },
-  
-  async loadApiKeys() {
-    try {
-      const result = await API.virtualKeys.list();
-      this.apiKeys = result.data || [];
-      if (this.apiKeys.length > 0 && !this.selectedApiKey) {
-        this.selectedApiKey = this.apiKeys[0].id;
-      }
-    } catch (error) {
-      console.error('Failed to load API keys:', error);
-    }
-  },
-  
   addMessage() {
     this.requestBody.messages.push({ role: 'user', content: '' });
   },
@@ -978,22 +1142,8 @@ Alpine.data('playgroundManager', () => ({
   },
   
   async sendRequest() {
-    // Determine which key to use
-    let apiKey = '';
-    if (this.useManualKey) {
-      if (!this.manualApiKey) {
-        Utils.showToast('Please enter a virtual key', 'error');
-        return;
-      }
-      apiKey = this.manualApiKey;
-    } else {
-      if (!this.selectedApiKey) {
-        Utils.showToast('Please select a virtual key or enter one manually', 'error');
-        return;
-      }
-      // Since we can't get the plain key from the list, ask user to enter it manually
-      Utils.showToast('Please use "Enter Virtual Key Manually" option below', 'error');
-      this.useManualKey = true;
+    if (!this.apiKey) {
+      Utils.showToast('Please enter a virtual key', 'error');
       return;
     }
     
@@ -1019,7 +1169,7 @@ Alpine.data('playgroundManager', () => ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify(body)
       });
@@ -1086,8 +1236,7 @@ Alpine.data('playgroundManager', () => ({
   },
   
   get curlCommand() {
-    const selectedKey = this.apiKeys.find(k => k.id === this.selectedApiKey);
-    const apiKey = selectedKey?.plainKey || 'YOUR_API_KEY';
+    const apiKey = this.apiKey || 'YOUR_API_KEY';
     
     let body = { ...this.requestBody };
     if (this.endpoint !== '/v1/chat/completions') {
@@ -1104,12 +1253,15 @@ Alpine.data('playgroundManager', () => ({
   }
 }));
 
-// Workspaces Manager
+// Workspaces Manager (used in top bar selector)
 Alpine.data('workspacesManager', () => ({
   workspaces: [],
   currentWorkspace: null,
   loading: true,
   showCreateModal: false,
+  showAdminKeyModal: false,
+  createdAdminKey: '',
+  submitting: false,
   formData: {
     name: '',
     description: ''
@@ -1142,14 +1294,29 @@ Alpine.data('workspacesManager', () => ({
   },
   
   async createWorkspace() {
+    if (!this.formData.name) {
+      Utils.showToast('Workspace name is required', 'error');
+      return;
+    }
+    
+    this.submitting = true;
     try {
-      await API.workspaces.create(this.formData);
+      const response = await API.workspaces.create(this.formData);
       await this.loadWorkspaces();
       this.showCreateModal = false;
-      this.formData = { name: '', description: '' };
+      
+      // Show admin key modal
+      if (response.data?.adminKey?.plainKey) {
+        this.createdAdminKey = response.data.adminKey.plainKey;
+        this.showAdminKeyModal = true;
+      }
+      
       Utils.showToast('Workspace created successfully', 'success');
+      this.resetForm();
     } catch (error) {
       Utils.showToast('Failed to create workspace: ' + error.message, 'error');
+    } finally {
+      this.submitting = false;
     }
   },
   
@@ -1159,6 +1326,260 @@ Alpine.data('workspacesManager', () => ({
     Utils.showToast(`Switched to workspace: ${workspace.name}`, 'success');
     // Reload the page to fetch data for the new workspace
     setTimeout(() => window.location.reload(), 500);
+  },
+  
+  resetForm() {
+    this.formData = { name: '', description: '' };
+  }
+}));
+
+// Workspaces Manager Section (full management page)
+Alpine.data('workspacesManagerSection', () => ({
+  workspaces: [],
+  loading: true,
+  error: null,
+  showCreateModal: false,
+  showEditModal: false,
+  showAdminKeyModal: false,
+  createdAdminKey: '',
+  submitting: false,
+  selectedWorkspace: null,
+  searchTerm: '',
+  sortKey: 'name',
+  sortDirection: 'asc',
+  currentPage: 1,
+  perPage: 10,
+  selectedItems: new Set(),
+  formData: {
+    name: '',
+    description: ''
+  },
+  
+  async init() {
+    await this.loadWorkspaces();
+  },
+  
+  get filteredData() {
+    let data = this.workspaces;
+    
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      data = data.filter(item => 
+        ['name', 'description'].some(field => {
+          const value = item[field];
+          return value && String(value).toLowerCase().includes(term);
+        })
+      );
+    }
+    
+    if (this.sortKey) {
+      data = Utils.sortBy(data, this.sortKey, this.sortDirection);
+    }
+    
+    return data;
+  },
+  
+  get paginatedData() {
+    return Utils.paginate(this.filteredData, this.currentPage, this.perPage);
+  },
+  
+  get totalPages() {
+    return Math.ceil(this.filteredData.length / this.perPage);
+  },
+  
+  get pageNumbers() {
+    const pages = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    
+    pages.push(1);
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (total > 1) pages.push(total);
+    
+    return [...new Set(pages)].sort((a, b) => a - b);
+  },
+  
+  sortBy(key) {
+    if (this.sortKey === key) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortKey = key;
+      this.sortDirection = 'asc';
+    }
+  },
+  
+  goToPage(page) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  },
+  
+  nextPage() {
+    this.goToPage(this.currentPage + 1);
+  },
+  
+  prevPage() {
+    this.goToPage(this.currentPage - 1);
+  },
+  
+  toggleSelectAll() {
+    if (this.selectedItems.size === this.paginatedData.length) {
+      this.selectedItems.clear();
+    } else {
+      this.paginatedData.forEach(item => this.selectedItems.add(item.id));
+    }
+  },
+  
+  toggleSelect(id) {
+    if (this.selectedItems.has(id)) {
+      this.selectedItems.delete(id);
+    } else {
+      this.selectedItems.add(id);
+    }
+  },
+  
+  isSelected(id) {
+    return this.selectedItems.has(id);
+  },
+  
+  clearSelection() {
+    this.selectedItems.clear();
+  },
+  
+  async loadWorkspaces() {
+    this.loading = true;
+    this.error = null;
+    try {
+      const response = await API.workspaces.list();
+      this.workspaces = response.data || [];
+    } catch (err) {
+      this.error = err.message;
+      Utils.showToast('Failed to load workspaces: ' + err.message, 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+  
+  async createWorkspace() {
+    if (!this.formData.name) {
+      Utils.showToast('Workspace name is required', 'error');
+      return;
+    }
+    
+    this.submitting = true;
+    try {
+      const response = await API.workspaces.create(this.formData);
+      await this.loadWorkspaces();
+      this.showCreateModal = false;
+      
+      // Show admin key modal
+      if (response.data?.adminKey?.plainKey) {
+        this.createdAdminKey = response.data.adminKey.plainKey;
+        this.showAdminKeyModal = true;
+      }
+      
+      Utils.showToast('Workspace created successfully', 'success');
+      this.resetForm();
+    } catch (err) {
+      Utils.showToast('Failed to create workspace: ' + err.message, 'error');
+    } finally {
+      this.submitting = false;
+    }
+  },
+  
+  editWorkspace(workspace) {
+    this.selectedWorkspace = workspace;
+    this.formData = {
+      name: workspace.name,
+      description: workspace.description || ''
+    };
+    this.showEditModal = true;
+  },
+  
+  async updateWorkspace() {
+    if (!this.formData.name) {
+      Utils.showToast('Workspace name is required', 'error');
+      return;
+    }
+    
+    this.submitting = true;
+    try {
+      await API.workspaces.update(this.selectedWorkspace.id, this.formData);
+      await this.loadWorkspaces();
+      this.showEditModal = false;
+      Utils.showToast('Workspace updated successfully', 'success');
+      this.resetForm();
+    } catch (err) {
+      Utils.showToast('Failed to update workspace: ' + err.message, 'error');
+    } finally {
+      this.submitting = false;
+    }
+  },
+  
+  async deleteWorkspace(workspace) {
+    // Prevent deleting current workspace
+    const currentWorkspaceId = localStorage.getItem('axon_current_workspace');
+    if (workspace.id === currentWorkspaceId) {
+      Utils.showToast('Cannot delete the current workspace. Switch to another workspace first.', 'error');
+      return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete "${workspace.name}"?\n\nThis will delete all associated resources including keys, prompts, and logs.\n\nThis action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      await API.workspaces.delete(workspace.id);
+      await this.loadWorkspaces();
+      Utils.showToast('Workspace deleted successfully', 'success');
+    } catch (err) {
+      Utils.showToast('Failed to delete workspace: ' + err.message, 'error');
+    }
+  },
+  
+  async bulkDelete() {
+    if (this.selectedItems.size === 0) {
+      Utils.showToast('No workspaces selected', 'error');
+      return;
+    }
+    
+    const currentWorkspaceId = localStorage.getItem('axon_current_workspace');
+    if (this.selectedItems.has(currentWorkspaceId)) {
+      Utils.showToast('Cannot delete the current workspace. Please deselect it first.', 'error');
+      return;
+    }
+    
+    if (!confirm(`Delete ${this.selectedItems.size} selected workspace(s)?\n\nThis will delete all associated resources.\n\nThis action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      await Promise.all(
+        Array.from(this.selectedItems).map(id => API.workspaces.delete(id))
+      );
+      await this.loadWorkspaces();
+      this.clearSelection();
+      Utils.showToast(`Deleted ${this.selectedItems.size} workspace(s)`, 'success');
+    } catch (err) {
+      Utils.showToast('Failed to delete some workspaces: ' + err.message, 'error');
+    }
+  },
+  
+  switchWorkspace(workspace) {
+    localStorage.setItem('axon_current_workspace', workspace.id);
+    Utils.showToast(`Switched to workspace: ${workspace.name}`, 'success');
+    // Reload the page to fetch data for the new workspace
+    setTimeout(() => window.location.reload(), 500);
+  },
+  
+  resetForm() {
+    this.formData = {
+      name: '',
+      description: ''
+    };
+    this.selectedWorkspace = null;
   }
 }));
 

@@ -1,92 +1,48 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Quick reference for Claude when working with **Axon AI Gateway** - a fast AI gateway routing requests to 250+ LLMs with sub-1ms latency. Built with Hono framework, deploys to Cloudflare Workers and Node.js.
 
-## Project Overview
+## Quick Start
 
-This is the **Axon AI Gateway** - a fast, reliable AI gateway that routes requests to 250+ LLMs with sub-1ms latency. It's built with Hono framework for TypeScript/JavaScript and can be deployed to multiple environments including Cloudflare Workers, Node.js servers, and Docker containers.
+```bash
+npm run dev          # Cloudflare Workers dev server
+npm run dev:node     # Node.js dev server
+npm run build        # Production build
+npm run test:gateway # Run gateway tests
+npm run deploy       # Deploy to Cloudflare Workers
+```
 
-## Development Commands
+## Architecture Overview
 
-### Core Development
-- `npm run dev` - Start development server using Wrangler (Cloudflare Workers)
-- `npm run dev:node` - Start development server using Node.js
-- `npm run build` - Build the project for production
-- `npm run build-plugins` - Build the plugin system
-
-### Testing
-- `npm run test:gateway` - Run tests for the main gateway code (src/)
-- `npm run test:plugins` - Run tests for plugins
-- `jest src/` - Run specific gateway tests
-- `jest plugins/` - Run specific plugin tests
-
-### Code Quality
-- `npm run format` - Format code with Prettier
-- `npm run format:check` - Check code formatting
-- `npm run pretty` - Alternative format command
-
-### Deployment
-- `npm run deploy` - Deploy to Cloudflare Workers
-- `npm run start:node` - Start production Node.js server
-
-## Architecture
-
-### Core Components
-
-**Main Application (`src/index.ts`)**
-- Hono-based HTTP server with middleware pipeline
-- Handles multiple AI provider integrations
+**Hono-based HTTP server** with middleware pipeline:
 - Routes: `/v1/chat/completions`, `/v1/completions`, `/v1/embeddings`, etc.
+- Modular provider system (250+ LLMs)
+- Plugin-based guardrails (PII, content safety, etc.)
 
-**Provider System (`src/providers/`)**
-- Modular provider implementations (OpenAI, Anthropic, Azure, etc.)
-- Each provider has standardized interface: `api.ts`, `chatComplete.ts`, `embed.ts`
-- Provider configs define supported features and transformations
+**Key Paths:**
+- `src/index.ts` - Cloudflare Workers entry
+- `src/start-server.ts` - Node.js server entry
+- `src/handlers/` - API route handlers
+- `src/providers/` - AI provider adapters
+- `src/middlewares/` - Auth, cache, logging, guardrails
+- `plugins/` - Guardrail plugins (build with `npm run build-plugins`)
 
-**Middleware Pipeline**
-- `requestValidator` - Validates incoming requests
-- `hooks` - Pre/post request hooks
-- `memoryCache` - Response caching
-- `logger` - Request/response logging
-- `axon` - Core Portkey-specific middleware for routing, guardrails, etc.
+**Middleware Pipeline:**
+`requestValidator` → `hooks` → `memoryCache` → `logger` → `axon` (routing/guardrails)
 
-**Plugin System (`plugins/`)**
-- Guardrail plugins for content filtering, PII detection, etc.
-- Each plugin has `manifest.json` defining capabilities
-- Plugins are built separately with `npm run build-plugins`
+**Configs** (see `conf.json`):
+JSON configurations for provider routing, fallbacks, load balancing, guardrails, caching, retries.
 
-### Key Concepts
+## Testing
 
-**Configs** - JSON configurations that define:
-- Provider routing and fallbacks
-- Load balancing strategies
-- Guardrails and content filtering
-- Caching and retry policies
-
-**Handlers** - Route-specific request processors in `src/handlers/`
-- Each AI API endpoint has dedicated handler
-- Stream handling for real-time responses
-- WebSocket support for realtime APIs
-
-## File Structure
-
-- `src/providers/` - AI provider integrations
-- `src/handlers/` - API endpoint handlers
-- `src/middlewares/` - Request/response middleware
-- `plugins/` - Guardrail and validation plugins
-- `cookbook/` - Example integrations and use cases
-- `conf.json` - Runtime configuration
-
-## Testing Strategy
-
-Tests are organized by component:
-- `src/tests/` - Core gateway functionality tests
-- `src/handlers/__tests__/` - Handler-specific tests
+- `src/tests/` - Core gateway tests
+- `src/handlers/__tests__/` - Handler tests  
 - `plugins/*/**.test.ts` - Plugin tests
-- Test timeout: 30 seconds (configured in jest.config.js)
+- Timeout: 30s (jest.config.js)
 
-## Configuration
+## Runtime Notes
 
-The gateway uses `conf.json` for runtime configuration. Sample config available in `conf_sample.json`.
-
-Key environment variables and configuration handled through Hono's adapter system for multi-environment deployment.
+- ESM only (`"type": "module"`)
+- Targets Node.js and Cloudflare Workers
+- Guard Node-only APIs from worker paths
+- Provider configs support streaming with backpressure handling

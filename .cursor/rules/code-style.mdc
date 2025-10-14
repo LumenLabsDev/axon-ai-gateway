@@ -1,0 +1,41 @@
+---
+description: TypeScript style, patterns, and best practices
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: true
+---
+
+## Naming & Clarity
+- Functions: verbs. Variables: descriptive nouns. Prefer full words.
+- Names should eliminate need for comments.
+
+## Types
+- Strict TypeScript. Annotate public/exported signatures.
+- Avoid `any`. Use discriminated unions and narrow types explicitly.
+
+## Control Flow
+- Guard clauses first. Handle edge cases early. Avoid deep nesting.
+- Never catch and ignore errors. Surface actionable messages with context.
+
+## Async & Streaming
+- Pass `AbortSignal` through handlers/services.
+- Support streaming with backpressure-friendly APIs.
+
+## Validation
+- Validate external inputs early (use `zod` where appropriate).
+- Convert to internal types in handlers. Sanitize user content.
+
+## Documentation
+- JSDoc (`/** ... */`) for public APIs.
+- Document intent (why), not mechanics (how), unless non-obvious.
+
+## Formatting
+- Prettier is source of truth. Match existing style. Avoid unrelated reformatting.
+
+## Centralized Utilities
+- Error types in `src/errors/**`
+- Pure helpers in `src/utils/**`
+
+@src/errors/**
+@src/utils/**

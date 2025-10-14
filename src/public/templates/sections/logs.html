@@ -4,47 +4,115 @@
     <div class="card-header">
       <h2 class="card-title">Request Logs</h2>
       <div style="display: flex; gap: 0.5rem;">
-        <button class="btn btn-secondary btn-sm" @click="exportLogs('json')">Export JSON</button>
-        <button class="btn btn-secondary btn-sm" @click="exportLogs('csv')">Export CSV</button>
-        <button class="btn btn-danger btn-sm" @click="clearLogs()">Clear</button>
+        <button class="btn btn-secondary btn-sm" @click="loadLogs()" title="Refresh">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+        <button class="btn btn-secondary btn-sm" @click="exportLogs('json')" title="Export JSON">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+        </button>
+        <button class="btn btn-danger btn-sm" @click="clearLogs()">Clear All</button>
       </div>
     </div>
     
-    <div style="margin-bottom: 1rem; display: flex; gap: 1rem;">
-      <input 
-        type="text" 
-        class="form-input" 
-        placeholder="Search endpoint..." 
-        x-model="searchTerm"
-        style="max-width: 300px;"
-      />
-      <select class="form-select" x-model="filterStatus" style="max-width: 150px;">
-        <option value="">All Status</option>
-        <option value="2xx">Success (2xx)</option>
-        <option value="4xx">Client Error (4xx)</option>
-        <option value="5xx">Server Error (5xx)</option>
-      </select>
+    <div x-show="logs.length === 0" class="empty-state">
+      <div class="empty-state-title">No Logs</div>
+      <p class="empty-state-text">Logs will appear here as requests are made</p>
     </div>
     
-    <div x-show="filteredLogs.length === 0" class="empty-state">
-      <p>No logs to display. Logs will appear here as requests are made.</p>
-    </div>
-    
-    <div x-show="filteredLogs.length > 0" class="table-container">
+    <div x-show="logs.length > 0">
+      <!-- Toolbar -->
+      <div style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <input 
+          type="text" 
+          class="form-input" 
+          placeholder="Search endpoint..." 
+          x-model="searchTerm"
+          style="max-width: 300px;"
+        />
+        <select class="form-select" x-model="filterStatus" style="max-width: 150px;">
+          <option value="">All Status</option>
+          <option value="2xx">Success (2xx)</option>
+          <option value="4xx">Client Error (4xx)</option>
+          <option value="5xx">Server Error (5xx)</option>
+        </select>
+        <div style="margin-left: auto; display: flex; gap: 0.5rem; align-items: center;">
+          <span x-show="selectedItems.size > 0" style="font-size: 0.875rem; color: #6b7280;">
+            <span x-text="selectedItems.size"></span> selected
+          </span>
+          <button 
+            x-show="selectedItems.size > 0" 
+            class="btn btn-secondary btn-sm" 
+            @click="exportSelected('csv')"
+          >
+            Export Selected (CSV)
+          </button>
+          <button 
+            x-show="selectedItems.size > 0" 
+            class="btn btn-danger btn-sm" 
+            @click="bulkDelete()"
+          >
+            Delete Selected
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Method</th>
+            <th style="width: 40px;">
+              <input 
+                type="checkbox" 
+                @change="toggleSelectAll()"
+                :checked="selectedItems.size > 0 && selectedItems.size === paginatedData.length"
+              />
+            </th>
+            <th @click="sortBy('time')" style="cursor: pointer;">
+              Time
+              <span x-show="sortKey === 'time'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
+            <th @click="sortBy('method')" style="cursor: pointer;">
+              Method
+              <span x-show="sortKey === 'method'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
             <th>Endpoint</th>
-            <th>Status</th>
-            <th>Duration</th>
+            <th @click="sortBy('status')" style="cursor: pointer;">
+              Status
+              <span x-show="sortKey === 'status'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
+            <th @click="sortBy('duration')" style="cursor: pointer;">
+              Duration
+              <span x-show="sortKey === 'duration'">
+                <span x-show="sortDirection === 'asc'">↑</span>
+                <span x-show="sortDirection === 'desc'">↓</span>
+              </span>
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <template x-for="log in filteredLogs.slice(0, 100)" :key="log.id">
+          <template x-for="log in paginatedData" :key="log.id">
             <tr>
+              <td>
+                <input 
+                  type="checkbox" 
+                  :checked="isSelected(log.id)"
+                  @change="toggleSelect(log.id)"
+                />
+              </td>
               <td x-text="log.time" style="font-size: 0.813rem; font-family: monospace;"></td>
               <td><span class="badge badge-gray" x-text="log.method"></span></td>
               <td x-text="log.endpoint" style="font-size: 0.813rem;"></td>
@@ -59,9 +127,40 @@
           </template>
         </tbody>
       </table>
-      <p x-show="filteredLogs.length > 100" style="padding: 1rem; text-align: center; color: #6b7280; font-size: 0.875rem;">
-        Showing 100 of <span x-text="filteredLogs.length"></span> logs
-      </p>
+      </div>
+      
+      <!-- Pagination -->
+      <div x-show="totalPages > 1" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding: 1rem; border-top: 1px solid #e5e7eb;">
+        <div style="font-size: 0.875rem; color: #6b7280;">
+          Showing <span x-text="(currentPage - 1) * perPage + 1"></span> to 
+          <span x-text="Math.min(currentPage * perPage, filteredData.length)"></span> of 
+          <span x-text="filteredData.length"></span> results
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="prevPage()" 
+            :disabled="currentPage === 1"
+          >
+            Previous
+          </button>
+          <template x-for="page in pageNumbers" :key="page">
+            <button 
+              class="btn btn-sm" 
+              :class="page === currentPage ? 'btn-primary' : 'btn-secondary'"
+              @click="goToPage(page)"
+              x-text="page"
+            ></button>
+          </template>
+          <button 
+            class="btn btn-secondary btn-sm" 
+            @click="nextPage()" 
+            :disabled="currentPage === totalPages"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

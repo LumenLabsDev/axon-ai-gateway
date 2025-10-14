@@ -1,7 +1,7 @@
 import { Context } from 'hono';
 import { getDb } from '../../db';
-import { virtualKeys, rateLimitUsage, providerKeys, prompts } from '../../db/schema';
-import { eq, and, gte, count, sum, sql } from 'drizzle-orm';
+import { virtualKeys, requestLogs, providerKeys, prompts } from '../../db/schema';
+import { eq, and, gte, count, sum, sql, avg } from 'drizzle-orm';
 
 /**
  * Get analytics data for a workspace
@@ -80,17 +80,17 @@ export async function getAnalytics(c: Context) {
       });
     }
 
-    // Get total requests and tokens
+    // Get total requests and tokens from request logs
     const usageStats = await db
       .select({
-        totalRequests: sum(rateLimitUsage.requestsCount),
-        totalTokens: sum(rateLimitUsage.tokensCount),
+        totalRequests: count(requestLogs.id),
+        totalTokens: sum(requestLogs.tokensUsed),
       })
-      .from(rateLimitUsage)
+      .from(requestLogs)
       .where(
         and(
-          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
-          gte(rateLimitUsage.windowStart, startTime)
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime)
         )
       );
 
@@ -100,18 +100,18 @@ export async function getAnalytics(c: Context) {
     // Get requests by virtual key
     const requestsByVirtualKeyResult = await db
       .select({
-        virtualKeyId: rateLimitUsage.virtualKeyId,
-        requests: sum(rateLimitUsage.requestsCount),
-        tokens: sum(rateLimitUsage.tokensCount),
+        virtualKeyId: requestLogs.virtualKeyId,
+        requests: count(requestLogs.id),
+        tokens: sum(requestLogs.tokensUsed),
       })
-      .from(rateLimitUsage)
+      .from(requestLogs)
       .where(
         and(
-          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
-          gte(rateLimitUsage.windowStart, startTime)
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime)
         )
       )
-      .groupBy(rateLimitUsage.virtualKeyId);
+      .groupBy(requestLogs.virtualKeyId);
 
     // Map virtual key IDs to names
     const virtualKeyMap = new Map(
@@ -130,34 +130,96 @@ export async function getAnalytics(c: Context) {
     // Get requests over time (grouped by hour)
     const requestsByTimeWindow = await db
       .select({
-        windowStart: rateLimitUsage.windowStart,
-        requests: sum(rateLimitUsage.requestsCount),
-        tokens: sum(rateLimitUsage.tokensCount),
+        windowStart: sql<Date>`datetime(${requestLogs.createdAt} / 1000, 'unixepoch', 'start of hour')`.as('windowStart'),
+        requests: count(requestLogs.id),
+        tokens: sum(requestLogs.tokensUsed),
       })
-      .from(rateLimitUsage)
+      .from(requestLogs)
       .where(
         and(
-          sql`${rateLimitUsage.virtualKeyId} IN (${sql.join(virtualKeyIds.map(id => sql`${id}`), sql`, `)})`,
-          gte(rateLimitUsage.windowStart, startTime)
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime)
         )
       )
-      .groupBy(rateLimitUsage.windowStart)
-      .orderBy(rateLimitUsage.windowStart);
+      .groupBy(sql`windowStart`)
+      .orderBy(sql`windowStart`);
 
-    // Since we don't have model-specific tracking yet, we'll simulate it
-    // In a real implementation, you'd track this in a separate table
-    const topModels = [
-      { model: 'gpt-4o', requests: Math.floor(totalRequests * 0.4) },
-      { model: 'gpt-4', requests: Math.floor(totalRequests * 0.25) },
-      { model: 'claude-3-5-sonnet', requests: Math.floor(totalRequests * 0.2) },
-      { model: 'claude-3-opus', requests: Math.floor(totalRequests * 0.15) },
-    ].filter(m => m.requests > 0);
+    // Get top models
+    const topModelsResult = await db
+      .select({
+        model: requestLogs.model,
+        requests: count(requestLogs.id),
+      })
+      .from(requestLogs)
+      .where(
+        and(
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime),
+          sql`${requestLogs.model} IS NOT NULL`
+        )
+      )
+      .groupBy(requestLogs.model)
+      .orderBy(sql`${count(requestLogs.id)} DESC`)
+      .limit(10);
 
-    // Calculate success rate (simulated for now - in real implementation, track failed requests)
-    const successRate = totalRequests > 0 ? 95 + Math.random() * 4.9 : 0;
+    const topModels = topModelsResult.map(row => ({
+      model: row.model || 'unknown',
+      requests: Number(row.requests) || 0,
+    }));
 
-    // Calculate average response time (simulated - in real implementation, track response times)
-    const avgResponseTime = totalRequests > 0 ? 150 + Math.random() * 100 : 0;
+    // Calculate success rate from status codes
+    const statusStats = await db
+      .select({
+        statusCode: requestLogs.statusCode,
+        count: count(requestLogs.id),
+      })
+      .from(requestLogs)
+      .where(
+        and(
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime)
+        )
+      )
+      .groupBy(requestLogs.statusCode);
+
+    const requestsByStatus: Record<string, number> = {
+      '200': 0,
+      '400': 0,
+      '500': 0,
+    };
+
+    let successfulRequests = 0;
+    for (const row of statusStats) {
+      const status = row.statusCode;
+      const count = Number(row.count) || 0;
+      
+      if (status >= 200 && status < 300) {
+        requestsByStatus['200'] += count;
+        successfulRequests += count;
+      } else if (status >= 400 && status < 500) {
+        requestsByStatus['400'] += count;
+      } else if (status >= 500) {
+        requestsByStatus['500'] += count;
+      }
+    }
+
+    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
+
+    // Calculate average response time
+    const avgResponseTimeResult = await db
+      .select({
+        avgTime: avg(requestLogs.responseTime),
+      })
+      .from(requestLogs)
+      .where(
+        and(
+          eq(requestLogs.workspaceId, workspace.id),
+          gte(requestLogs.createdAt, startTime),
+          sql`${requestLogs.responseTime} IS NOT NULL`
+        )
+      );
+
+    const avgResponseTime = Number(avgResponseTimeResult[0]?.avgTime) || 0;
 
     return c.json({
       status: 'success',
@@ -165,7 +227,7 @@ export async function getAnalytics(c: Context) {
         totalRequests,
         totalTokens,
         successRate: Number(successRate.toFixed(2)),
-        avgResponseTime: Number(avgResponseTime.toFixed(0)),
+        avgResponseTime: Math.round(avgResponseTime),
         requestsByVirtualKey,
         requestsByTimeWindow: requestsByTimeWindow.map(row => ({
           timestamp: row.windowStart,
@@ -173,11 +235,7 @@ export async function getAnalytics(c: Context) {
           tokens: Number(row.tokens) || 0,
         })),
         topModels,
-        requestsByStatus: {
-          '200': Math.floor(totalRequests * (successRate / 100)),
-          '400': Math.floor(totalRequests * 0.03),
-          '500': Math.floor(totalRequests * 0.02),
-        },
+        requestsByStatus,
         resourceCounts: {
           virtualKeys: totalVirtualKeys,
           providerKeys: totalProviderKeys,

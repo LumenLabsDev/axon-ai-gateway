@@ -1,0 +1,29 @@
+---
+description: Testing, security, and deployment practices
+globs:
+  - "tests/**/*.ts"
+  - "**/*.test.ts"
+  - "Dockerfile"
+  - "wrangler.toml"
+alwaysApply: false
+---
+
+## Testing
+**Unit**: Pure utilities without network I/O. Mock at adapter boundary.
+**Integration**: Critical handlers and streaming paths with fixtures.
+**CI**: Parallelizable tests. No shared global state. Fast feedback loops.
+
+## Security
+**Secrets**: Never commit. Read from env/runtime managers. Redact in logs.
+**Input Safety**: Validate and sanitize. Enforce size limits. Escape suspicious content.
+**Transport**: HTTPS only. Verify certs. Short-lived in-memory caches preferred.
+
+## Deployment
+**Docker**: Minimal images (node:lts-slim). `NODE_ENV=production`. Run as non-root.
+**Cloudflare Workers**: No Node-only APIs. Guard conditional imports. Workers-compatible bundling.
+**Kubernetes**: Minimal ports. Configure resources/probes. Externalize secrets. Explicit autoscaling.
+
+@jest.config.js
+@Dockerfile
+@wrangler.toml
+@deployment.yaml
