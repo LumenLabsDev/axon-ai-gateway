@@ -30,7 +30,10 @@ export async function proxyHandler(c: Context): Promise<Response> {
 
     const request = await getRequestData(c.req.raw, requestContentType);
 
-    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders, c);
+    const camelCaseConfig = constructConfigFromRequestHeaders(
+      requestHeaders,
+      c
+    );
 
     const tryTargetsResponse = await tryTargetsRecursively(
       c,

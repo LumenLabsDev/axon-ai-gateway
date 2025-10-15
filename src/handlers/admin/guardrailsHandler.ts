@@ -1,6 +1,11 @@
 import { Context } from 'hono';
 import { getDb } from '../../db';
-import { guardrails, workspaceGuardrails, NewGuardrail, NewWorkspaceGuardrail } from '../../db/schema';
+import {
+  guardrails,
+  workspaceGuardrails,
+  NewGuardrail,
+  NewWorkspaceGuardrail,
+} from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -11,7 +16,7 @@ export async function listGuardrails(c: Context) {
   const timestamp = new Date().toISOString();
   const db = getDb();
   const workspace = c.get('workspace');
-  
+
   if (!workspace) {
     return c.json(
       {
@@ -21,21 +26,26 @@ export async function listGuardrails(c: Context) {
       400
     );
   }
-  
+
   try {
     const allGuardrails = await db
       .select()
       .from(guardrails)
       .where(eq(guardrails.workspaceId, workspace.id));
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Listed ${allGuardrails.length} guardrails for workspace ${workspace.id}`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Listed ${allGuardrails.length} guardrails for workspace ${workspace.id}`
+    );
+
     return c.json({
       status: 'success',
       data: allGuardrails,
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to list guardrails:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to list guardrails:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -55,16 +65,18 @@ export async function getGuardrail(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     const guardrail = await db
       .select()
       .from(guardrails)
       .where(eq(guardrails.id, id))
       .get();
-    
+
     if (!guardrail) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -73,10 +85,12 @@ export async function getGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && guardrail.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -85,15 +99,17 @@ export async function getGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Get bindings
     const bindings = await db
       .select()
       .from(workspaceGuardrails)
       .where(eq(workspaceGuardrails.guardrailId, id));
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Retrieved guardrail: ${id} with ${bindings.length} bindings`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Retrieved guardrail: ${id} with ${bindings.length} bindings`
+    );
+
     return c.json({
       status: 'success',
       data: {
@@ -102,7 +118,10 @@ export async function getGuardrail(c: Context) {
       },
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to get guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to get guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -122,7 +141,7 @@ export async function createGuardrail(c: Context) {
   const db = getDb();
   const workspace = c.get('workspace');
   const apiKey = c.get('apiKey');
-  
+
   if (!workspace) {
     return c.json(
       {
@@ -132,11 +151,11 @@ export async function createGuardrail(c: Context) {
       400
     );
   }
-  
+
   try {
     const body = await c.req.json();
     const { name, description, checks, actions, async } = body;
-    
+
     if (!name || !checks || !Array.isArray(checks)) {
       return c.json(
         {
@@ -146,7 +165,7 @@ export async function createGuardrail(c: Context) {
         400
       );
     }
-    
+
     // Validate checks format
     for (const check of checks) {
       if (!check.id || !check.parameters) {
@@ -159,7 +178,7 @@ export async function createGuardrail(c: Context) {
         );
       }
     }
-    
+
     const newGuardrail: NewGuardrail = {
       workspaceId: workspace.id,
       name,
@@ -169,12 +188,14 @@ export async function createGuardrail(c: Context) {
       async: async || false,
       createdBy: apiKey?.createdBy,
     };
-    
+
     const result = await db.insert(guardrails).values(newGuardrail).returning();
     const created = result[0];
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Created guardrail: ${created.id} (${created.name}) in workspace ${workspace.id}`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Created guardrail: ${created.id} (${created.name}) in workspace ${workspace.id}`
+    );
+
     return c.json(
       {
         status: 'success',
@@ -183,7 +204,10 @@ export async function createGuardrail(c: Context) {
       201
     );
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to create guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to create guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -203,20 +227,22 @@ export async function updateGuardrail(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     const body = await c.req.json();
     const { name, description, checks, actions, async } = body;
-    
+
     // Check if guardrail exists
     const existing = await db
       .select()
       .from(guardrails)
       .where(eq(guardrails.id, id))
       .get();
-    
+
     if (!existing) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -225,10 +251,12 @@ export async function updateGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && existing.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -237,7 +265,7 @@ export async function updateGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Validate checks if provided
     if (checks && Array.isArray(checks)) {
       for (const check of checks) {
@@ -252,34 +280,39 @@ export async function updateGuardrail(c: Context) {
         }
       }
     }
-    
+
     // Update guardrail
     const updateData: Partial<typeof guardrails.$inferInsert> = {
       updatedAt: new Date(),
     };
-    
+
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (checks !== undefined) updateData.checks = checks;
     if (actions !== undefined) updateData.actions = actions;
     if (async !== undefined) updateData.async = async;
-    
+
     const result = await db
       .update(guardrails)
       .set(updateData)
       .where(eq(guardrails.id, id))
       .returning();
-    
+
     const updated = result[0];
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Updated guardrail: ${id}`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Updated guardrail: ${id}`
+    );
+
     return c.json({
       status: 'success',
       data: updated,
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to update guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to update guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -299,7 +332,7 @@ export async function deleteGuardrail(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     // Check if guardrail exists
     const existing = await db
@@ -307,9 +340,11 @@ export async function deleteGuardrail(c: Context) {
       .from(guardrails)
       .where(eq(guardrails.id, id))
       .get();
-    
+
     if (!existing) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -318,10 +353,12 @@ export async function deleteGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && existing.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -330,18 +367,23 @@ export async function deleteGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Delete guardrail (cascade will delete bindings)
     await db.delete(guardrails).where(eq(guardrails.id, id));
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Deleted guardrail: ${id}`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Deleted guardrail: ${id}`
+    );
+
     return c.json({
       status: 'success',
       message: 'Guardrail deleted successfully',
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to delete guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to delete guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -361,7 +403,7 @@ export async function bindGuardrail(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   if (!workspace) {
     return c.json(
       {
@@ -371,20 +413,22 @@ export async function bindGuardrail(c: Context) {
       400
     );
   }
-  
+
   try {
     const body = await c.req.json();
     const { apiKeyId, mode } = body;
-    
+
     // Check if guardrail exists
     const guardrail = await db
       .select()
       .from(guardrails)
       .where(eq(guardrails.id, id))
       .get();
-    
+
     if (!guardrail) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -393,9 +437,11 @@ export async function bindGuardrail(c: Context) {
         404
       );
     }
-    
+
     if (guardrail.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -404,7 +450,7 @@ export async function bindGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Create binding
     const newBinding: NewWorkspaceGuardrail = {
       workspaceId: workspace.id,
@@ -412,12 +458,17 @@ export async function bindGuardrail(c: Context) {
       apiKeyId: apiKeyId || null,
       mode: mode || 'observe',
     };
-    
-    const result = await db.insert(workspaceGuardrails).values(newBinding).returning();
+
+    const result = await db
+      .insert(workspaceGuardrails)
+      .values(newBinding)
+      .returning();
     const created = result[0];
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Bound guardrail ${id} to ${apiKeyId ? `API key ${apiKeyId}` : `workspace ${workspace.id}`}`);
-    
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Bound guardrail ${id} to ${apiKeyId ? `API key ${apiKeyId}` : `workspace ${workspace.id}`}`
+    );
+
     return c.json(
       {
         status: 'success',
@@ -426,7 +477,10 @@ export async function bindGuardrail(c: Context) {
       201
     );
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to bind guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to bind guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -446,7 +500,7 @@ export async function unbindGuardrail(c: Context) {
   const db = getDb();
   const bindingId = c.req.param('bindingId');
   const workspace = c.get('workspace');
-  
+
   try {
     // Check if binding exists
     const existing = await db
@@ -454,9 +508,11 @@ export async function unbindGuardrail(c: Context) {
       .from(workspaceGuardrails)
       .where(eq(workspaceGuardrails.id, bindingId))
       .get();
-    
+
     if (!existing) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail binding not found: ${bindingId}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail binding not found: ${bindingId}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -465,10 +521,12 @@ export async function unbindGuardrail(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && existing.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [GuardrailsHandler] [WARN] Guardrail binding ${bindingId} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [GuardrailsHandler] [WARN] Guardrail binding ${bindingId} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -477,17 +535,24 @@ export async function unbindGuardrail(c: Context) {
         404
       );
     }
-    
-    await db.delete(workspaceGuardrails).where(eq(workspaceGuardrails.id, bindingId));
-    
-    console.log(`[${timestamp}] [GuardrailsHandler] [INFO] Unbound guardrail binding: ${bindingId}`);
-    
+
+    await db
+      .delete(workspaceGuardrails)
+      .where(eq(workspaceGuardrails.id, bindingId));
+
+    console.log(
+      `[${timestamp}] [GuardrailsHandler] [INFO] Unbound guardrail binding: ${bindingId}`
+    );
+
     return c.json({
       status: 'success',
       message: 'Guardrail unbound successfully',
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailsHandler] [ERROR] Failed to unbind guardrail:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailsHandler] [ERROR] Failed to unbind guardrail:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -497,4 +562,3 @@ export async function unbindGuardrail(c: Context) {
     );
   }
 }
-

@@ -33,43 +33,45 @@ export async function resolvePrompt(
 ): Promise<ResolvedPrompt> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   try {
     // Get prompt by ID or name
     const prompt = await db
       .select()
       .from(prompts)
       .where(
-        and(
-          eq(prompts.workspaceId, workspaceId),
-          eq(prompts.id, promptId)
-        )
+        and(eq(prompts.workspaceId, workspaceId), eq(prompts.id, promptId))
       )
       .get();
-    
+
     if (!prompt) {
       // Try by name
       const promptByName = await db
         .select()
         .from(prompts)
         .where(
-          and(
-            eq(prompts.workspaceId, workspaceId),
-            eq(prompts.name, promptId)
-          )
+          and(eq(prompts.workspaceId, workspaceId), eq(prompts.name, promptId))
         )
         .get();
-      
+
       if (!promptByName) {
         throw new Error(`Prompt not found: ${promptId}`);
       }
-      
-      return resolvePromptById(workspaceId, promptByName.id, variables, version);
+
+      return resolvePromptById(
+        workspaceId,
+        promptByName.id,
+        variables,
+        version
+      );
     }
-    
+
     return resolvePromptById(workspaceId, prompt.id, variables, version);
   } catch (error: any) {
-    console.error(`[${timestamp}] [PromptService] [ERROR] Failed to resolve prompt:`, error.message);
+    console.error(
+      `[${timestamp}] [PromptService] [ERROR] Failed to resolve prompt:`,
+      error.message
+    );
     throw error;
   }
 }
@@ -85,10 +87,10 @@ async function resolvePromptById(
 ): Promise<ResolvedPrompt> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   // Get prompt version
   let promptVersion;
-  
+
   if (version !== undefined) {
     // Get specific version
     promptVersion = await db
@@ -114,39 +116,43 @@ async function resolvePromptById(
       )
       .get();
   }
-  
+
   if (!promptVersion) {
-    throw new Error(`No ${version !== undefined ? `version ${version}` : 'production version'} found for prompt: ${promptId}`);
+    throw new Error(
+      `No ${version !== undefined ? `version ${version}` : 'production version'} found for prompt: ${promptId}`
+    );
   }
-  
-  console.log(`[${timestamp}] [PromptService] [INFO] Resolving prompt ${promptId} version ${promptVersion.version}`);
-  
+
+  console.log(
+    `[${timestamp}] [PromptService] [INFO] Resolving prompt ${promptId} version ${promptVersion.version}`
+  );
+
   // Get all partials for this workspace
   const allPartials = await db
     .select()
     .from(promptPartials)
     .where(eq(promptPartials.workspaceId, workspaceId));
-  
+
   // Create partials map
   const partialsMap: Record<string, string> = {};
   for (const partial of allPartials) {
     partialsMap[partial.name] = partial.template;
   }
-  
+
   // Merge with variables
   const context = {
     ...variables,
     ...(promptVersion.variables || {}),
   };
-  
+
   // Parse template
   let template = promptVersion.template;
   let resolved: ResolvedPrompt = {};
-  
+
   try {
     // Try to parse as JSON (for messages format)
     const parsed = JSON.parse(template);
-    
+
     if (Array.isArray(parsed)) {
       // Messages format
       resolved.messages = parsed.map((msg: any) => {
@@ -181,31 +187,32 @@ async function resolvePromptById(
     // Not JSON, treat as plain text prompt
     resolved.prompt = Mustache.render(template, context, partialsMap);
   }
-  
+
   // Add params if present
   if (promptVersion.params) {
     resolved.params = promptVersion.params;
   }
-  
+
   return resolved;
 }
 
 /**
  * Get all partials for a workspace
  */
-export async function getWorkspacePartials(workspaceId: string): Promise<Record<string, string>> {
+export async function getWorkspacePartials(
+  workspaceId: string
+): Promise<Record<string, string>> {
   const db = getDb();
-  
+
   const allPartials = await db
     .select()
     .from(promptPartials)
     .where(eq(promptPartials.workspaceId, workspaceId));
-  
+
   const partialsMap: Record<string, string> = {};
   for (const partial of allPartials) {
     partialsMap[partial.name] = partial.template;
   }
-  
+
   return partialsMap;
 }
-

@@ -37,7 +37,7 @@ function copyDirectory(source: string, destination: string): void {
       if (!existsSync(destDir)) {
         mkdirSync(destDir, { recursive: true });
       }
-      
+
       // Copy file
       copyFileSync(sourcePath, destPath);
       console.log(`📄 Copied file: ${sourcePath} → ${destPath}`);
@@ -77,4 +77,3 @@ function buildFrontend(): void {
 
 // Run the build
 buildFrontend();
-

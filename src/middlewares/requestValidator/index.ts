@@ -29,9 +29,11 @@ export const requestValidator = (c: Context, next: any) => {
   }
 
   // Check if provider is specified via headers or via virtual key context
-  const hasProviderHeader = requestHeaders[`x-${POWERED_BY}-config`] || requestHeaders[`x-${POWERED_BY}-provider`];
+  const hasProviderHeader =
+    requestHeaders[`x-${POWERED_BY}-config`] ||
+    requestHeaders[`x-${POWERED_BY}-provider`];
   const hasProviderFromVirtualKey = !!c.get('providerKey');
-  
+
   if (!hasProviderHeader && !hasProviderFromVirtualKey) {
     return new Response(
       JSON.stringify({

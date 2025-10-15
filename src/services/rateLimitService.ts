@@ -37,7 +37,7 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   try {
     // Get virtual key configuration
     const virtualKey = await db
@@ -45,15 +45,17 @@ export async function checkRateLimit(
       .from(virtualKeys)
       .where(eq(virtualKeys.id, virtualKeyId))
       .get();
-    
+
     if (!virtualKey) {
-      console.error(`[${timestamp}] [RateLimitService] [ERROR] Virtual key not found: ${virtualKeyId}`);
+      console.error(
+        `[${timestamp}] [RateLimitService] [ERROR] Virtual key not found: ${virtualKeyId}`
+      );
       return {
         allowed: false,
         remaining: { requests: null, tokens: null },
       };
     }
-    
+
     // If no limits are set, allow the request
     if (!virtualKey.rateLimitRpm && !virtualKey.rateLimitTpm) {
       return {
@@ -61,10 +63,10 @@ export async function checkRateLimit(
         remaining: { requests: null, tokens: null },
       };
     }
-    
+
     const windowStart = getWindowStart();
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-    
+
     // Get usage in the current window
     const usageRecords = await db
       .select()
@@ -75,16 +77,16 @@ export async function checkRateLimit(
           gte(rateLimitUsage.windowStart, oneMinuteAgo)
         )
       );
-    
+
     // Calculate total usage in the sliding window
     let totalRequests = 0;
     let totalTokens = 0;
-    
+
     for (const record of usageRecords) {
       totalRequests += record.requestsCount;
       totalTokens += record.tokensCount;
     }
-    
+
     // Check request limit
     if (virtualKey.rateLimitRpm && totalRequests >= virtualKey.rateLimitRpm) {
       console.warn(
@@ -94,37 +96,51 @@ export async function checkRateLimit(
         allowed: false,
         remaining: {
           requests: 0,
-          tokens: virtualKey.rateLimitTpm ? Math.max(0, virtualKey.rateLimitTpm - totalTokens) : null,
+          tokens: virtualKey.rateLimitTpm
+            ? Math.max(0, virtualKey.rateLimitTpm - totalTokens)
+            : null,
         },
         resetAt: new Date(Date.now() + 60 * 1000),
       };
     }
-    
+
     // Check token limit
-    if (virtualKey.rateLimitTpm && totalTokens + estimatedTokens > virtualKey.rateLimitTpm) {
+    if (
+      virtualKey.rateLimitTpm &&
+      totalTokens + estimatedTokens > virtualKey.rateLimitTpm
+    ) {
       console.warn(
         `[${timestamp}] [RateLimitService] [WARN] Token rate limit exceeded for key ${virtualKey.name}: ${totalTokens + estimatedTokens}/${virtualKey.rateLimitTpm}`
       );
       return {
         allowed: false,
         remaining: {
-          requests: virtualKey.rateLimitRpm ? Math.max(0, virtualKey.rateLimitRpm - totalRequests) : null,
+          requests: virtualKey.rateLimitRpm
+            ? Math.max(0, virtualKey.rateLimitRpm - totalRequests)
+            : null,
           tokens: 0,
         },
         resetAt: new Date(Date.now() + 60 * 1000),
       };
     }
-    
+
     // Allow the request
     return {
       allowed: true,
       remaining: {
-        requests: virtualKey.rateLimitRpm ? virtualKey.rateLimitRpm - totalRequests - 1 : null,
-        tokens: virtualKey.rateLimitTpm ? virtualKey.rateLimitTpm - totalTokens - estimatedTokens : null,
+        requests: virtualKey.rateLimitRpm
+          ? virtualKey.rateLimitRpm - totalRequests - 1
+          : null,
+        tokens: virtualKey.rateLimitTpm
+          ? virtualKey.rateLimitTpm - totalTokens - estimatedTokens
+          : null,
       },
     };
   } catch (error: any) {
-    console.error(`[${timestamp}] [RateLimitService] [ERROR] Rate limit check failed:`, error.message);
+    console.error(
+      `[${timestamp}] [RateLimitService] [ERROR] Rate limit check failed:`,
+      error.message
+    );
     // On error, allow the request (fail open)
     return {
       allowed: true,
@@ -138,13 +154,16 @@ export async function checkRateLimit(
  * @param virtualKeyId - The virtual key ID
  * @param tokensUsed - Number of tokens used
  */
-export async function recordUsage(virtualKeyId: string, tokensUsed: number = 0): Promise<void> {
+export async function recordUsage(
+  virtualKeyId: string,
+  tokensUsed: number = 0
+): Promise<void> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   try {
     const windowStart = getWindowStart();
-    
+
     // Check if record exists for this window
     const existing = await db
       .select()
@@ -156,7 +175,7 @@ export async function recordUsage(virtualKeyId: string, tokensUsed: number = 0):
         )
       )
       .get();
-    
+
     if (existing) {
       // Update existing record
       await db
@@ -176,7 +195,10 @@ export async function recordUsage(virtualKeyId: string, tokensUsed: number = 0):
       });
     }
   } catch (error: any) {
-    console.error(`[${timestamp}] [RateLimitService] [ERROR] Failed to record usage:`, error.message);
+    console.error(
+      `[${timestamp}] [RateLimitService] [ERROR] Failed to record usage:`,
+      error.message
+    );
     // Don't throw - this is non-critical
   }
 }
@@ -187,17 +209,22 @@ export async function recordUsage(virtualKeyId: string, tokensUsed: number = 0):
 export async function cleanupOldRecords(): Promise<void> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
+
     const result = await db
       .delete(rateLimitUsage)
       .where(gte(rateLimitUsage.createdAt, oneDayAgo));
-    
-    console.log(`[${timestamp}] [RateLimitService] [INFO] Cleaned up old rate limit records`);
+
+    console.log(
+      `[${timestamp}] [RateLimitService] [INFO] Cleaned up old rate limit records`
+    );
   } catch (error: any) {
-    console.error(`[${timestamp}] [RateLimitService] [ERROR] Cleanup failed:`, error.message);
+    console.error(
+      `[${timestamp}] [RateLimitService] [ERROR] Cleanup failed:`,
+      error.message
+    );
   }
 }
 
@@ -210,7 +237,7 @@ export async function getCurrentUsage(virtualKeyId: string): Promise<{
 }> {
   const db = getDb();
   const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
-  
+
   const usageRecords = await db
     .select()
     .from(rateLimitUsage)
@@ -220,15 +247,14 @@ export async function getCurrentUsage(virtualKeyId: string): Promise<{
         gte(rateLimitUsage.windowStart, oneMinuteAgo)
       )
     );
-  
+
   let totalRequests = 0;
   let totalTokens = 0;
-  
+
   for (const record of usageRecords) {
     totalRequests += record.requestsCount;
     totalTokens += record.tokensCount;
   }
-  
+
   return { requests: totalRequests, tokens: totalTokens };
 }
-

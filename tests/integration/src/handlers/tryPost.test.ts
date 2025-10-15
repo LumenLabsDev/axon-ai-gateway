@@ -476,9 +476,7 @@ describe('tryPost-caching', () => {
     const nonCachedData: any = await nonCachedResponse.json();
 
     expect(nonCachedResponse.status).toBe(200);
-    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe(
-      'MISS'
-    );
+    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe('MISS');
 
     // Get from cache
     const response = await fetch(url, options);
@@ -559,9 +557,7 @@ describe('tryPost-caching', () => {
     expect(nonCachedResponse.body).toBeInstanceOf(ReadableStream);
 
     expect(nonCachedResponse.status).toBe(200);
-    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe(
-      'MISS'
-    );
+    expect(nonCachedResponse.headers.get('x-axon-cache-status')).toBe('MISS');
 
     // Get from cache
     const response = await fetch(url, options);

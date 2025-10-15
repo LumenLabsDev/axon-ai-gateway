@@ -837,11 +837,11 @@ export function resolveProviderApiKey(
   if ('apiKey' in config && config.apiKey) {
     return config.apiKey;
   }
-  
+
   // Use the provider key linked to the virtual key
   if (context) {
     const providerKey = context.get('providerKey');
-    
+
     if (providerKey) {
       try {
         return decryptProviderKey(providerKey.encryptedKey);
@@ -850,7 +850,7 @@ export function resolveProviderApiKey(
       }
     }
   }
-  
+
   return undefined;
 }
 
@@ -1022,7 +1022,7 @@ export function constructConfigFromRequestHeaders(
         'Bearer ',
         ''
       );
-      
+
       // If using virtual keys, get provider and API key from context
       if (context) {
         const providerKey = context.get('providerKey');
@@ -1032,7 +1032,9 @@ export function constructConfigFromRequestHeaders(
           }
           // Always use the provider's API key when using virtual keys (decrypt it first)
           try {
-            parsedConfigJson.api_key = decryptProviderKey(providerKey.encryptedKey);
+            parsedConfigJson.api_key = decryptProviderKey(
+              providerKey.encryptedKey
+            );
           } catch (error: any) {
             console.error('Failed to decrypt provider API key:', error.message);
             parsedConfigJson.api_key = undefined;
@@ -1144,7 +1146,7 @@ export function constructConfigFromRequestHeaders(
   // If no explicit provider is specified, use the one from virtual key's provider key
   let provider = requestHeaders[`x-${POWERED_BY}-provider`];
   let apiKey = requestHeaders['authorization']?.replace('Bearer ', '');
-  
+
   if (!provider && context) {
     const providerKey = context.get('providerKey');
     if (providerKey) {

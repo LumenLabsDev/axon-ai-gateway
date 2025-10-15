@@ -51,7 +51,7 @@ if (
     app.get('/public', (c: Context) => {
       return c.redirect('/public/');
     });
-    
+
     // Root route redirects to admin
     app.get('/', (c: Context) => {
       return c.redirect('/public/');
@@ -61,11 +61,11 @@ if (
     app.get('/public/js/:filename', (c: Context) => {
       const filename = c.req.param('filename');
       const filePath = join(scriptDir, 'public/js', filename);
-      
+
       if (!existsSync(filePath)) {
         return c.notFound();
       }
-      
+
       const content = readFileSync(filePath, 'utf-8');
       return c.text(content, 200, {
         'Content-Type': 'application/javascript',
@@ -75,11 +75,11 @@ if (
     app.get('/public/css/:filename', (c: Context) => {
       const filename = c.req.param('filename');
       const filePath = join(scriptDir, 'public/css', filename);
-      
+
       if (!existsSync(filePath)) {
         return c.notFound();
       }
-      
+
       const content = readFileSync(filePath, 'utf-8');
       return c.text(content, 200, {
         'Content-Type': 'text/css',
@@ -90,11 +90,11 @@ if (
     app.get('/public/templates/*', (c: Context) => {
       const templatePath = c.req.path.replace('/public/templates/', '');
       const filePath = join(scriptDir, 'public/templates', templatePath);
-      
+
       if (!existsSync(filePath)) {
         return c.notFound();
       }
-      
+
       const content = readFileSync(filePath, 'utf-8');
       return c.text(content, 200, {
         'Content-Type': 'text/html; charset=utf-8',
@@ -202,14 +202,19 @@ await initializeDatabase();
 await cleanupOldRecords();
 
 // Schedule periodic cleanup (every hour)
-const cleanupInterval = setInterval(async () => {
-  await cleanupOldRecords();
-}, 60 * 60 * 1000); // 1 hour
+const cleanupInterval = setInterval(
+  async () => {
+    await cleanupOldRecords();
+  },
+  60 * 60 * 1000
+); // 1 hour
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
   const timestamp = new Date().toISOString();
-  console.log(`\n[${timestamp}] [Server] [INFO] SIGTERM received, shutting down gracefully`);
+  console.log(
+    `\n[${timestamp}] [Server] [INFO] SIGTERM received, shutting down gracefully`
+  );
   clearInterval(cleanupInterval);
   closeDatabase();
   process.exit(0);
@@ -217,7 +222,9 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   const timestamp = new Date().toISOString();
-  console.log(`\n[${timestamp}] [Server] [INFO] SIGINT received, shutting down gracefully`);
+  console.log(
+    `\n[${timestamp}] [Server] [INFO] SIGINT received, shutting down gracefully`
+  );
   clearInterval(cleanupInterval);
   closeDatabase();
   process.exit(0);
@@ -262,7 +269,10 @@ console.log('   ' + '\x1b[1;4;32m%s\x1b[0m', `${url}`);
 
 // Secondary information on single lines
 if (!isHeadless) {
-  console.log('\n\x1b[90m📱 Admin Dashboard:\x1b[0m \x1b[36m%s\x1b[0m', `${url}/public/`);
+  console.log(
+    '\n\x1b[90m📱 Admin Dashboard:\x1b[0m \x1b[36m%s\x1b[0m',
+    `${url}/public/`
+  );
 }
 // console.log('\x1b[90m📚 Docs:\x1b[0m \x1b[36m%s\x1b[0m', 'https://axon.ai/docs');
 

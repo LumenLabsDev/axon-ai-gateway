@@ -17,17 +17,19 @@ import { HookObject, HookType } from '../middlewares/hooks/types';
 export async function getGuardrailsForContext(
   workspaceId: string,
   virtualKeyId?: string
-): Promise<Array<{
-  guardrail: typeof guardrails.$inferSelect;
-  mode: 'block' | 'observe';
-}>> {
+): Promise<
+  Array<{
+    guardrail: typeof guardrails.$inferSelect;
+    mode: 'block' | 'observe';
+  }>
+> {
   const timestamp = new Date().toISOString();
   const db = getDb();
-  
+
   try {
     // Build query to get bindings for workspace and optionally for specific virtual key
     const queryConditions = [eq(workspaceGuardrails.workspaceId, workspaceId)];
-    
+
     if (virtualKeyId) {
       // Get bindings for specific virtual key OR workspace-wide bindings
       queryConditions.push(
@@ -40,23 +42,23 @@ export async function getGuardrailsForContext(
       // Only workspace-wide bindings
       queryConditions.push(isNull(workspaceGuardrails.virtualKeyId));
     }
-    
+
     const bindings = await db
       .select()
       .from(workspaceGuardrails)
       .where(and(...queryConditions));
-    
+
     if (bindings.length === 0) {
       return [];
     }
-    
+
     // Get the actual guardrails
     const guardrailIds = bindings.map((b) => b.guardrailId);
     const allGuardrails = await db
       .select()
       .from(guardrails)
       .where(eq(guardrails.workspaceId, workspaceId));
-    
+
     // Filter to bound guardrails and attach mode
     const boundGuardrails = allGuardrails
       .filter((g) => guardrailIds.includes(g.id))
@@ -67,14 +69,17 @@ export async function getGuardrailsForContext(
           mode: binding!.mode,
         };
       });
-    
+
     console.log(
       `[${timestamp}] [GuardrailService] [INFO] Found ${boundGuardrails.length} guardrails for workspace ${workspaceId}${virtualKeyId ? ` / virtual key ${virtualKeyId}` : ''}`
     );
-    
+
     return boundGuardrails;
   } catch (error: any) {
-    console.error(`[${timestamp}] [GuardrailService] [ERROR] Failed to get guardrails:`, error.message);
+    console.error(
+      `[${timestamp}] [GuardrailService] [ERROR] Failed to get guardrails:`,
+      error.message
+    );
     return [];
   }
 }
@@ -89,16 +94,16 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
   afterRequestHooks: HookObject[];
 } {
   const timestamp = new Date().toISOString();
-  
+
   const beforeChecks: any[] = [];
   const afterChecks: any[] = [];
-  
+
   // Convert each check and categorize
   for (const check of guardrail.checks) {
     if (check.enabled === false) {
       continue; // Skip disabled checks
     }
-    
+
     const checkObject = {
       id: check.id,
       parameters: {
@@ -108,25 +113,26 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
       },
       is_enabled: true,
     };
-    
+
     // Determine if this is a before or after request hook based on check ID
     // Checks that operate on input go in beforeRequestHooks
     // Checks that operate on output go in afterRequestHooks
-    const isOutputCheck = check.id.includes('output') || 
-                         check.id.includes('response') ||
-                         check.id.includes('scan.response');
-    
+    const isOutputCheck =
+      check.id.includes('output') ||
+      check.id.includes('response') ||
+      check.id.includes('scan.response');
+
     if (isOutputCheck) {
       afterChecks.push(checkObject);
     } else {
       beforeChecks.push(checkObject);
     }
   }
-  
+
   // Create hook objects
   const beforeRequestHooks: HookObject[] = [];
   const afterRequestHooks: HookObject[] = [];
-  
+
   if (beforeChecks.length > 0) {
     const hookObject: HookObject = {
       type: HookType.GUARDRAIL,
@@ -136,28 +142,28 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
       deny: false,
       eventType: 'beforeRequestHook',
     };
-    
+
     // Add actions as callbacks
     if (guardrail.actions) {
       const actions = guardrail.actions as any;
-      
+
       if (actions.onSuccess) {
         hookObject.onSuccess = { feedback: actions.onSuccess };
       }
-      
+
       if (actions.onFailure) {
         hookObject.onFail = { feedback: actions.onFailure };
-        
+
         // If denyRequest is true, mark to fail the request
         if (actions.onFailure.denyRequest) {
           hookObject.deny = true;
         }
       }
     }
-    
+
     beforeRequestHooks.push(hookObject);
   }
-  
+
   if (afterChecks.length > 0) {
     const hookObject: HookObject = {
       type: HookType.GUARDRAIL,
@@ -167,32 +173,32 @@ export function guardrailToHooks(guardrail: typeof guardrails.$inferSelect): {
       deny: false,
       eventType: 'afterRequestHook',
     };
-    
+
     // Add actions as callbacks
     if (guardrail.actions) {
       const actions = guardrail.actions as any;
-      
+
       if (actions.onSuccess) {
         hookObject.onSuccess = { feedback: actions.onSuccess };
       }
-      
+
       if (actions.onFailure) {
         hookObject.onFail = { feedback: actions.onFailure };
-        
+
         // If denyRequest is true, mark to fail the request
         if (actions.onFailure.denyRequest) {
           hookObject.deny = true;
         }
       }
     }
-    
+
     afterRequestHooks.push(hookObject);
   }
-  
+
   console.log(
     `[${timestamp}] [GuardrailService] [INFO] Converted guardrail "${guardrail.name}" to ${beforeRequestHooks.length} before hooks and ${afterRequestHooks.length} after hooks`
   );
-  
+
   return {
     beforeRequestHooks,
     afterRequestHooks,
@@ -212,14 +218,18 @@ export async function getHooksForContext(
   beforeRequestHooks: HookObject[];
   afterRequestHooks: HookObject[];
 }> {
-  const guardrailsWithMode = await getGuardrailsForContext(workspaceId, virtualKeyId);
-  
+  const guardrailsWithMode = await getGuardrailsForContext(
+    workspaceId,
+    virtualKeyId
+  );
+
   const allBeforeHooks: HookObject[] = [];
   const allAfterHooks: HookObject[] = [];
-  
+
   for (const { guardrail, mode } of guardrailsWithMode) {
-    const { beforeRequestHooks, afterRequestHooks } = guardrailToHooks(guardrail);
-    
+    const { beforeRequestHooks, afterRequestHooks } =
+      guardrailToHooks(guardrail);
+
     // Add mode to each hook's checks
     beforeRequestHooks.forEach((hook) => {
       if (hook.checks) {
@@ -235,14 +245,13 @@ export async function getHooksForContext(
         });
       }
     });
-    
+
     allBeforeHooks.push(...beforeRequestHooks);
     allAfterHooks.push(...afterRequestHooks);
   }
-  
+
   return {
     beforeRequestHooks: allBeforeHooks,
     afterRequestHooks: allAfterHooks,
   };
 }
-

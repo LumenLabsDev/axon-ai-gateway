@@ -1,6 +1,11 @@
 import { Context } from 'hono';
 import { getDb } from '../../db';
-import { virtualKeys, requestLogs, providerKeys, prompts } from '../../db/schema';
+import {
+  virtualKeys,
+  requestLogs,
+  providerKeys,
+  prompts,
+} from '../../db/schema';
 import { eq, and, gte, count, sum, sql, avg } from 'drizzle-orm';
 
 /**
@@ -10,7 +15,7 @@ import { eq, and, gte, count, sum, sql, avg } from 'drizzle-orm';
 export async function getAnalytics(c: Context) {
   const db = getDb();
   const workspace = c.get('workspace');
-  
+
   if (!workspace) {
     return c.json(
       {
@@ -32,7 +37,7 @@ export async function getAnalytics(c: Context) {
       .select({ count: count() })
       .from(virtualKeys)
       .where(eq(virtualKeys.workspaceId, workspace.id));
-    
+
     const totalVirtualKeys = virtualKeysResult[0]?.count || 0;
 
     // Get total provider keys count
@@ -40,7 +45,7 @@ export async function getAnalytics(c: Context) {
       .select({ count: count() })
       .from(providerKeys)
       .where(eq(providerKeys.workspaceId, workspace.id));
-    
+
     const totalProviderKeys = providerKeysResult[0]?.count || 0;
 
     // Get total prompts count
@@ -48,7 +53,7 @@ export async function getAnalytics(c: Context) {
       .select({ count: count() })
       .from(prompts)
       .where(eq(prompts.workspaceId, workspace.id));
-    
+
     const totalPrompts = promptsResult[0]?.count || 0;
 
     // Get workspace virtual keys for rate limit queries
@@ -56,8 +61,8 @@ export async function getAnalytics(c: Context) {
       .select({ id: virtualKeys.id })
       .from(virtualKeys)
       .where(eq(virtualKeys.workspaceId, workspace.id));
-    
-    const virtualKeyIds = workspaceVirtualKeys.map(k => k.id);
+
+    const virtualKeyIds = workspaceVirtualKeys.map((k) => k.id);
 
     if (virtualKeyIds.length === 0) {
       // No virtual keys, return empty analytics
@@ -75,7 +80,7 @@ export async function getAnalytics(c: Context) {
             virtualKeys: totalVirtualKeys,
             providerKeys: totalProviderKeys,
             prompts: totalPrompts,
-          }
+          },
         },
       });
     }
@@ -115,10 +120,13 @@ export async function getAnalytics(c: Context) {
 
     // Map virtual key IDs to names
     const virtualKeyMap = new Map(
-      workspaceVirtualKeys.map(k => [k.id, k.id.substring(0, 8)])
+      workspaceVirtualKeys.map((k) => [k.id, k.id.substring(0, 8)])
     );
 
-    const requestsByVirtualKey: Record<string, { requests: number; tokens: number }> = {};
+    const requestsByVirtualKey: Record<
+      string,
+      { requests: number; tokens: number }
+    > = {};
     for (const row of requestsByVirtualKeyResult) {
       const keyName = virtualKeyMap.get(row.virtualKeyId) || row.virtualKeyId;
       requestsByVirtualKey[keyName] = {
@@ -130,7 +138,10 @@ export async function getAnalytics(c: Context) {
     // Get requests over time (grouped by hour)
     const requestsByTimeWindow = await db
       .select({
-        windowStart: sql<Date>`datetime(${requestLogs.createdAt} / 1000, 'unixepoch', 'start of hour')`.as('windowStart'),
+        windowStart:
+          sql<Date>`datetime(${requestLogs.createdAt} / 1000, 'unixepoch', 'start of hour')`.as(
+            'windowStart'
+          ),
         requests: count(requestLogs.id),
         tokens: sum(requestLogs.tokensUsed),
       })
@@ -162,7 +173,7 @@ export async function getAnalytics(c: Context) {
       .orderBy(sql`${count(requestLogs.id)} DESC`)
       .limit(10);
 
-    const topModels = topModelsResult.map(row => ({
+    const topModels = topModelsResult.map((row) => ({
       model: row.model || 'unknown',
       requests: Number(row.requests) || 0,
     }));
@@ -192,7 +203,7 @@ export async function getAnalytics(c: Context) {
     for (const row of statusStats) {
       const status = row.statusCode;
       const count = Number(row.count) || 0;
-      
+
       if (status >= 200 && status < 300) {
         requestsByStatus['200'] += count;
         successfulRequests += count;
@@ -203,7 +214,8 @@ export async function getAnalytics(c: Context) {
       }
     }
 
-    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
+    const successRate =
+      totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
 
     // Calculate average response time
     const avgResponseTimeResult = await db
@@ -229,7 +241,7 @@ export async function getAnalytics(c: Context) {
         successRate: Number(successRate.toFixed(2)),
         avgResponseTime: Math.round(avgResponseTime),
         requestsByVirtualKey,
-        requestsByTimeWindow: requestsByTimeWindow.map(row => ({
+        requestsByTimeWindow: requestsByTimeWindow.map((row) => ({
           timestamp: row.windowStart,
           requests: Number(row.requests) || 0,
           tokens: Number(row.tokens) || 0,
@@ -279,4 +291,3 @@ function parseTimeRange(timeRange: string): number {
       return 24 * 60 * 60 * 1000;
   }
 }
-

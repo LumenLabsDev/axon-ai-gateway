@@ -19,7 +19,10 @@ export class RequestContext {
   private _transformedRequestBody: any;
   public readonly providerOption: Options;
   private _requestURL: string = ''; // Is set at the beginning of tryPost()
-  private _dbGuardrails: { beforeRequestHooks: HookObject[]; afterRequestHooks: HookObject[] } | null = null;
+  private _dbGuardrails: {
+    beforeRequestHooks: HookObject[];
+    afterRequestHooks: HookObject[];
+  } | null = null;
   private _dbGuardrailsLoaded = false;
 
   constructor(
@@ -40,14 +43,14 @@ export class RequestContext {
     // Load database guardrails asynchronously
     this.loadDatabaseGuardrails();
   }
-  
+
   private async loadDatabaseGuardrails() {
     if (this._dbGuardrailsLoaded) return;
-    
+
     try {
       const workspace = this.honoContext.get('workspace');
       const virtualKey = this.honoContext.get('virtualKey');
-      
+
       if (workspace) {
         this._dbGuardrails = await getHooksForContext(
           workspace.id,
@@ -58,7 +61,7 @@ export class RequestContext {
       console.error('Failed to load database guardrails:', error);
       this._dbGuardrails = { beforeRequestHooks: [], afterRequestHooks: [] };
     }
-    
+
     this._dbGuardrailsLoaded = true;
   }
 
@@ -171,7 +174,7 @@ export class RequestContext {
     return {
       attempts: retry?.attempts ?? 0,
       onStatusCodes: retry?.attempts
-        ? retry?.onStatusCodes ?? RETRY_STATUS_CODES
+        ? (retry?.onStatusCodes ?? RETRY_STATUS_CODES)
         : [],
       useRetryAfterHeader: retry?.useRetryAfterHeader,
     };

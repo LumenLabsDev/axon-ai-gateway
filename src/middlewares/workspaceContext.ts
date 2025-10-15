@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm';
  */
 export async function workspaceContext(c: Context, next: Next) {
   const workspaceId = c.req.header('x-axon-workspace-id');
-  
+
   if (workspaceId) {
     try {
       const db = getDb();
@@ -18,15 +18,17 @@ export async function workspaceContext(c: Context, next: Next) {
         .from(workspaces)
         .where(eq(workspaces.id, workspaceId))
         .limit(1);
-      
+
       if (workspace) {
         c.set('workspace', workspace);
       }
     } catch (error: any) {
-      console.error('[WorkspaceContext] [ERROR] Failed to load workspace:', error.message);
+      console.error(
+        '[WorkspaceContext] [ERROR] Failed to load workspace:',
+        error.message
+      );
     }
   }
-  
+
   return next();
 }
-

@@ -2,7 +2,10 @@ import { Context } from 'hono';
 import { getDb } from '../../db';
 import { providerKeys, NewProviderKey, virtualKeys } from '../../db/schema';
 import { eq } from 'drizzle-orm';
-import { encryptProviderKey, maskApiKey } from '../../services/encryptionService';
+import {
+  encryptProviderKey,
+  maskApiKey,
+} from '../../services/encryptionService';
 
 /**
  * List provider keys (masked)
@@ -13,32 +16,37 @@ export async function listProviderKeys(c: Context) {
   const db = getDb();
   const workspace = c.get('workspace');
   const workspaceIdParam = c.req.query('workspaceId');
-  
+
   try {
     let query = db.select().from(providerKeys);
-    
+
     // Filter by workspace if provided
     const workspaceId = workspace?.id || workspaceIdParam;
     if (workspaceId) {
       query = query.where(eq(providerKeys.workspaceId, workspaceId)) as any;
     }
-    
+
     const keys = await query;
-    
+
     // Mask the keys before returning
     const maskedKeys = keys.map((key) => ({
       ...key,
       encryptedKey: maskApiKey(key.encryptedKey),
     }));
-    
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Listed ${maskedKeys.length} provider keys${workspaceId ? ` for workspace ${workspaceId}` : ''}`);
-    
+
+    console.log(
+      `[${timestamp}] [ProviderKeysHandler] [INFO] Listed ${maskedKeys.length} provider keys${workspaceId ? ` for workspace ${workspaceId}` : ''}`
+    );
+
     return c.json({
       status: 'success',
       data: maskedKeys,
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to list provider keys:`, error.message);
+    console.error(
+      `[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to list provider keys:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -58,16 +66,18 @@ export async function getProviderKey(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     const key = await db
       .select()
       .from(providerKeys)
       .where(eq(providerKeys.id, id))
       .get();
-    
+
     if (!key) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -76,10 +86,12 @@ export async function getProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && key.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -88,21 +100,26 @@ export async function getProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Mask the key
     const maskedKey = {
       ...key,
       encryptedKey: maskApiKey(key.encryptedKey),
     };
-    
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Retrieved provider key: ${id}`);
-    
+
+    console.log(
+      `[${timestamp}] [ProviderKeysHandler] [INFO] Retrieved provider key: ${id}`
+    );
+
     return c.json({
       status: 'success',
       data: maskedKey,
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to get provider key:`, error.message);
+    console.error(
+      `[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to get provider key:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -122,7 +139,7 @@ export async function createProviderKey(c: Context) {
   const db = getDb();
   const workspace = c.get('workspace');
   const apiKey = c.get('apiKey');
-  
+
   if (!workspace) {
     return c.json(
       {
@@ -132,11 +149,11 @@ export async function createProviderKey(c: Context) {
       400
     );
   }
-  
+
   try {
     const body = await c.req.json();
     const { name, provider, apiKey: providerApiKey } = body;
-    
+
     if (!name || !provider || !providerApiKey) {
       return c.json(
         {
@@ -146,10 +163,10 @@ export async function createProviderKey(c: Context) {
         400
       );
     }
-    
+
     // Encrypt the provider API key
     const encryptedKey = encryptProviderKey(providerApiKey);
-    
+
     const newProviderKey: NewProviderKey = {
       workspaceId: workspace.id,
       name,
@@ -157,18 +174,23 @@ export async function createProviderKey(c: Context) {
       encryptedKey,
       createdBy: apiKey?.createdBy,
     };
-    
-    const result = await db.insert(providerKeys).values(newProviderKey).returning();
+
+    const result = await db
+      .insert(providerKeys)
+      .values(newProviderKey)
+      .returning();
     const created = result[0];
-    
+
     // Return masked key
     const maskedKey = {
       ...created,
       encryptedKey: maskApiKey(created.encryptedKey),
     };
-    
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Created provider key: ${created.id} (${created.provider}) in workspace ${workspace.id}`);
-    
+
+    console.log(
+      `[${timestamp}] [ProviderKeysHandler] [INFO] Created provider key: ${created.id} (${created.provider}) in workspace ${workspace.id}`
+    );
+
     return c.json(
       {
         status: 'success',
@@ -177,7 +199,10 @@ export async function createProviderKey(c: Context) {
       201
     );
   } catch (error: any) {
-    console.error(`[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to create provider key:`, error.message);
+    console.error(
+      `[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to create provider key:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -197,20 +222,22 @@ export async function updateProviderKey(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     const body = await c.req.json();
     const { name, apiKey: providerApiKey } = body;
-    
+
     // Check if key exists
     const existing = await db
       .select()
       .from(providerKeys)
       .where(eq(providerKeys.id, id))
       .get();
-    
+
     if (!existing) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -219,10 +246,12 @@ export async function updateProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && existing.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -231,39 +260,44 @@ export async function updateProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Update key
     const updateData: Partial<typeof providerKeys.$inferInsert> = {
       updatedAt: new Date(),
     };
-    
+
     if (name !== undefined) updateData.name = name;
     if (providerApiKey !== undefined) {
       updateData.encryptedKey = encryptProviderKey(providerApiKey);
     }
-    
+
     const result = await db
       .update(providerKeys)
       .set(updateData)
       .where(eq(providerKeys.id, id))
       .returning();
-    
+
     const updated = result[0];
-    
+
     // Mask the key
     const maskedKey = {
       ...updated,
       encryptedKey: maskApiKey(updated.encryptedKey),
     };
-    
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Updated provider key: ${id}`);
-    
+
+    console.log(
+      `[${timestamp}] [ProviderKeysHandler] [INFO] Updated provider key: ${id}`
+    );
+
     return c.json({
       status: 'success',
       data: maskedKey,
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to update provider key:`, error.message);
+    console.error(
+      `[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to update provider key:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -283,7 +317,7 @@ export async function deleteProviderKey(c: Context) {
   const db = getDb();
   const id = c.req.param('id');
   const workspace = c.get('workspace');
-  
+
   try {
     // Check if key exists
     const existing = await db
@@ -291,9 +325,11 @@ export async function deleteProviderKey(c: Context) {
       .from(providerKeys)
       .where(eq(providerKeys.id, id))
       .get();
-    
+
     if (!existing) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key not found: ${id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -302,10 +338,12 @@ export async function deleteProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Check workspace access
     if (workspace && existing.workspaceId !== workspace.id) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Provider key ${id} does not belong to workspace ${workspace.id}`
+      );
       return c.json(
         {
           status: 'failure',
@@ -314,15 +352,17 @@ export async function deleteProviderKey(c: Context) {
         404
       );
     }
-    
+
     // Check if any virtual keys are using this provider key
     const linkedVirtualKeys = await db
       .select()
       .from(virtualKeys)
       .where(eq(virtualKeys.providerKeyId, id));
-    
+
     if (linkedVirtualKeys.length > 0) {
-      console.warn(`[${timestamp}] [ProviderKeysHandler] [WARN] Cannot delete provider key ${id} - used by ${linkedVirtualKeys.length} virtual key(s)`);
+      console.warn(
+        `[${timestamp}] [ProviderKeysHandler] [WARN] Cannot delete provider key ${id} - used by ${linkedVirtualKeys.length} virtual key(s)`
+      );
       return c.json(
         {
           status: 'failure',
@@ -331,17 +371,22 @@ export async function deleteProviderKey(c: Context) {
         400
       );
     }
-    
+
     await db.delete(providerKeys).where(eq(providerKeys.id, id));
-    
-    console.log(`[${timestamp}] [ProviderKeysHandler] [INFO] Deleted provider key: ${id}`);
-    
+
+    console.log(
+      `[${timestamp}] [ProviderKeysHandler] [INFO] Deleted provider key: ${id}`
+    );
+
     return c.json({
       status: 'success',
       message: 'Provider key deleted successfully',
     });
   } catch (error: any) {
-    console.error(`[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to delete provider key:`, error.message);
+    console.error(
+      `[${timestamp}] [ProviderKeysHandler] [ERROR] Failed to delete provider key:`,
+      error.message
+    );
     return c.json(
       {
         status: 'failure',
@@ -351,4 +396,3 @@ export async function deleteProviderKey(c: Context) {
     );
   }
 }
-

@@ -8,4 +8,3 @@ export default {
     url: process.env.DATABASE_PATH || './data/gateway.db',
   },
 } satisfies Config;
-

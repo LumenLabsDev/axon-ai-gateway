@@ -19,14 +19,18 @@ let sqlite: Database.Database | null = null;
  */
 export async function initializeDatabase() {
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [DB] [INFO] Initializing database at: ${DATABASE_PATH}`);
+  console.log(
+    `[${timestamp}] [DB] [INFO] Initializing database at: ${DATABASE_PATH}`
+  );
 
   try {
     // Ensure the directory exists
     const dir = dirname(DATABASE_PATH);
     if (!existsSync(dir)) {
       await mkdir(dir, { recursive: true });
-      console.log(`[${timestamp}] [DB] [INFO] Created database directory: ${dir}`);
+      console.log(
+        `[${timestamp}] [DB] [INFO] Created database directory: ${dir}`
+      );
     }
 
     // Initialize SQLite connection
@@ -40,17 +44,24 @@ export async function initializeDatabase() {
     // Apply migrations
     const migrationsFolder = join(process.cwd(), 'src', 'db', 'migrations');
     if (existsSync(migrationsFolder)) {
-      console.log(`[${timestamp}] [DB] [INFO] Applying migrations from: ${migrationsFolder}`);
+      console.log(
+        `[${timestamp}] [DB] [INFO] Applying migrations from: ${migrationsFolder}`
+      );
       migrate(db, { migrationsFolder });
       console.log(`[${timestamp}] [DB] [INFO] Migrations applied successfully`);
     } else {
-      console.log(`[${timestamp}] [DB] [WARN] Migrations folder not found: ${migrationsFolder}`);
+      console.log(
+        `[${timestamp}] [DB] [WARN] Migrations folder not found: ${migrationsFolder}`
+      );
     }
 
     console.log(`[${timestamp}] [DB] [INFO] Database initialized successfully`);
     return db;
   } catch (error: any) {
-    console.error(`[${timestamp}] [DB] [ERROR] Failed to initialize database:`, error.message);
+    console.error(
+      `[${timestamp}] [DB] [ERROR] Failed to initialize database:`,
+      error.message
+    );
     throw error;
   }
 }
@@ -61,7 +72,9 @@ export async function initializeDatabase() {
  */
 export function getDb() {
   if (!db) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.'
+    );
   }
   return db;
 }
@@ -71,7 +84,9 @@ export function getDb() {
  */
 export function getSqlite() {
   if (!sqlite) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.'
+    );
   }
   return sqlite;
 }
@@ -91,4 +106,3 @@ export function closeDatabase() {
 
 // Export schema for use in queries
 export * from './schema';
-

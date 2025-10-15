@@ -19,15 +19,15 @@ export async function chatCompletionsHandler(c: Context): Promise<Response> {
   try {
     let request = await c.req.json();
     let requestHeaders = Object.fromEntries(c.req.raw.headers);
-    
+
     // Check if this is a prompt completion request
     const url = new URL(c.req.url);
     const promptMatch = url.pathname.match(/\/v1\/prompts\/([^\/]+)\//);
-    
+
     if (promptMatch) {
       const promptId = promptMatch[1];
       const workspace = c.get('workspace');
-      
+
       if (!workspace) {
         return new Response(
           JSON.stringify({
@@ -42,15 +42,20 @@ export async function chatCompletionsHandler(c: Context): Promise<Response> {
           }
         );
       }
-      
+
       try {
         // Get variables from request body
         const variables = request.variables || {};
         const version = request.version;
-        
+
         // Resolve prompt
-        const resolved = await resolvePrompt(workspace.id, promptId, variables, version);
-        
+        const resolved = await resolvePrompt(
+          workspace.id,
+          promptId,
+          variables,
+          version
+        );
+
         // Merge resolved prompt into request
         if (resolved.messages) {
           request.messages = resolved.messages;
@@ -63,13 +68,15 @@ export async function chatCompletionsHandler(c: Context): Promise<Response> {
             },
           ];
         }
-        
+
         // Merge params if provided
         if (resolved.params) {
           request = { ...resolved.params, ...request };
         }
-        
-        console.log(`Resolved prompt ${promptId} for workspace ${workspace.id}`);
+
+        console.log(
+          `Resolved prompt ${promptId} for workspace ${workspace.id}`
+        );
       } catch (error: any) {
         console.error('Failed to resolve prompt:', error);
         return new Response(
@@ -86,8 +93,11 @@ export async function chatCompletionsHandler(c: Context): Promise<Response> {
         );
       }
     }
-    
-    const camelCaseConfig = constructConfigFromRequestHeaders(requestHeaders, c);
+
+    const camelCaseConfig = constructConfigFromRequestHeaders(
+      requestHeaders,
+      c
+    );
     const tryTargetsResponse = await tryTargetsRecursively(
       c,
       camelCaseConfig ?? {},
