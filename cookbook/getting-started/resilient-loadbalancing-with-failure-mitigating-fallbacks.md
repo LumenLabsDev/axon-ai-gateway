@@ -2,15 +2,15 @@
 
 Companies often face challenges of scaling their services efficiently as the traffic to their applications grow - when you’re consuming APIs, the first point of failure is that if you hit the API too much, you can get rate limited. Loadbalancing is a proven way to scale usage horizontally without overburdening any one provider and thus staying within rate limits.
 
-For your AI app, rate limits are even more stringent, and if you start hitting the providers’ rate limits, there’s nothing you can do except wait to cool down and try again. With Portkey, we help you solve this very easily.
+For your AI app, rate limits are even more stringent, and if you start hitting the providers’ rate limits, there’s nothing you can do except wait to cool down and try again. With Axon AI, we help you solve this very easily.
 
-This cookbook will teach you how to utilize Portkey to distribute traffic across multiple LLMs, ensuring that your loadbalancer is robust by setting up backups for requests. Additionally, you will learn how to load balance across OpenAI and Anthropic, leveraging the powerful Claude-3 models recently developed by Anthropic, with Azure serving as the fallback layer.
+This cookbook will teach you how to utilize Axon AI to distribute traffic across multiple LLMs, ensuring that your loadbalancer is robust by setting up backups for requests. Additionally, you will learn how to load balance across OpenAI and Anthropic, leveraging the powerful Claude-3 models recently developed by Anthropic, with Azure serving as the fallback layer.
 
 <span style="text-decoration:underline;">Prerequisites:</span>
 
-You should have the [Portkey API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key). Please sign up to obtain it. Additionally, you should have stored the OpenAI, Azure OpenAI, and Anthropic details in the [Portkey vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+You should have the [Axon AI API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key). Please sign up to obtain it. Additionally, you should have stored the OpenAI, Azure OpenAI, and Anthropic details in the [Axon AI vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
-## 1. Import the SDK and authenticate Portkey
+## 1. Import the SDK and authenticate Axon AI
 
 Start by installing the `axon-ai` to your NodeJS project.
 
@@ -18,19 +18,19 @@ Start by installing the `axon-ai` to your NodeJS project.
 npm i --save axon-ai
 ```
 
-Once installed, you can import it and instantiate it with the API key to your Portkey account.
+Once installed, you can import it and instantiate it with the API key to your Axon AI account.
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
-  apiKey: process.env['PORTKEYAI_API_KEY']
+const axon = new Axon AI({
+  apiKey: process.env['Axon AIAI_API_KEY']
 });
 ```
 
 ## 2. Create Configs: Loadbalance with Nested Fallbacks
 
-Portkey acts as AI gateway to all of your requests to LLMs. It follows the OpenAI SDK signature in all of it’s methods and interfaces making it easy to use and switch. Here is an example of an chat completions requests through Portkey.
+Axon AI acts as AI gateway to all of your requests to LLMs. It follows the OpenAI SDK signature in all of it’s methods and interfaces making it easy to use and switch. Here is an example of an chat completions requests through Axon AI.
 
 ```js
 const response = await axon.chat.completions.create({
@@ -39,11 +39,11 @@ const response = await axon.chat.completions.create({
 });
 ```
 
-The Portkey AI gateway can apply our desired behaviour to the requests to various LLMs. In a nutshell, our desired behaviour is the following:
+The Axon AI AI gateway can apply our desired behaviour to the requests to various LLMs. In a nutshell, our desired behaviour is the following:
 
 ![Flow diagram for loadbalancing and fallbacks](../../docs/images/cookbooks/resilient-loadbalance.png)
 
-Lucky for us, all of this can implemented by passing a configs allowing us to express what behavior to apply to every request through the Portkey AI gateway.
+Lucky for us, all of this can implemented by passing a configs allowing us to express what behavior to apply to every request through the Axon AI AI gateway.
 
 ```js
 const config = {
@@ -76,8 +76,8 @@ const config = {
   ]
 };
 
-const axon = new Portkey({
-  apiKey: process.env['PORTKEYAI_API_KEY'],
+const axon = new Axon AI({
+  apiKey: process.env['Axon AIAI_API_KEY'],
   config // pass configs as argument
 });
 ```
@@ -86,11 +86,11 @@ We apply the `loadbalance` strategy across _Anthropic and OpenAI._ `weight` desc
 
 Let’s take this a step further to apply a fallback mechanism for the requests from* OpenAI* to fallback to _Azure OpenAI_. This nested mechanism among the `targets` will ensure our app is reliable in the production in great confidence.
 
-See the documentation for Portkey [Fallbacks](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks) and [Loadbalancing](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing).
+See the documentation for Axon AI [Fallbacks](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/fallbacks) and [Loadbalancing](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/load-balancing).
 
 ## 3. Make a Request
 
-Now that the `config` ‘s are concrete and are passed as arguments when instantiating the Portkey client instance, all subsequent will acquire desired behavior auto-magically — No additional changes to the codebase.
+Now that the `config` ‘s are concrete and are passed as arguments when instantiating the Axon AI client instance, all subsequent will acquire desired behavior auto-magically — No additional changes to the codebase.
 
 ```js
 const messages = [
@@ -117,7 +117,7 @@ Next, we will examine how to identify load-balanced requests or those that have 
 
 ## 4. Trace the request from the logs
 
-It can be challenging to identify particular requests from the thousands that are received every day, similar to trying to find a needle in a haystack. However, Portkey offers a solution by enabling us to attach a desired trace ID. Here `request-loadbalance-fallback`.
+It can be challenging to identify particular requests from the thousands that are received every day, similar to trying to find a needle in a haystack. However, Axon AI offers a solution by enabling us to attach a desired trace ID. Here `request-loadbalance-fallback`.
 
 ```js
 const response = await axon.chat.completions.create(
@@ -131,13 +131,13 @@ const response = await axon.chat.completions.create(
 );
 ```
 
-This trace ID can be used to filter requests from the Portkey Dashboard (>Logs) easily.
+This trace ID can be used to filter requests from the Axon AI Dashboard (>Logs) easily.
 
 ![logs-request-loadbalance-fallback](../../docs/images/cookbooks/resilient-loadbalance-1.png)
 
 In addition to activating Loadbalance (icon), the logs provide essential observability information, including tokens, cost, and model.
 
-Are the configs growing and becoming harder to manage in the code? [Try creating them from Portkey UI](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/configs#creating-configs) and reference the configs ID in your code. It will make it significantly easier to maintain.
+Are the configs growing and becoming harder to manage in the code? [Try creating them from Axon AI UI](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/configs#creating-configs) and reference the configs ID in your code. It will make it significantly easier to maintain.
 
 ## 5. Advanced: Canary Testing
 
@@ -165,8 +165,8 @@ const config = {
   ]
 };
 
-const axon = new Portkey({
-  apiKey: process.env['PORTKEYAI_API_KEY'],
+const axon = new Axon AI({
+  apiKey: process.env['Axon AIAI_API_KEY'],
   config
 });
 
@@ -191,7 +191,7 @@ You can implement production-grade Loadbalancing and nested fallback mechanisms 
 
 - Every request has to adhere to the LLM provider’s requirements for it to be successful. For instance, `max_tokens` is required for Anthropic and not for OpenAI.
 - While loadbalance helps reduce the load on one LLM - it is recommended to pair it with a Fallback strategy to ensure that your app stays reliable
-- On Portkey, you can also pass the loadbalance weight as 0 - this will essentially stop routing requests to that target and you can amp it up when required
+- On Axon AI, you can also pass the loadbalance weight as 0 - this will essentially stop routing requests to that target and you can amp it up when required
 - Loadbalance has no target limits as such, so you can potentially add multiple account details from one provider and effectively multiply your available rate limits
 - Loadbalance does not alter the outputs or the latency of the requests in any way
 
@@ -201,7 +201,7 @@ Happy Coding!
 <summary>See the entire code</summary>
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
 const config = {
   strategy: {
@@ -233,8 +233,8 @@ const config = {
   ]
 };
 
-const axon = new Portkey({
-  apiKey: process.env['PORTKEYAI_API_KEY'],
+const axon = new Axon AI({
+  apiKey: process.env['Axon AIAI_API_KEY'],
   config
 });
 

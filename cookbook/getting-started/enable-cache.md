@@ -1,16 +1,16 @@
-# Prevent unnecessary LLM requests with the Portkey Cache
+# Prevent unnecessary LLM requests with the Axon AI Cache
 
 If you have multiple users of your GenAI app triggering the same or similar queries to your models, fetching LLM response from the models can be slow and expensive. This is because it requires multiple round trips from your app to the model and you may end up paying for the duplicate queries.
 
-To avoid such unnecessary LLM requests, you can use Portkey as your first line of defense. It is highly effective and can be made to work across the 100+ LLMs it supports by simply making changes to a few lines of code.
+To avoid such unnecessary LLM requests, you can use Axon AI as your first line of defense. It is highly effective and can be made to work across the 100+ LLMs it supports by simply making changes to a few lines of code.
 
-## How Portkey Cache Works
+## How Axon AI Cache Works
 
-All requests that have caching enabled on them will serve the subsequent responses from the Portkey’s cache.
+All requests that have caching enabled on them will serve the subsequent responses from the Axon AI’s cache.
 
 ![prevent-unnecessary-llm-requests-with-the-axon-cache](../../docs/images/cookbooks/cache-1.png)
 
-Portkey offers two main ways of Caching techniques to enable on your requests — Simple and Semantic.
+Axon AI offers two main ways of Caching techniques to enable on your requests — Simple and Semantic.
 
 In short:
 
@@ -19,11 +19,11 @@ In short:
 
 For detailed information, check out [this](https://axon.ai/blog/reducing-llm-costs-and-latency-semantic-cache/) blog post.
 
-## 1. Import and Authenticate Portkey Client SDK
+## 1. Import and Authenticate Axon AI Client SDK
 
-You now have a brief mindmap of Portkey's approach to caching responses from LLMs.
+You now have a brief mindmap of Axon AI's approach to caching responses from LLMs.
 
-Let's utilize the Portkey Client SDK to send chat completion requests and attach gateway configs, which in turn activate caching.
+Let's utilize the Axon AI Client SDK to send chat completion requests and attach gateway configs, which in turn activate caching.
 
 To install it, type the following in your NodeJS environment:
 
@@ -31,18 +31,18 @@ To install it, type the following in your NodeJS environment:
 npm install axon-ai
 ```
 
-Instantiate Portkey instance
+Instantiate Axon AI instance
 
 ```js
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxrk',
   virtualKey: 'maixxx4d'
 });
 ```
 
-At this point, it’s essential to understand that you instantiate the `axon` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Portkey Dashboard.
+At this point, it’s essential to understand that you instantiate the `axon` instance with `apiKey` and `virtualKey` parameters. You can find the arguments for both of them in your Axon AI Dashboard.
 
-Visit the reference to [obtain the Portkey API key](https://axon.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+Visit the reference to [obtain the Axon AI API key](https://axon.ai/docs/api-reference/authentication) and learn [how to create Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 ## 2. Use Gateway Configs to enable Caching
 
@@ -59,7 +59,7 @@ The `mode` key specifies the desired strategy of caching you want for your app.
 
 ```
 
-Next up, attach these configs to the request using Portkey SDK. The SDK accepts an `config` parameter that can accept these configurations as an argument. To learn about more ways, refer to the [101 on Gateway Configs](https://github.com/Portkey-AI/axon-cookbook/blob/main/product/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui).
+Next up, attach these configs to the request using Axon AI SDK. The SDK accepts an `config` parameter that can accept these configurations as an argument. To learn about more ways, refer to the [101 on Gateway Configs](https://github.com/Axon AI-AI/axon-cookbook/blob/main/product/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui).
 
 ## 3. Make API calls, Serve from Cache
 
@@ -144,7 +144,7 @@ Explore the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integr
 
 ## 4. View Analytics and Logs
 
-On the **Analytics** page, you can find Portkey's cache performance analytics under the Cache tab.
+On the **Analytics** page, you can find Axon AI's cache performance analytics under the Cache tab.
 
 ![Dasbhoard with Analytics](../../docs/images/cookbooks/cache-2.png)
 
@@ -154,21 +154,21 @@ The **Logs** page displays a list of LLM calls that served responses from cache.
 
 ## Next steps
 
-By leveraging simple and semantic caching, you can avoid unnecessary LLM requests, reduce latency, and provide a better user experience. So go ahead and experiment with the Portkey Cache in your own projects – the benefits are just a few lines of code away!
+By leveraging simple and semantic caching, you can avoid unnecessary LLM requests, reduce latency, and provide a better user experience. So go ahead and experiment with the Axon AI Cache in your own projects – the benefits are just a few lines of code away!
 
 Some suggestions to experiment:
 
-- Try using the configs from the [Portkey UI](https://github.com/Portkey-AI/axon-cookbook/blob/main/ai-gateway/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui) as a reference.
+- Try using the configs from the [Axon AI UI](https://github.com/Axon AI-AI/axon-cookbook/blob/main/ai-gateway/101-axon-gateway-configs.md#a-reference-gateway-configs-from-the-ui) as a reference.
 
-- Implement caching when there are [multiple targets](https://github.com/Portkey-AI/axon-cookbook/blob/main/ai-gateway/how-to-setup-fallback-from-openai-to-azure-openai.md#2-creating-fallback-configs) in your gateway configs. (Here’s a [clue](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic#how-cache-works-with-configs))
+- Implement caching when there are [multiple targets](https://github.com/Axon AI-AI/axon-cookbook/blob/main/ai-gateway/how-to-setup-fallback-from-openai-to-azure-openai.md#2-creating-fallback-configs) in your gateway configs. (Here’s a [clue](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/cache-simple-and-semantic#how-cache-works-with-configs))
 
 <details>
 <summary>See the full code</summary>
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxxk',
   virtualKey: 'mxxxxxxxxd'
 });

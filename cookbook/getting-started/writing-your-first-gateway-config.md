@@ -1,17 +1,17 @@
-# 101 on Portkey's Gateway Configs
+# 101 on Axon AI's Gateway Configs
 
-You are likely familiar with how to make an API call to GPT4 for chat completions. However, did you know you can **set up** automatic retries for requests that might fail on OpenAI’s end using Portkey?
+You are likely familiar with how to make an API call to GPT4 for chat completions. However, did you know you can **set up** automatic retries for requests that might fail on OpenAI’s end using Axon AI?
 
-The Portkey AI gateway provides several useful features that you can use to enhance your requests. In this cookbook, we will start by making an API call to LLM and explore how Gateway Configs can be utilized to optimize these API calls.
+The Axon AI AI gateway provides several useful features that you can use to enhance your requests. In this cookbook, we will start by making an API call to LLM and explore how Gateway Configs can be utilized to optimize these API calls.
 
-## 1. API calls to LLMs with Portkey
+## 1. API calls to LLMs with Axon AI
 
-Consider a typical API call to GPT4 to get chat completions using OpenAI SDK. It takes `messages` and `model` arguments to get us a response. If you have tried one before, the following code snippet should look familiar. That’s because Portkey Client SDK follows the same signature as OpenAI’s.
+Consider a typical API call to GPT4 to get chat completions using OpenAI SDK. It takes `messages` and `model` arguments to get us a response. If you have tried one before, the following code snippet should look familiar. That’s because Axon AI Client SDK follows the same signature as OpenAI’s.
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxxxxtrk',
   virtualKey: 'ma5xfxxxxx4x'
 });
@@ -31,7 +31,7 @@ const response = await axon.chat.completions.create({
 console.log(response.choices[0].message.content);
 ```
 
-Along with Portkey API Key ([get one](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)), you might’ve noticed a new parameter while instantiating the `axon` variable — `virtualKey`. Portkey securely stores API keys of LLM providers in a vault and substitutes them at runtime in your requests. These unique identifiers to your API keys are called Virtual Keys. For more information, see the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+Along with Axon AI API Key ([get one](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)), you might’ve noticed a new parameter while instantiating the `axon` variable — `virtualKey`. Axon AI securely stores API keys of LLM providers in a vault and substitutes them at runtime in your requests. These unique identifiers to your API keys are called Virtual Keys. For more information, see the [docs](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 With basics out of our way, let’s jump into applying what we set out to do in the first place with the AI gateway — To automatically retry our request when we hit rate-limits (429 status codes).
 
@@ -54,7 +54,7 @@ You guessed it, on the request headers. The next section will explore two ways t
 
 ### a. Reference Gateway Configs from the UI
 
-Just as the title says — you create them on the UI and use an ID to have Portkey automatically apply in the request headers to instruct the AI gateway. UI builder features lint suggestions, makes it easy to reference (through config ID), eliminates manual management, and allows you to view version history.
+Just as the title says — you create them on the UI and use an ID to have Axon AI automatically apply in the request headers to instruct the AI gateway. UI builder features lint suggestions, makes it easy to reference (through config ID), eliminates manual management, and allows you to view version history.
 
 To create Gateway Configs,
 
@@ -75,18 +75,18 @@ Try it out now!
 
 The Configs saved will appear as a row item on the Configs page. The `ID` is important as it is referenced in our calls through the AI gateway.
 
-#### Portkey SDK
+#### Axon AI SDK
 
-The Portkey SDK accepts the config parameter that takes the created config ID as it’s argument. To ensure all requests have automatic retries enabled on them, pass the config ID as argument when `axon` is instantiated.
+The Axon AI SDK accepts the config parameter that takes the created config ID as it’s argument. To ensure all requests have automatic retries enabled on them, pass the config ID as argument when `axon` is instantiated.
 
 That’s right! One line of code, and all the request from your apps now inherit Gateway Configs and demonstrate automatic retries.
 
 Let’s take a look at the code snippet:
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxxxrk',
   virtualKey: 'xxxxx',
   config: 'pc-xxxxx-edx21x' // Gateway Configs
@@ -113,7 +113,7 @@ In the cases, where you are not able to use an SDK, you can pass the same config
 
 ```js
 const CONFIG_ID = 'pc-reques-edf21c';
-const PORTKEY_API_KEY = 'xxxxxrk';
+const Axon AI_API_KEY = 'xxxxxrk';
 const OPENAI_API_KEY = 'sk-*******';
 
 const response = await axios({
@@ -122,7 +122,7 @@ const response = await axios({
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
-    'x-axon-api-key': PORTKEY_API_KEY,
+    'x-axon-api-key': Axon AI_API_KEY,
     'x-axon-provider': 'openai',
     'x-axon-config': CONFIG_ID
   },
@@ -134,15 +134,15 @@ console.log(response.data);
 
 #### OpenAI SDK
 
-Portkey can be used with OpenAI SDK.
+Axon AI can be used with OpenAI SDK.
 
 To send a request with using OpenAI SDK client and apply gateway configs to the request pass a `baseURL` and necessary headers as follows:
 
 ```js
 import OpenAI from 'openai'; // We're using the v4 SDK
-import { PORTKEY_GATEWAY_URL, createHeaders } from 'axon-ai';
+import { Axon AI_GATEWAY_URL, createHeaders } from 'axon-ai';
 
-const PORTKEY_API_KEY = 'xxxxxrk';
+const Axon AI_API_KEY = 'xxxxxrk';
 const CONFIG_ID = 'pc-reques-edf21c';
 
 const messages = [
@@ -154,10 +154,10 @@ const messages = [
 
 const openai = new OpenAI({
   apiKey: 'OPENAI_API_KEY', // When you pass the parameter `virtualKey`, this value is ignored.
-  baseURL: PORTKEY_GATEWAY_URL,
+  baseURL: Axon AI_GATEWAY_URL,
   defaultHeaders: createHeaders({
     provider: 'openai',
-    apiKey: PORTKEY_API_KEY,
+    apiKey: Axon AI_API_KEY,
     virtualKey: 'open-ai-key-04ba3e', // OpenAI virtual key
     config: CONFIG_ID
   })
@@ -177,12 +177,12 @@ The approach to declare the Gateway Configs in the UI and reference them in the 
 
 Depending on the dynamics of your app, you might want to construct the Gateway Configs at the runtime. All you need to do is to pass the Gateway Configs directly to the `config` parameter as an argument.
 
-#### Portkey SDK
+#### Axon AI SDK
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxxxx',
   virtualKey: 'maxxxxx8f4d',
   config: JSON.stringify({
@@ -220,7 +220,7 @@ const CONFIG_ID = {
   }
 };
 
-const PORTKEY_API_KEY = 'xxxxxxxx';
+const Axon AI_API_KEY = 'xxxxxxxx';
 const OPENAI_API_KEY = 'sk-xxxxxxxxx';
 
 const data = {
@@ -239,7 +239,7 @@ const { data: response } = await axios({
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${OPENAI_API_KEY}`,
-    'x-axon-api-key': PORTKEY_API_KEY,
+    'x-axon-api-key': Axon AI_API_KEY,
     'x-axon-provider': 'openai',
     'x-axon-config': JSON.stringify(CONFIG_ID)
   },
@@ -253,9 +253,9 @@ console.log(response.choices[0].message.content);
 
 ```js
 import OpenAI from 'openai'; // We're using the v4 SDK
-import { PORTKEY_GATEWAY_URL, createHeaders } from 'axon-ai';
+import { Axon AI_GATEWAY_URL, createHeaders } from 'axon-ai';
 
-const PORTKEY_API_KEY = 'xxxxxrk';
+const Axon AI_API_KEY = 'xxxxxrk';
 const CONFIG_ID = 'pc-reques-edf21c';
 
 const messages = [
@@ -267,10 +267,10 @@ const messages = [
 
 const openai = new OpenAI({
   apiKey: 'OPENAI_API_KEY', // When you pass the parameter `virtualKey`, this value is ignored.
-  baseURL: PORTKEY_GATEWAY_URL,
+  baseURL: Axon AI_GATEWAY_URL,
   defaultHeaders: createHeaders({
     provider: 'openai',
-    apiKey: PORTKEY_API_KEY,
+    apiKey: Axon AI_API_KEY,
     virtualKey: 'open-ai-key-04ba3e', // OpenAI virtual key
     config: {
       retry: {
@@ -291,7 +291,7 @@ console.log(chatCompletion.choices[0].message.content);
 
 Those are three ways to use Gateway Configs in your requests.
 
-In the cases where you want to specifically add a config for a specific request instead of all, Portkey allows you to pass `config` argument as seperate objects right at the time of chat completions call instead of `Portkey({..})` instantiation.
+In the cases where you want to specifically add a config for a specific request instead of all, Axon AI allows you to pass `config` argument as seperate objects right at the time of chat completions call instead of `Axon AI({..})` instantiation.
 
 ```js
 const response = await axon.chat.completions.create(
@@ -311,7 +311,7 @@ Applying retry super power to your requests is that easy!
 
 Great job on implementing the retry behavior for your LLM calls to OpenAI!
 
-Gateway Configs is a tool that can help you manage fallbacks, request timeouts, load balancing, caching, and more. With Portkey's support for over 100+ LLMs, it is a powerful tool for managing complex use cases that involve multiple target configurations. A Gateway Config that encompasses such complexity may look like:
+Gateway Configs is a tool that can help you manage fallbacks, request timeouts, load balancing, caching, and more. With Axon AI's support for over 100+ LLMs, it is a powerful tool for managing complex use cases that involve multiple target configurations. A Gateway Config that encompasses such complexity may look like:
 
 ```
 TARGET 1 (root):

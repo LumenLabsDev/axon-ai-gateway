@@ -1,10 +1,10 @@
 ## 🎉 Welcome
 
-Hello and Thank you for your interest in contributing to Portkey Gateway Plugins! We're excited to welcome new  developers to our community. This guide will help you get started with creating and submitting new guardrails plugins for the Portkey Gateway.
+Hello and Thank you for your interest in contributing to Axon AI Gateway Plugins! We're excited to welcome new  developers to our community. This guide will help you get started with creating and submitting new guardrails plugins for the Axon AI Gateway.
 
 ## 🚀 Quick Start
 
-1. Fork the repository on GitHub: [https://github.com/Portkey-AI/gateway](https://github.com/Portkey-AI/gateway)
+1. Fork the repository on GitHub: [https://github.com/Axon AI-AI/gateway](https://github.com/Axon AI-AI/gateway)
 2. Clone your forked repository to your local machine:
    ```sh
    git clone https://github.com/YOUR_USERNAME/gateway.git
@@ -28,7 +28,7 @@ Create a `manifest.json` file defining your plugin's properties, credentials, an
 Implement your plugin logic in `main-function.ts.`
 Write tests for your plugin in `test-file.test.ts`.
 
-For detailed information on plugin structure and implementation, please refer to the  [Plugins README](https://github.com/Portkey-AI/gateway/tree/main/plugins#readme).
+For detailed information on plugin structure and implementation, please refer to the  [Plugins README](https://github.com/Axon AI-AI/gateway/tree/main/plugins#readme).
 
 
 ## 📝 Plugin Guidelines
@@ -41,11 +41,11 @@ Test your plugin thoroughly before submission.
 
 ## 🔄 Contributing a Plugin
 
-There are two main ways to contribute a plugin to the Portkey Gateway:
+There are two main ways to contribute a plugin to the Axon AI Gateway:
 
 ### 1. Work on Existing Issues
 
-1. Check the [Issues tab](https://github.com/Portkey-AI/gateway/issues) in the Portkey Gateway repository.
+1. Check the [Issues tab](https://github.com/Axon AI-AI/gateway/issues) in the Axon AI Gateway repository.
 2. Look for issues labeled with `good-first-issue` and `plugin`.
 3. Submit a pull request referencing the original issue number.
 
@@ -53,7 +53,7 @@ There are two main ways to contribute a plugin to the Portkey Gateway:
 
 If you have an idea for a new plugin:
 
-1. Check the [Issues tab](https://github.com/Portkey-AI/gateway/issues) to ensure a similar plugin hasn't been proposed.
+1. Check the [Issues tab](https://github.com/Axon AI-AI/gateway/issues) to ensure a similar plugin hasn't been proposed.
 2. Create a new issue with the following title format: [Feature] Your Plugin Name.
 3. In the issue description, provide:
    - **Plugin Name**: A clear, descriptive name for your plugin.
@@ -64,7 +64,7 @@ If you have an idea for a new plugin:
 
 When your plugin is ready for review:
 
-1. Ensure your code follows the structure outlined in the [Plugins README](https://github.com/Portkey-AI/gateway/blob/main/plugins/README.md).
+1. Ensure your code follows the structure outlined in the [Plugins README](https://github.com/Axon AI-AI/gateway/blob/main/plugins/README.md).
 3. Run tests to ensure your plugin works as expected.
 4. Create a pull request with the following title format: `[New Plugin] Your Plugin Name`.
 5. In the pull request description, provide:
@@ -87,5 +87,5 @@ Before submitting your pull request:
 If you have any questions or need assistance while developing your plugin, please join our [Discord](https://discord.gg/DD7vgKK299) community. It's the fastest way to get support and connect with other contributors.
 
 ## 🎊 Your Plugin is Accepted!
-Once your plugin is reviewed and accepted, it will be merged into the main repository. We appreciate your contribution to making the Portkey Gateway more powerful and versatile!
-Thank you for contributing to Portkey Gateway Plugins!
+Once your plugin is reviewed and accepted, it will be merged into the main repository. We appreciate your contribution to making the Axon AI Gateway more powerful and versatile!
+Thank you for contributing to Axon AI Gateway Plugins!

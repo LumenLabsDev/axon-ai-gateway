@@ -1,22 +1,22 @@
 # Smart Fallback with Model-Optimized Prompts
 
-Portkey can help you easily create fallbacks from one LLM to another, making your application more reliable. While Fallback ensures reliability, it also means that you'll be running a prompt optimized for one LLM on another, which can often lead to significant differences in the final output.
+Axon AI can help you easily create fallbacks from one LLM to another, making your application more reliable. While Fallback ensures reliability, it also means that you'll be running a prompt optimized for one LLM on another, which can often lead to significant differences in the final output.
 
-Using Portkey Prompt templates you can optimize for specific models and ensure the final output is best optimised for the use-case, even if there are different models (in the fallback chain).
+Using Axon AI Prompt templates you can optimize for specific models and ensure the final output is best optimised for the use-case, even if there are different models (in the fallback chain).
 
 In this cookbook, we will explore setting up fallbacks between model-optimized prompt templates instead of using the same prompt for different models.
 
 Let’s get started
 
-## 1. Import and Authenticate Portkey SDK
+## 1. Import and Authenticate Axon AI SDK
 
-Start by importing Portkey SDK into your NodeJS project using npm and authenticate by passing the Portkey API Key.
+Start by importing Axon AI SDK into your NodeJS project using npm and authenticate by passing the Axon AI API Key.
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
-  apiKey: process.env.PORTKEYAI_API_KEY
+const axon = new Axon AI({
+  apiKey: process.env.Axon AIAI_API_KEY
 });
 ```
 
@@ -75,11 +75,11 @@ We will solve this problem with model optimised prompt templates.
 
 ## 3. Create Model-Optimised Prompt Templates
 
-Using Portkey Prompt Templates, you can write your prompt and instructions in one place and then just input the variables when making a call rather than passing the whole instruction again.
+Using Axon AI Prompt Templates, you can write your prompt and instructions in one place and then just input the variables when making a call rather than passing the whole instruction again.
 
 To create a prompt template:
 
-1. Login into Portkey Dashboard
+1. Login into Axon AI Dashboard
 2. Navigate to **Prompts**
    1. Click **Create** to open prompt creation page
 
@@ -95,7 +95,7 @@ Now, create another prompt template that can act as a fallback.
 
 You can create the same prompt this time but use a different model, such as `gpt-4`. You have created two prompt templates by now. You must have noticed each prompt has a slightly different `system` message based on the model. After experimenting with each model, the above prompt was best suited for suggesting actionable steps to reach the goal.
 
-The models on this page require you to save OpenAI and Anthropic API keys to the Portkey Vault. For more information about Portkey Vault, [read more on Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
+The models on this page require you to save OpenAI and Anthropic API keys to the Axon AI Vault. For more information about Axon AI Vault, [read more on Virtual Keys](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys#creating-virtual-keys).
 
 For further exploration, [Try learning about OpenAI SDK to work with Prompt Templates](../ai-gateway/).
 
@@ -121,11 +121,11 @@ You need to prepare requests to apply fallback strategy. To do that, use the cre
 
 The `targets` is an array of objects ordered by preference in favor of _Anthropic_ and then on to _OpenAI_.
 
-Pass these `config`s at instance creation from Portkey
+Pass these `config`s at instance creation from Axon AI
 
 ```js
-const axon = new Portkey({
-  apiKey: PORTKEY_API_KEY,
+const axon = new Axon AI({
+  apiKey: Axon AI_API_KEY,
   config: {
     strategy: {
       mode: 'fallback'
@@ -148,7 +148,7 @@ Read more about different [ways to work with Gateway Configs](../product/101-axo
 
 ## Trigger Prompt Completions to Activate Smart Fallbacks
 
-The prompt templates are prepared to be triggered while the Portkey client SDK waits to trigger the prompt completions API.
+The prompt templates are prepared to be triggered while the Axon AI client SDK waits to trigger the prompt completions API.
 
 ```js
 const response = await axon.prompts.completions.create({
@@ -167,7 +167,7 @@ See the [reference](https://axon.ai/docs/api-reference/prompts/prompt-completion
 
 ## View Fallback status in the Logs
 
-Portkey provides the **Logs** to inspect and monitor all the requests seamlessly. It provides valuable information about each request from date/time, model, request, response, etc.
+Axon AI provides the **Logs** to inspect and monitor all the requests seamlessly. It provides valuable information about each request from date/time, model, request, response, etc.
 
 Here is a screenshot of a log:
 
@@ -175,7 +175,7 @@ Here is a screenshot of a log:
 
 [Refer to the Logs documentation](https://axon.ai/docs/product/observability-modern-monitoring-for-llms/logs).
 
-Great job! You learned how to create prompt templates in Portkey and set up fallbacks for thousands of requests from your app, all with just a few lines of code.
+Great job! You learned how to create prompt templates in Axon AI and set up fallbacks for thousands of requests from your app, all with just a few lines of code.
 
 ## Bonus: Activate Loadbalancing
 
@@ -184,8 +184,8 @@ Loadbalancing can split the volume of requests to both prompts separately, respe
 Here is how you can update the gateway configs:
 
 ```js
-const axon = new Portkey({
-  apiKey: PORTKEY_API_KEY,
+const axon = new Axon AI({
+  apiKey: Axon AI_API_KEY,
   config: {
     strategy: {
       mode: 'loadbalance'
@@ -206,19 +206,19 @@ const axon = new Portkey({
 
 The weights will split the traffic of 90% to OpenAI and 10% to Anthropic prompt templates.
 
-Great job! You learned how to create prompt templates in Portkey and set up fallbacks and load balancing for thousands of requests from your app, all with just a few lines of code.
+Great job! You learned how to create prompt templates in Axon AI and set up fallbacks and load balancing for thousands of requests from your app, all with just a few lines of code.
 
 Happy Coding!
 
 See the full code:
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const PORTKEY_API_KEY = 'xssxxrk';
+const Axon AI_API_KEY = 'xssxxrk';
 
-const axon = new Portkey({
-  apiKey: PORTKEY_API_KEY,
+const axon = new Axon AI({
+  apiKey: Axon AI_API_KEY,
   config: {
     strategy: {
       mode: 'fallback'

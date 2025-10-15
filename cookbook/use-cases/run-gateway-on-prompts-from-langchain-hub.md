@@ -1,16 +1,16 @@
-# How to use Prompts from Langchain Hub and Requests through Portkey
+# How to use Prompts from Langchain Hub and Requests through Axon AI
 
 Writing the right prompt is often hard to get a quality LLM response. You want the prompt to be specialized and exhaustive enough for your problem. There is a high chance someone else might’ve stumbled across a similar situation and written the prompt you’ve been figuring out all this while.
 
-Langchain’s [Prompts Hub](https://smith.langchain.com/hub) is like Github but for prompts. You can pull the prompt to make API calls to your favorite Large Language Models (LLMs) on providers such as OpenAI, Anthropic, Google, etc. [Portkey](https://axon.ai/) provides a unified API interface (follows the OpenAI signature) to make API calls through its SDK.
+Langchain’s [Prompts Hub](https://smith.langchain.com/hub) is like Github but for prompts. You can pull the prompt to make API calls to your favorite Large Language Models (LLMs) on providers such as OpenAI, Anthropic, Google, etc. [Axon AI](https://axon.ai/) provides a unified API interface (follows the OpenAI signature) to make API calls through its SDK.
 
-Learn more about [Langchain Hub](https://blog.langchain.dev/langchain-prompt-hub/) and [Portkey](https://axon.ai/docs).
+Learn more about [Langchain Hub](https://blog.langchain.dev/langchain-prompt-hub/) and [Axon AI](https://axon.ai/docs).
 
-In this cookbook, we will pick up a prompt to direct the model in generating precise step-by-step instructions to reach a user-desired goal. This requires us to grab a prompt by browsing on the Prompts Hub and integrating it into Portkey to make a chat completions API call.
+In this cookbook, we will pick up a prompt to direct the model in generating precise step-by-step instructions to reach a user-desired goal. This requires us to grab a prompt by browsing on the Prompts Hub and integrating it into Axon AI to make a chat completions API call.
 
 Let’s get started.
 
-## 1. Import Langchain Hub and Portkey Libraries
+## 1. Import Langchain Hub and Axon AI Libraries
 
 Why not explore the prompts listed on the [Prompts Hub](https://smith.langchain.com/hub)?
 
@@ -18,15 +18,15 @@ Meanwhile, let’s boot up the NodeJS environment and start importing libraries 
 
 ```js
 import * as the hub from 'langchain/hub';
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 ```
 
 You can access the Langchain Hub through SDK read-only without a LangSmith API Key.
 
-Since we expect to use Portkey to make API calls, let’s instantiate and authenticate with the API keys. You can[ get the Portkey API key](https://axon.ai/docs/welcome/make-your-first-request#id-1.-get-your-axon-api-key) from the dashboard and save your OpenAI API key in the [Portkey Vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys) to get a Virtual Key.
+Since we expect to use Axon AI to make API calls, let’s instantiate and authenticate with the API keys. You can[ get the Axon AI API key](https://axon.ai/docs/welcome/make-your-first-request#id-1.-get-your-axon-api-key) from the dashboard and save your OpenAI API key in the [Axon AI Vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys) to get a Virtual Key.
 
 ```js
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxtrk',
   virtualKey: 'main-xwxxxf4d'
 });
@@ -55,7 +55,7 @@ This should log the following to the console:
 
 Good going! It’s time to pipe the prompt to make the API call.
 
-## 3. Make the API Call using Portkey
+## 3. Make the API Call using Axon AI
 
 The model we will request is going to be OpenAI’s GPT4. Since `gpt-4` accepts System and User roles, let’s prepare them.
 
@@ -95,7 +95,7 @@ console.log(chatCompletion.choices[0].message.content);
 
 ## 4. Explore the Logs
 
-The prompt we used consisted of approximately 1300 tokens and cost around 5.5 cents. This information can be found on Portkey's Logs page, which provides valuable data such as the time it took for the request to be processed, dates, and a snapshot of the request headers and body.
+The prompt we used consisted of approximately 1300 tokens and cost around 5.5 cents. This information can be found on Axon AI's Logs page, which provides valuable data such as the time it took for the request to be processed, dates, and a snapshot of the request headers and body.
 
 ![How to Use Prompts from Lanchain Hub](../../docs/images/cookbooks/langchain-hub.png)
 
@@ -110,9 +110,9 @@ See the full code
 
 ```js
 import * as hub from 'langchain/hub';
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 
-const axon = new Portkey({
+const axon = new Axon AI({
   apiKey: 'xxxxrk',
   virtualKey: 'anthrxpic-xxxx32'
 });

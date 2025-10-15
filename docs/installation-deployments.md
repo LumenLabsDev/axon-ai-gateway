@@ -1,12 +1,12 @@
 # How to Deploy the Gateway?
 
-1. [Managed Deployment by Portkey](#managed-deployment) for quick setup without infrastructure concerns
+1. [Managed Deployment by Axon AI](#managed-deployment) for quick setup without infrastructure concerns
 2. [Local Deployment](#local-deployment) for complete control & customization
 3. [Enterprise Deployment](#enterprise-deployment) for advanced features and dedicated support
 
 ## Managed Deployment
 
-Portkey runs this same Gateway on our API and processes **billions of tokens** daily. Portkey's API is in production with companies like Postman, Haptik, Turing, MultiOn, SiteGPT, and more.
+Axon AI runs this same Gateway on our API and processes **billions of tokens** daily. Axon AI's API is in production with companies like Postman, Haptik, Turing, MultiOn, SiteGPT, and more.
 
 Sign up for the free developer plan [here](https://app.axon.ai/) or [discuss here](https://calendly.com/axon-ai/quick-meeting?utm_source=github&utm_campaign=install_page) for enterprise deployments.
 
@@ -94,9 +94,9 @@ export DISTRIBUTED_CLOUD_APP_STACK_SITE=myappstacksite
 export DISTRIBUTED_CLOUD_SERVICE_NAME=axonai
 # adjust the expiry date to a time no more than 90 days in the future
 export KUBECONFIG_CERT_EXPIRE_DATE="2021-09-14T09:02:25.547659194Z"
-export PORTKEY_GATEWAY_FQDN=the.host.nameof.theservice
-export PORTKEY_PROVIDER=openai
-export PORTKEY_PROVIDER_AUTH_TOKEN=authorizationtoken
+export Axon AI_GATEWAY_FQDN=the.host.nameof.theservice
+export Axon AI_PROVIDER=openai
+export Axon AI_PROVIDER_AUTH_TOKEN=authorizationtoken
 
 curl --location --request POST 'https://$DISTRIBUTED_CLOUD_TENANT.console.ves.volterra.io/api/web/namespaces/system/sites/$DISTRIBUTED_CLOUD_SITE_NAME/global-kubeconfigs' \
 --header 'Authorization: APIToken $DISTRIBUTED_CLOUD_API_TOKEN' \
@@ -109,7 +109,7 @@ Save the response in a YAML file for later use.
 
 3. Copy the deployment YAML
 ```shell
-wget https://raw.githubusercontent.com/Portkey-AI/gateway/main/deployment.yaml
+wget https://raw.githubusercontent.com/Axon AI-AI/gateway/main/deployment.yaml
 ```
 
 4. Apply the manifest
@@ -129,20 +129,20 @@ curl --request POST \
 ```
 or [use the UI](https://docs.cloud.f5.com/docs/how-to/app-networking/origin-pools)
 
-6. Create an HTTP Load Balancer, including header injection of Portkey provider and credentials
+6. Create an HTTP Load Balancer, including header injection of Axon AI provider and credentials
 ```shell
 curl --request POST \
   --url https://$DISTRIBUTED_CLOUD_TENANT.console.ves.volterra.io/api/config/namespaces/$DISTRIBUTED_CLOUD_NAMESPACE/http_loadbalancers \
   --header 'authorization: APIToken $DISTRIBUTED_CLOUD_API_TOKEN' \
   --header 'content-type: application/json' \
-  --data '{"metadata": {"name": "$DISTRIBUTED_CLOUD_SERVICE_NAME","namespace": "$DISTRIBUTED_CLOUD_NAMESPACE","labels": {},"annotations": {},"description": "","disable": false},"spec": {"domains": ["$PORTKEY_GATEWAY_FQDN"],"https_auto_cert": {"http_redirect": true,"add_hsts": false,"tls_config": {"default_security": {}},"no_mtls": {},"default_header": {},"enable_path_normalize": {},"port": 443,"non_default_loadbalancer": {},"header_transformation_type": {"default_header_transformation": {}},"connection_idle_timeout": 120000,"http_protocol_options": {"http_protocol_enable_v1_v2": {}}},"advertise_on_public_default_vip": {},"default_route_pools": [{"pool": {"tenant": "$DISTRIBUTED_CLOUD_TENANT_ID","namespace": "$DISTRIBUTED_CLOUD_NAMESPACE","name": "$DISTRIBUTED_CLOUD_SERVICE_NAME"},"weight": 1,"priority": 1,"endpoint_subsets": {}}],"origin_server_subset_rule_list": null,"routes": [],"cors_policy": null,"disable_waf": {},"add_location": true,"no_challenge": {},"more_option": {"request_headers_to_add": [{"name": "x-axon-provider","value": "$PORTKEY_PROVIDER","append": false},{"name": "Authorization","value": "Bearer $PORTKEY_PROVIDER_AUTH_TOKEN","append": false}],"request_headers_to_remove": [],"response_headers_to_add": [],"response_headers_to_remove": [],"max_request_header_size": 60,"buffer_policy": null,"compression_params": null,"custom_errors": {},"javascript_info": null,"jwt": [],"idle_timeout": 30000,"disable_default_error_pages": false,"cookies_to_modify": []},"user_id_client_ip": {},"disable_rate_limit": {},"malicious_user_mitigation": null,"waf_exclusion_rules": [],"data_guard_rules": [],"blocked_clients": [],"trusted_clients": [],"api_protection_rules": null,"ddos_mitigation_rules": [],"service_policies_from_namespace": {},"round_robin": {},"disable_trust_client_ip_headers": {},"disable_ddos_detection": {},"disable_malicious_user_detection": {},"disable_api_discovery": {},"disable_bot_defense": {},"disable_api_definition": {},"disable_ip_reputation": {},"disable_client_side_defense": {},"csrf_policy": null,"graphql_rules": [],"protected_cookies": [],"host_name": "","dns_info": [],"internet_vip_info": [],"system_default_timeouts": {},"jwt_validation": null,"disable_threat_intelligence": {},"l7_ddos_action_default": {},}}'
+  --data '{"metadata": {"name": "$DISTRIBUTED_CLOUD_SERVICE_NAME","namespace": "$DISTRIBUTED_CLOUD_NAMESPACE","labels": {},"annotations": {},"description": "","disable": false},"spec": {"domains": ["$Axon AI_GATEWAY_FQDN"],"https_auto_cert": {"http_redirect": true,"add_hsts": false,"tls_config": {"default_security": {}},"no_mtls": {},"default_header": {},"enable_path_normalize": {},"port": 443,"non_default_loadbalancer": {},"header_transformation_type": {"default_header_transformation": {}},"connection_idle_timeout": 120000,"http_protocol_options": {"http_protocol_enable_v1_v2": {}}},"advertise_on_public_default_vip": {},"default_route_pools": [{"pool": {"tenant": "$DISTRIBUTED_CLOUD_TENANT_ID","namespace": "$DISTRIBUTED_CLOUD_NAMESPACE","name": "$DISTRIBUTED_CLOUD_SERVICE_NAME"},"weight": 1,"priority": 1,"endpoint_subsets": {}}],"origin_server_subset_rule_list": null,"routes": [],"cors_policy": null,"disable_waf": {},"add_location": true,"no_challenge": {},"more_option": {"request_headers_to_add": [{"name": "x-axon-provider","value": "$Axon AI_PROVIDER","append": false},{"name": "Authorization","value": "Bearer $Axon AI_PROVIDER_AUTH_TOKEN","append": false}],"request_headers_to_remove": [],"response_headers_to_add": [],"response_headers_to_remove": [],"max_request_header_size": 60,"buffer_policy": null,"compression_params": null,"custom_errors": {},"javascript_info": null,"jwt": [],"idle_timeout": 30000,"disable_default_error_pages": false,"cookies_to_modify": []},"user_id_client_ip": {},"disable_rate_limit": {},"malicious_user_mitigation": null,"waf_exclusion_rules": [],"data_guard_rules": [],"blocked_clients": [],"trusted_clients": [],"api_protection_rules": null,"ddos_mitigation_rules": [],"service_policies_from_namespace": {},"round_robin": {},"disable_trust_client_ip_headers": {},"disable_ddos_detection": {},"disable_malicious_user_detection": {},"disable_api_discovery": {},"disable_bot_defense": {},"disable_api_definition": {},"disable_ip_reputation": {},"disable_client_side_defense": {},"csrf_policy": null,"graphql_rules": [],"protected_cookies": [],"host_name": "","dns_info": [],"internet_vip_info": [],"system_default_timeouts": {},"jwt_validation": null,"disable_threat_intelligence": {},"l7_ddos_action_default": {},}}'
 ```
 or [use the UI](https://docs.cloud.f5.com/docs/how-to/app-networking/http-load-balancer)
 
 7. Test the service
 ```shell
 curl --request POST \
-  --url https://$PORTKEY_GATEWAY_FQDN/v1/chat/completions \
+  --url https://$Axon AI_GATEWAY_FQDN/v1/chat/completions \
   --header 'content-type: application/json' \
   --data '{"messages": [{"role": "user","content": "Say this might be a test."}],"max_tokens": 20,"model": "gpt-4"}'
 ```
@@ -220,7 +220,7 @@ For more information on the Docker image, check [here](https://hub.docker.com/r/
 1. Download Compose File from the Repository:
 
 ```sh
-wget "https://raw.githubusercontent.com/Portkey-AI/gateway/main/docker-compose.yaml"
+wget "https://raw.githubusercontent.com/Axon AI-AI/gateway/main/docker-compose.yaml"
 ```
 
 2. Run:
@@ -277,12 +277,12 @@ Resources:
           sudo docker run -p 8787:8787 -d axonai/gateway:latest
       Tags:
         - Key: Name
-          Value: PortkeyGateway
+          Value: Axon AIGateway
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for Portkey Gateway
+      GroupDescription: Security group for Axon AI Gateway
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -338,8 +338,8 @@ Mappings:
 
 
 Outputs:
-  PortkeyGatewayURL:
-    Description: URL to access Portkey Gateway
+  Axon AIGatewayURL:
+    Description: URL to access Axon AI Gateway
     Value: !Sub http://${EC2Instance.PublicDnsName}:8787
 ```
 
@@ -352,7 +352,7 @@ Outputs:
 
 4. Create the stack and wait for it to be created.
 
-5. Once the stack is created, you can access the Portkey Gateway URL from the Outputs section.
+5. Once the stack is created, you can access the Axon AI Gateway URL from the Outputs section.
 
 ---
 

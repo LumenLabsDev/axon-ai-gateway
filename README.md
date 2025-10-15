@@ -64,6 +64,14 @@ cd gateway
 npm install
 ```
 
+```bash
+# Set encryption key for secure provider key storage
+export ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
+
+# For Windows PowerShell users, use:
+$env:ENCRYPTION_KEY = node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
 **Bootstrap database:**
 ```bash
 # Creates initial workspace, admin key, and virtual key
@@ -329,10 +337,10 @@ The enterprise deployment architecture for supported platforms is available here
 ### Trending
 - Use models from [Nvidia NIM](/cookbook/providers/nvidia.ipynb) with AI Gateway
 - Monitor [CrewAI Agents](/cookbook/monitoring-agents/CrewAI_with_Telemetry.ipynb) with Axon!
-- Comparing [Top 10 LMSYS Models](/cookbook/use-cases/LMSYS%20Series/comparing-top10-LMSYS-models-with-Portkey.ipynb) with AI Gateway.
+- Comparing [Top 10 LMSYS Models](/cookbook/use-cases/LMSYS%20Series/comparing-top10-LMSYS-models-with-Axon AI.ipynb) with AI Gateway.
 
 ### Latest
-* [Create Synthetic Datasets using Nemotron](/cookbook/use-cases/Nemotron_GPT_Finetuning_Portkey.ipynb)
+* [Create Synthetic Datasets using Nemotron](/cookbook/use-cases/Nemotron_GPT_Finetuning_Axon AI.ipynb)
 * [Use the LLM Gateway with Vercel's AI SDK](/cookbook/integrations/vercel-ai.md)
 * [Monitor Llama Agents with Axon LLM Gateway](/cookbook/monitoring-agents/Llama_Agents_with_Telemetry.ipynb)
 

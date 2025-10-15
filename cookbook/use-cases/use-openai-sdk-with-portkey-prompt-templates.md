@@ -1,12 +1,12 @@
-# How to use OpenAI SDK with Portkey Prompt Templates
+# How to use OpenAI SDK with Axon AI Prompt Templates
 
-Portkey's Prompt Playground allows you to test and tinker with various hyperparameters without any external dependencies and deploy them to production seamlessly. Moreover, all team members can use the same prompt template, ensuring that everyone works from the same source of truth.
+Axon AI's Prompt Playground allows you to test and tinker with various hyperparameters without any external dependencies and deploy them to production seamlessly. Moreover, all team members can use the same prompt template, ensuring that everyone works from the same source of truth.
 
-Right within OpenAI SDK along with Portkey APIs, you can use prompt templates to achieve this. Just keep following this approach throughout the cookbook.
+Right within OpenAI SDK along with Axon AI APIs, you can use prompt templates to achieve this. Just keep following this approach throughout the cookbook.
 
 ## 1. Creating a Prompt Template
 
-Portkey's quick playground enables you to experiment with various LLM providers. It acts as a definitive source of truth for your team, and it versions each snapshot of model parameters, allowing for easy rollback. We want to create a chat completion prompt with `gpt4` that tells a story about any user-desired topic.
+Axon AI's quick playground enables you to experiment with various LLM providers. It acts as a definitive source of truth for your team, and it versions each snapshot of model parameters, allowing for easy rollback. We want to create a chat completion prompt with `gpt4` that tells a story about any user-desired topic.
 
 To do this:
 
@@ -28,7 +28,7 @@ The list of parameters in my prompt template:
 | Temperature       | `0.9`                                                                                                                                                                             |
 | Frequency Penalty | `-0.2`                                                                                                                                                                            |
 
-When you look closely at the description for the User role, you find `{{topic}}`. Portkey treats them as dynamic variables, so a string can be passed to this prompt at runtime. This prompt is much more useful since it generates stories on any topic.
+When you look closely at the description for the User role, you find `{{topic}}`. Axon AI treats them as dynamic variables, so a string can be passed to this prompt at runtime. This prompt is much more useful since it generates stories on any topic.
 
 Once you are happy with the Prompt Template, hit **Save Prompt**. The Prompts page displays saved prompt templates and their corresponding prompt ID, serving as a reference point in our code.
 
@@ -36,9 +36,9 @@ Next up, let’s see how to use the created prompt template to generate chat com
 
 ## 2. Retrieving the prompt template
 
-Fire up your code editor and import the request client, `axios`. This will allow you to POST to the Portkey's render endpoint and retrieve prompt details that can be used with OpenAI SDK.
+Fire up your code editor and import the request client, `axios`. This will allow you to POST to the Axon AI's render endpoint and retrieve prompt details that can be used with OpenAI SDK.
 
-We will use `axios` to make a `POST` call to `/prompts/${PROMPT_ID}/render` endpoint along with headers (includes [Portkey API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)) and body that includes the prompt variables required in the prompt template.
+We will use `axios` to make a `POST` call to `/prompts/${PROMPT_ID}/render` endpoint along with headers (includes [Axon AI API Key](https://axon.ai/docs/api-reference/authentication#obtaining-your-api-key)) and body that includes the prompt variables required in the prompt template.
 
 For more information about Render API, refer to the [docs](https://axon.ai/docs/api-reference/prompts/render).
 
@@ -46,13 +46,13 @@ For more information about Render API, refer to the [docs](https://axon.ai/docs/
 import axios from 'axios';
 
 const PROMPT_ID = '<prompt-id>';
-const PORTKEYAI_API_KEY = '<api_key>';
+const Axon AIAI_API_KEY = '<api_key>';
 
 const url = `https://api.axon.ai/v1/prompts/${PROMPT_ID}/render`;
 
 const headers = {
   'Content-Type': 'application/json',
-  'x-axon-api-key': PORTKEYAI_API_KEY
+  'x-axon-api-key': Axon AIAI_API_KEY
 };
 
 const data = {
@@ -95,20 +95,20 @@ Let’s import the necessary libraries and create a client instance from the Ope
 
 ```js
 import OpenAI from 'openai';
-import { createHeaders, PORTKEY_GATEWAY_URL } from 'axon-ai';
+import { createHeaders, Axon AI_GATEWAY_URL } from 'axon-ai';
 
 const client = new OpenAI({
   apiKey: 'USES_VIRTUAL_KEY',
-  baseURL: PORTKEY_GATEWAY_URL,
+  baseURL: Axon AI_GATEWAY_URL,
   defaultHeaders: createHeaders({
     provider: 'openai',
-    apiKey: `${PORTKEYAI_API_KEY}`,
+    apiKey: `${Axon AIAI_API_KEY}`,
     virtualKey: `${OPENAI_VIRTUAL_KEY}`
   })
 });
 ```
 
-We are importing `axon-ai` to use its utilities to change the base URL and the default headers. If you are wondering what virtual keys are, refer to [Portkey Vault documentation](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+We are importing `axon-ai` to use its utilities to change the base URL and the default headers. If you are wondering what virtual keys are, refer to [Axon AI Vault documentation](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
 The prompt details we retrieved are passed as an argument to the chat completions creation method.
 
@@ -137,9 +137,9 @@ This time, run your code and see the story we set out to generate logged to the 
 In the heart of a bustling city, lived an eccentric cat named Tom and a witty little mouse named Jerry. Tom, always trying to catch Jerry, maneuvered himself th...(truncated)
 ```
 
-## Bonus: Using Portkey SDK
+## Bonus: Using Axon AI SDK
 
-The official Portkey Client SDK has a prompts completions method that is similar to chat completions’ OpenAI signature. You can invoke a prompt template just by passing arguments to `promptID` and `variables` parameters.
+The official Axon AI Client SDK has a prompts completions method that is similar to chat completions’ OpenAI signature. You can invoke a prompt template just by passing arguments to `promptID` and `variables` parameters.
 
 ```js
 const promptCompletion = await axon.prompts.completions.create({
@@ -164,25 +164,25 @@ We can use this approach to focus on improving prompt quality with all the LLMs 
 ```js
 import axios from 'axios';
 import OpenAI from 'openai';
-import { createHeaders, PORTKEY_GATEWAY_URL } from 'axon-ai';
+import { createHeaders, Axon AI_GATEWAY_URL } from 'axon-ai';
 
 const PROMPT_ID = 'xxxxxx';
-const PORTKEYAI_API_KEY = 'xxxxx';
+const Axon AIAI_API_KEY = 'xxxxx';
 const OPENAI_VIRTUAL_KEY = 'xxxx';
 
 const url = `https://api.axon.ai/v1/prompts/${PROMPT_ID}/render`;
 
 const headers = {
   'Content-Type': 'application/json',
-  'x-axon-api-key': PORTKEYAI_API_KEY
+  'x-axon-api-key': Axon AIAI_API_KEY
 };
 
 const client = new OpenAI({
   apiKey: 'USES_VIRTUAL_KEY',
-  baseURL: PORTKEY_GATEWAY_URL,
+  baseURL: Axon AI_GATEWAY_URL,
   defaultHeaders: createHeaders({
     provider: 'openai',
-    apiKey: `${PORTKEYAI_API_KEY}`,
+    apiKey: `${Axon AIAI_API_KEY}`,
     virtualKey: `${OPENAI_VIRTUAL_KEY}`
   })
 });

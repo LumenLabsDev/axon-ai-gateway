@@ -1,5 +1,5 @@
 ## 🎉 Welcome
-Hello and thank you for considering contributing to Portkey's AI Gateway! Whether you're reporting a bug, suggesting a feature, improving documentation, or writing code, your contributions are invaluable to us.
+Hello and thank you for considering contributing to Axon AI's AI Gateway! Whether you're reporting a bug, suggesting a feature, improving documentation, or writing code, your contributions are invaluable to us.
 
 ## 🚀 Quick Start
 1. Fork the repository on Github.
@@ -42,4 +42,4 @@ Facing issues or have questions? Don't hesitate to share your doubts or question
 Releases are made as soon as possible to ensure that new features and fixes reach our users quickly. We follow a seamless CI/CD pipeline to ensure the smooth transition of code from development to production.
 
 ## 🎊 Your PR is Merged!
-All successful PRs are celebrated on our [Discord](https://discord.com/invite/DD7vgKK299) and are mentioned in the release notes, and significant contributions are highlighted on our [Twitter](https://twitter.com/PortkeyAI). Stay tuned for more bounties and goodies for contributors in the near future!
+All successful PRs are celebrated on our [Discord](https://discord.com/invite/DD7vgKK299) and are mentioned in the release notes, and significant contributions are highlighted on our [Twitter](https://twitter.com/Axon AIAI). Stay tuned for more bounties and goodies for contributors in the near future!

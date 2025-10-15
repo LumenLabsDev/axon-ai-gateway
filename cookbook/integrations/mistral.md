@@ -1,21 +1,21 @@
-# Portkey + Mistral
-Portkey helps bring Mistral's APIs to production with its observability suite & AI Gateway. Use the Mistral API **through** Portkey for:
+# Axon AI + Mistral
+Axon AI helps bring Mistral's APIs to production with its observability suite & AI Gateway. Use the Mistral API **through** Axon AI for:
 1. **Enhanced Logging**: Track API usage with detailed insights and custom segmentation.
 2. **Production Reliability**: Automated fallbacks, load balancing, retries, time outs, and caching.
 3. **Continuous Improvement**: Collect and apply user feedback.
 
 ### 1.1 Setup & Logging
-1. Obtain your [**Portkey API Key**](https://app.axon.ai/).
-2. Set `$ export PORTKEY_API_KEY=PORTKEY_API_KEY`
+1. Obtain your [**Axon AI API Key**](https://app.axon.ai/).
+2. Set `$ export Axon AI_API_KEY=Axon AI_API_KEY`
 3. Set `$ export MISTRAL_API_KEY=MISTRAL_API_KEY`
 4. `pip install axon-ai` or `npm i axon-ai`
 
 ```py
 """ OPENAI PYTHON SDK """
-from axon_ai import Portkey
+from axon_ai import Axon AI
 
-axon = Portkey(
-    api_key="PORTKEY_API_KEY",
+axon = Axon AI(
+    api_key="Axon AI_API_KEY",
     # ************************************
     provider="mistral-ai",
     Authorization="Bearer MISTRAL_API_KEY"
@@ -29,10 +29,10 @@ response = axon.chat.completions.create(
 ```
 
 ```javascript
-import Portkey from 'axon-ai';
+import Axon AI from 'axon-ai';
 
-const axon = new Portkey({
-    apiKey: "PORTKEY_API_KEY",
+const axon = new Axon AI({
+    apiKey: "Axon AI_API_KEY",
     // ***********************************
     provider: "mistral-ai",
     Authorization: "Bearer MISTRAL_API_KEH"
@@ -56,10 +56,10 @@ main()
 Just add their relevant headers to your request:
 
 ```py
-from axon_ai import Portkey
+from axon_ai import Axon AI
 
-axon = Portkey(
-    api_key="PORTKEY_API_KEY",
+axon = Axon AI(
+    api_key="Axon AI_API_KEY",
     provider="mistral-ai",
     Authorization="Bearer MISTRAL_API_KEY"
 )
@@ -76,10 +76,10 @@ response = axon.with_options(
 ```
 
 ```javascript
-import Portkey from 'axon-ai';
+import Axon AI from 'axon-ai';
 
-const axon = new Portkey({
-    apiKey: "PORTKEY_API_KEY",
+const axon = new Axon AI({
+    apiKey: "Axon AI_API_KEY",
     provider: "mistral-ai",
     Authorization: "Bearer MISTRAL_API_KEH"
 })
@@ -98,7 +98,7 @@ async function main(){
 main()
 ```
 
-Here’s how your logs will appear on your Portkey dashboard:
+Here’s how your logs will appear on your Axon AI dashboard:
 
 <img src="https://axon.ai/blog/content/images/2023/11/logsgif.gif" />
 
@@ -107,9 +107,9 @@ Here’s how your logs will appear on your Portkey dashboard:
 * **Load Balancing**: Efficiently distribute incoming requests among multiple models.
 * **Semantic Caching**: Reduce costs and latency by intelligently caching results.
 
-Toggle these features by saving _Configs_ (from the Portkey dashboard > Configs tab).
+Toggle these features by saving _Configs_ (from the Axon AI dashboard > Configs tab).
 
-If we want to enable semantic caching + fallback from Mistral-Medium to Mistral-Tiny, your Portkey config would look like this:
+If we want to enable semantic caching + fallback from Mistral-Medium to Mistral-Tiny, your Axon AI config would look like this:
 ```json
 {
 	"cache": {"mode": "semantic"},
@@ -127,14 +127,14 @@ If we want to enable semantic caching + fallback from Mistral-Medium to Mistral-
 }
 ```
 
-Now, just set the Config ID while instantiating Portkey:
+Now, just set the Config ID while instantiating Axon AI:
 
 ```py
 """ OPENAI PYTHON SDK """
-from axon_ai import Portkey
+from axon_ai import Axon AI
 
-axon = Portkey(
-    api_key="PORTKEY_API_KEY",
+axon = Axon AI(
+    api_key="Axon AI_API_KEY",
     # ************************************
     config="pp-mistral-cache-xx"
     # ************************************
@@ -147,10 +147,10 @@ response = axon.chat.completions.create(
 ```
 
 ```javascript
-import Portkey from 'axon-ai';
+import Axon AI from 'axon-ai';
 
-const axon = new Portkey({
-    apiKey: "PORTKEY_API_KEY",
+const axon = new Axon AI({
+    apiKey: "Axon AI_API_KEY",
     // ***********************************
     config: "pp-mistral-cache-xx"
     // ***********************************
@@ -172,10 +172,10 @@ For more on Configs and other gateway feature like Load Balancing, [check out th
 Gather weighted feedback from users and improve your app:
 
 ```py
-from axon import Portkey
+from axon import Axon AI
 
-axon = Portkey(
-    api_key="PORTKEY_API_KEY"
+axon = Axon AI(
+    api_key="Axon AI_API_KEY"
 )
 
 def send_feedback():
@@ -188,10 +188,10 @@ send_feedback()
 ```
 
 ```javascript
-import Portkey from 'axon-ai';
+import Axon AI from 'axon-ai';
 
-const axon = new Portkey({
-    apiKey: "PORTKEY_API_KEY"
+const axon = new Axon AI({
+    apiKey: "Axon AI_API_KEY"
 });
 
 const sendFeedback = async () => {
@@ -205,6 +205,6 @@ await sendFeedback();
 
 #### Conclusion
 
-Integrating Portkey with Mistral helps you build resilient LLM apps from the get-go. With features like semantic caching, observability, load balancing, feedback, and fallbacks, you can ensure optimal performance and continuous improvement.
+Integrating Axon AI with Mistral helps you build resilient LLM apps from the get-go. With features like semantic caching, observability, load balancing, feedback, and fallbacks, you can ensure optimal performance and continuous improvement.
 
-[Read full Portkey docs here.](https://axon.ai/docs/) | [Reach out to the Portkey team.](https://discord.gg/sDk9JaNfK8)
+[Read full Axon AI docs here.](https://axon.ai/docs/) | [Reach out to the Axon AI team.](https://discord.gg/sDk9JaNfK8)

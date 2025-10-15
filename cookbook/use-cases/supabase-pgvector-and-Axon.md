@@ -1,4 +1,4 @@
-# Build an article suggestion app with Supabase pgvector, and Portkey
+# Build an article suggestion app with Supabase pgvector, and Axon AI
 
 Consider that you have list of support articles that you want to suggest it to users when users search for it. You want to suggest as best fit as possible. With the availability of tools like Large Language Model (LLMs) and Vector Databases, the approach towards suggestions & recommendation systems has significantly evolved.
 
@@ -8,7 +8,7 @@ A quick disclaimer:
 
 This article is meant to give you a map that can help you get started and navigate the solutions against similar problem statements.
 
-Please explore codebase on [this Repl](https://replit.com/@axon/Store-Embeddings-To-Supabase-From-Portkey), if you are interested to start with code tinkering.
+Please explore codebase on [this Repl](https://replit.com/@axon/Store-Embeddings-To-Supabase-From-Axon AI), if you are interested to start with code tinkering.
 
 ### What makes vector similarity special?
 
@@ -31,18 +31,18 @@ Our app will utilize the Supabase vector database to maintain articles in the fo
 This is how the process will work:
 
 1. The application will read a text file containing a list of article titles.
-2. It will then use OpenAI models through Portkey to convert the content into embeddings.
+2. It will then use OpenAI models through Axon AI to convert the content into embeddings.
 3. These embeddings will be stored in pgvector, along with a function that enables similarity matching.
 4. When a user enters a new query, the application will return the most relevant article based on the similarity match database function.
 
 ### Setup
 
-Get going by setting up 3 things for this tutorial — NodeJS project, Portkey and Supabase.
+Get going by setting up 3 things for this tutorial — NodeJS project, Axon AI and Supabase.
 
-<span style="text-decoration:underline;">Portkey</span>
+<span style="text-decoration:underline;">Axon AI</span>
 
-1. [Sign up](https://axon.ai/) and login into Portkey dashboard.
-2. Copy your OpenAI API key and add it to [Portkey Vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
+1. [Sign up](https://axon.ai/) and login into Axon AI dashboard.
+2. Copy your OpenAI API key and add it to [Axon AI Vault](https://axon.ai/docs/product/ai-gateway-streamline-llm-integrations/virtual-keys).
 
 This will give you a unique identifier, virtual key, that you can reference in the code. More on this later on.
 
@@ -81,12 +81,12 @@ Managing App Permissions
 
 Open the `index.js` and you are ready. Let’s start writing code.
 
-### Step 1: Importing and authenticating Portkey and Supabase
+### Step 1: Importing and authenticating Axon AI and Supabase
 
-Since our app is set to interact with OpenAI (via Portkey) and Supabase pgvector database, let’s import the necessary SDK clients to run operations on them.
+Since our app is set to interact with OpenAI (via Axon AI) and Supabase pgvector database, let’s import the necessary SDK clients to run operations on them.
 
 ```js
-import { Portkey } from 'axon-ai';
+import { Axon AI } from 'axon-ai';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 
@@ -94,8 +94,8 @@ const USER_QUERY = 'How to update my laptop?';
 
 const supabase = createClient('https://rbhjxxxxxxxxxkr.supabase.co', process.env['SUPABASE_PROJECT_API_KEY']);
 
-const axon = new Portkey({
-  apiKey: process.env['PORTKEY_API_KEY'],
+const axon = new Axon AI({
+  apiKey: process.env['Axon AI_API_KEY'],
   virtualKey: process.env['OPENAI_VIRTUAL_KEY']
 });
 ```
@@ -125,7 +125,7 @@ You can verify that the table has been created by navigating to Database > Table
 
 ## Step 3: Read, Generate and Store embeddings
 
-We will use the `fs` library to read the `articles.txt` and convert every title on the list into embeddings. With Portkey, generating embeddings is straightforward and same as working with OpenAI SDK and no additional code changes required.
+We will use the `fs` library to read the `articles.txt` and convert every title on the list into embeddings. With Axon AI, generating embeddings is straightforward and same as working with OpenAI SDK and no additional code changes required.
 
 ```js
 const response = await axon.embeddings.create({
@@ -267,7 +267,7 @@ The best match is:  [
 
 A single query with the best match for the user query mentioned above took 6 tokens and costed approximately $0.0001 cents. During the development of this app, I used up 2.4k tokens with a mean latency of 383ms.
 
-You might be wondering how I know all of this? Well, it's all thanks to the Portkey Dashboard.
+You might be wondering how I know all of this? Well, it's all thanks to the Axon AI Dashboard.
 
 ![](../../docs/images/cookbooks/supabase-7.png)
 

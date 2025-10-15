@@ -1,20 +1,20 @@
-# Portkey Product Requirements — Compiled
+# Axon AI Product Requirements — Compiled
 
 ## Table of Contents
-- [Portkey Getting Started Requirements](#axon-getting-started-requirements)
-- [Portkey Guardrails Requirements](#axon-guardrails-requirements)
-- [Portkey Api Keys Requirements](#axon-api-keys-requirements)
-- [Portkey Workspace Control Requirements](#axon-workspace-control-requirements)
-- [Portkey Prompts Requirements](#axon-prompts-requirements)
-- [Portkey Prompt Partials Requirements](#axon-prompt-partials-requirements)
-- [Portkey Playground Requirements](#axon-playground-requirements)
+- [Axon AI Getting Started Requirements](#axon-getting-started-requirements)
+- [Axon AI Guardrails Requirements](#axon-guardrails-requirements)
+- [Axon AI Api Keys Requirements](#axon-api-keys-requirements)
+- [Axon AI Workspace Control Requirements](#axon-workspace-control-requirements)
+- [Axon AI Prompts Requirements](#axon-prompts-requirements)
+- [Axon AI Prompt Partials Requirements](#axon-prompt-partials-requirements)
+- [Axon AI Playground Requirements](#axon-playground-requirements)
 
 
 ---
 
 <a id="axon-getting-started-requirements"></a>
 
-# Portkey — Getting Started Page Requirements
+# Axon AI — Getting Started Page Requirements
 
 > **Goal:** Provide a fast, self-serve onboarding path to take a workspace from 0 → first successful API call in minutes. The page guides users to set up their environment, connect a provider, and run a test request with copyable starter code.
 
@@ -23,11 +23,11 @@
 - **Layout Blocks (top → bottom):**
   1. **Welcome Hero** (personalized)
   2. **Setup your environment** (API Key + Provider Integration)
-  3. **Integrate Portkey** (language code snippets + test run)
+  3. **Integrate Axon AI** (language code snippets + test run)
   4. **Help & Resources**
 
 ## 2) Welcome Hero
-- Title: “Hi {first_name}, welcome to Portkey!”
+- Title: “Hi {first_name}, welcome to Axon AI!”
 - Subtitle: “Take your GenAI apps to production confidently in a few steps”
 - Quick links: **Developer Docs**, **Join our Discord**, **View GitHub**, **Talk to us**
 - **Product Demo** CTA (top-right) opens modal or navigates to demo page.
@@ -35,14 +35,14 @@
 ## 3) Setup Your Environment
 ### 3.1 API Key Card
 - Shows the **workspace API key** (masked with copy + reveal).
-- Caption: “Use this to authenticate all your requests to Portkey.”
+- Caption: “Use this to authenticate all your requests to Axon AI.”
 - Actions: **Copy**, **Reveal/Hide** (auto-hide after 30s).
 
 ### 3.2 Provider Integration Card
 - “We encrypt your original API keys and generate disposable keys.”
 - **Select new AI provider to integrate** dropdown → provider setup wizard.
 
-## 4) Integrate Portkey (Starter Code)
+## 4) Integrate Axon AI (Starter Code)
 - Language switcher: Node.js (default), Python, cURL, Go.
 - Model selector (disabled until a provider is configured).
 - Buttons: **Run Test Request**, **Copy to Integrate**.
@@ -68,7 +68,7 @@
 
 <a id="axon-guardrails-requirements"></a>
 
-# Portkey — Guardrails Page Requirements
+# Axon AI — Guardrails Page Requirements
 
 ## 1) Purpose
 Define, manage, and enforce **content checks** and **actions** before/after LLM inference. Provide a listing of guardrails and a builder (Checks & Actions).
@@ -107,7 +107,7 @@ Define, manage, and enforce **content checks** and **actions** before/after LLM 
 
 <a id="axon-api-keys-requirements"></a>
 
-# Portkey — API Keys Page Requirements
+# Axon AI — API Keys Page Requirements
 
 ## Purpose
 Create and manage **service** and **user** API tokens with fine-grained permissions.
@@ -135,7 +135,7 @@ Create and manage **service** and **user** API tokens with fine-grained permissi
 
 <a id="axon-workspace-control-requirements"></a>
 
-# Portkey — Workspace Control Page Requirements
+# Axon AI — Workspace Control Page Requirements
 
 ## Purpose
 Manage workspace identity (icon, name), description, and metadata; link workspace-level guardrails.
@@ -157,7 +157,7 @@ Manage workspace identity (icon, name), description, and metadata; link workspac
 
 <a id="axon-prompts-requirements"></a>
 
-# Portkey — Prompts Page Requirements
+# Axon AI — Prompts Page Requirements
 
 ## Goal
 Central place to browse and manage prompt templates. Authoring happens in **Playground**.
@@ -180,7 +180,7 @@ Central place to browse and manage prompt templates. Authoring happens in **Play
 
 <a id="axon-prompt-partials-requirements"></a>
 
-# Portkey — Prompt Partials Builder Requirements
+# Axon AI — Prompt Partials Builder Requirements
 
 ## Goal
 Reusable **prompt fragments** to compose prompts in Playground.
@@ -199,7 +199,7 @@ Reusable **prompt fragments** to compose prompts in Playground.
 
 <a id="axon-playground-requirements"></a>
 
-# Portkey — Playground Requirements
+# Axon AI — Playground Requirements
 
 ## Goal
 Author, test, compare, and save prompts.

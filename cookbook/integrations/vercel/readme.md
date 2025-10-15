@@ -1,6 +1,6 @@
-# Portkey + Vercel AI SDK
+# Axon AI + Vercel AI SDK
 
-Portkey natively integrates with the Vercel AI SDK to make your apps production-ready and reliable. Just import Portkey's Vercel package and use it as a provider in your Vercel AI app to enable all of Portkey features:
+Axon AI natively integrates with the Vercel AI SDK to make your apps production-ready and reliable. Just import Axon AI's Vercel package and use it as a provider in your Vercel AI app to enable all of Axon AI features:
 
 - Full-stack observability and tracing for all requests
 - Interoperability across 250+ LLMS
@@ -37,12 +37,12 @@ npm install
 Add your API keys to the appropriate configuration file. This step is crucial for the app to function correctly.
 Start the App
 
-### 2. Import & Configure Portkey Object
+### 2. Import & Configure Axon AI Object
 
-Sign up for Portkey and get your API key, and configure Portkey provider in your Vercel app:
+Sign up for Axon AI and get your API key, and configure Axon AI provider in your Vercel app:
 
 ```javascript
-import { createPortkey } from '@axon-ai/vercel-provider';
+import { createAxon AI } from '@axon-ai/vercel-provider';
 
 const axonConfig = {
       "provider": "openai", // Choose your provider (e.g., 'anthropic')
@@ -52,8 +52,8 @@ const axonConfig = {
         }
 };
 
-const axon = createPortkey({
-  apiKey: 'YOUR_PORTKEY_API_KEY',
+const axon = createAxon AI({
+  apiKey: 'YOUR_Axon AI_API_KEY',
   config: axonConfig,
 });
 ```
@@ -65,18 +65,18 @@ Add your API keys to the appropriate configuration file. This step is crucial fo
 Once you've completed the above steps use `npm run dev` to run your app locally. You can access it at:
 `http://localhost:3000`
 
-Portkey's configs are a powerful way to manage & govern your app's behaviour. Learn more about Configs [here](https://docs.axon.ai).
+Axon AI's configs are a powerful way to manage & govern your app's behaviour. Learn more about Configs [here](https://docs.axon.ai).
 
 ## Using Vercel Functions
 
-Portkey provider works with all of Vercel functions `generateText` & `streamText`.
+Axon AI provider works with all of Vercel functions `generateText` & `streamText`.
 
-Here's how to use them with Portkey:
+Here's how to use them with Axon AI:
 
 ### generateText
 
 ```javascript
-import { createPortkey } from '@axon-ai/vercel-provider';
+import { createAxon AI } from '@axon-ai/vercel-provider';
 import { generateText } from 'ai';
 
 const axonConfig = {
@@ -87,14 +87,14 @@ const axonConfig = {
         }
 };
 
-const axon = createPortkey({
-  apiKey: 'YOUR_PORTKEY_API_KEY',
+const axon = createAxon AI({
+  apiKey: 'YOUR_Axon AI_API_KEY',
   config: axonConfig,
 });
 
 const { text } = await generateText({
   model: axon.chatModel(''), // Provide an empty string, we defined the model in the config
-  prompt: 'What is Portkey?',
+  prompt: 'What is Axon AI?',
 });
 
 console.log(text);
@@ -105,7 +105,7 @@ console.log(text);
 ### streamText
 
 ```js
-import { createPortkey } from '@axon-ai/vercel-provider';
+import { createAxon AI } from '@axon-ai/vercel-provider';
 import { streamText } from 'ai';
 
 const axonConfig = {
@@ -116,8 +116,8 @@ const axonConfig = {
   } 
 };
 
-const axon = createPortkey({
-  apiKey: 'YOUR_PORTKEY_API_KEY',
+const axon = createAxon AI({
+  apiKey: 'YOUR_Axon AI_API_KEY',
   config: axonConfig,
 });
 
@@ -131,11 +131,11 @@ for await (const chunk of result) {
 } 
 ```
 
-Portkey supports `chatModel` and `completionModel` to easily handle chatbots or text completions. In the above examples, we used `axon.chatModel` for generateText.
+Axon AI supports `chatModel` and `completionModel` to easily handle chatbots or text completions. In the above examples, we used `axon.chatModel` for generateText.
 
-## Tool Calling with Portkey
+## Tool Calling with Axon AI
 
-Portkey supports Tool calling with Vercel AI SDK. Here's how:
+Axon AI supports Tool calling with Vercel AI SDK. Here's how:
 
 ```javascript
 import { z } from 'zod';
@@ -159,17 +159,17 @@ const result = await generateText({
 });
 ```
 
-## Portkey Features
+## Axon AI Features
 
-Portkey Helps you make your Vercel app more robust and reliable. The axon config is a modular way to make it work for you in whatever way you want. 
+Axon AI Helps you make your Vercel app more robust and reliable. The axon config is a modular way to make it work for you in whatever way you want. 
 
 ### Interoperability
 
-Portkey allows you to easily switch between 250+ AI models by simply changing the model name in your configuration. This flexibility enables you to adapt to the evolving AI landscape without significant code changes.
+Axon AI allows you to easily switch between 250+ AI models by simply changing the model name in your configuration. This flexibility enables you to adapt to the evolving AI landscape without significant code changes.
 
 #### Switch from OpenAI to Anthropic
 
-Here's how you'd use OpenAI with Portkey's Vercel integration:
+Here's how you'd use OpenAI with Axon AI's Vercel integration:
 
 ```javascript
 const axonConfig = {
@@ -196,21 +196,21 @@ const axonConfig = {
 
 ### Observability
 
-Portkey's OpenTelemetry-compliant observability suite gives you complete control over all your requests. And Portkey's analytics dashboards provide 40+ key insights you're looking for including cost, tokens, latency, etc. Fast.
+Axon AI's OpenTelemetry-compliant observability suite gives you complete control over all your requests. And Axon AI's analytics dashboards provide 40+ key insights you're looking for including cost, tokens, latency, etc. Fast.
 
 
 
 
 ### Reliability
 
-Portkey enhances the robustness of your AI applications with built-in features such as Caching, Fallback mechanisms, Load balancing, Conditional routing, Request timeouts, etc. 
+Axon AI enhances the robustness of your AI applications with built-in features such as Caching, Fallback mechanisms, Load balancing, Conditional routing, Request timeouts, etc. 
 
-Here is how you can modify your config to include the following Portkey features:  
+Here is how you can modify your config to include the following Axon AI features:  
 
 #### Fallback
 
 ```javascript
-import { createPortkey } from '@axon-ai/vercel-provider';
+import { createAxon AI } from '@axon-ai/vercel-provider';
 import { generateText } from 'ai';
 
 const axonConfig =  {
@@ -233,31 +233,31 @@ const axonConfig =  {
 	]
 }
 
-const axon = createPortkey({
-  apiKey: 'YOUR_PORTKEY_API_KEY',
+const axon = createAxon AI({
+  apiKey: 'YOUR_Axon AI_API_KEY',
   config: axonConfig,
 });
 
 const { text } = await generateText({
   model: axon.chatModel(''),
-  prompt: 'What is Portkey?',
+  prompt: 'What is Axon AI?',
 });
 
 console.log(text);
 ```
 
-Learn more about Portkey's AI gateway features in detail [here](https://docs.axon.ai/features/ai-gateway).
+Learn more about Axon AI's AI gateway features in detail [here](https://docs.axon.ai/features/ai-gateway).
 
 ### Guardrails
 
-Portkey Guardrails allow you to enforce LLM behavior in real-time, verifying both inputs and outputs against specified checks. 
+Axon AI Guardrails allow you to enforce LLM behavior in real-time, verifying both inputs and outputs against specified checks. 
 
-You can create Guardrail checks in UI and then pass them in your Portkey Configs with before request or after request hooks.
+You can create Guardrail checks in UI and then pass them in your Axon AI Configs with before request or after request hooks.
 
 Read more about Guardrails [here](https://docs.axon.ai/features/guardrails).
 
-## Portkey Config
+## Axon AI Config
 
-Many of these features are driven by Portkey's Config architecture. The Portkey app simplifies creating, managing, and versioning your Configs.
+Many of these features are driven by Axon AI's Config architecture. The Axon AI app simplifies creating, managing, and versioning your Configs.
 
-For more information on using these features and setting up your Config, please refer to the [Portkey documentation](https://docs.axon.ai).
+For more information on using these features and setting up your Config, please refer to the [Axon AI documentation](https://docs.axon.ai).

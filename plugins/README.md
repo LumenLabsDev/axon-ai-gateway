@@ -1,7 +1,7 @@
-# Portkey Gateway Plugins
+# Axon AI Gateway Plugins
 
 ## Table of Contents
-- [Portkey Gateway Plugins](#axon-gateway-plugins)
+- [Axon AI Gateway Plugins](#axon-gateway-plugins)
   - [Table of Contents](#table-of-contents)
   - [Introduction](#introduction)
   - [What are Plugins?](#what-are-plugins)
@@ -20,11 +20,11 @@
 
 ## Introduction
 
-This folder contains plugins for the Portkey Gateway. Plugins allow developers to extend the capabilities of the Gateway by adding custom functionality at various stages of the request lifecycle. Currently, the primary type of plugins supported in the AI gateway are guardrails.
+This folder contains plugins for the Axon AI Gateway. Plugins allow developers to extend the capabilities of the Gateway by adding custom functionality at various stages of the request lifecycle. Currently, the primary type of plugins supported in the AI gateway are guardrails.
 
 ## What are Plugins?
 
-Plugins in Portkey enable developers to extend the capabilities of the AI gateway by writing their own functionality. Portkey exposes the concept of hooks, which allows developers to execute custom functions at key points in the request journey. While the plugin system is designed to be extensible, the current focus is on implementing guardrails.
+Plugins in Axon AI enable developers to extend the capabilities of the AI gateway by writing their own functionality. Axon AI exposes the concept of hooks, which allows developers to execute custom functions at key points in the request journey. While the plugin system is designed to be extensible, the current focus is on implementing guardrails.
 
 ## Why are Plugins Important?
 
@@ -39,7 +39,7 @@ Plugins are crucial for several reasons:
 
 ### Hooks
 
-Hooks in Portkey's AI gateway allow custom functions to be executed at various stages of the request lifecycle. Currently, four types of hooks are supported:
+Hooks in Axon AI's AI gateway allow custom functions to be executed at various stages of the request lifecycle. Currently, four types of hooks are supported:
 
 1. **Start**: Executed at the beginning of the request lifecycle for initial setup and logging.
 2. **BeforeRequest**: Executed before the request is sent to the AI model, typically used for implementing guardrails.
@@ -50,17 +50,17 @@ While hooks can be extended for custom logging solutions and other custom functi
 
 ### Guardrails
 
-Guardrails in Portkey's AI gateway are a set of checks that are run together within the `beforeRequest` or `afterRequest` hooks to determine a `verdict`. The verdict of a guardrail dictates the actions to be taken on the request or response. For example, if the guardrail fails, the request can be failed, or the response can be returned with a 246 status code indicating that the guardrails failed.
+Guardrails in Axon AI's AI gateway are a set of checks that are run together within the `beforeRequest` or `afterRequest` hooks to determine a `verdict`. The verdict of a guardrail dictates the actions to be taken on the request or response. For example, if the guardrail fails, the request can be failed, or the response can be returned with a 246 status code indicating that the guardrails failed.
 
-Guardrails can be defined either through the user interface (UI) of Portkey or as a JSON configuration within the Portkey `config`. This flexibility allows for easy management and customization of guardrails according to the specific needs of the application.
+Guardrails can be defined either through the user interface (UI) of Axon AI or as a JSON configuration within the Axon AI `config`. This flexibility allows for easy management and customization of guardrails according to the specific needs of the application.
 
 ### Checks
 
-A check is an individual function that assesses the input prompt or output response against predefined conditions. Each check returns a boolean verdict or may error out if issues are encountered. Checks are the building blocks of guardrails, and Portkey includes a set of predefined checks as well as the ability to add custom checks.
+A check is an individual function that assesses the input prompt or output response against predefined conditions. Each check returns a boolean verdict or may error out if issues are encountered. Checks are the building blocks of guardrails, and Axon AI includes a set of predefined checks as well as the ability to add custom checks.
 
 ## Creating a Plugin
 
-When creating a plugin for Portkey, keep in mind that it should primarily focus on implementing guardrails. Here's how to structure your plugin:
+When creating a plugin for Axon AI, keep in mind that it should primarily focus on implementing guardrails. Here's how to structure your plugin:
 
 ### Folder Structure
 
