@@ -64,26 +64,27 @@ cd gateway
 npm install
 ```
 
-**Setup environment:**
-```bash
-# Set encryption key for secure provider key storage
-export ENCRYPTION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")
-
-# For Windows PowerShell users, use:
-# $env:ENCRYPTION_KEY = node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-```
-
 **Setup database:**
 ```bash
-# Generate and run database migrations to create tables
-npx drizzle-kit generate
-npx drizzle-kit migrate
-
-# Bootstrap database with initial workspace and admin key
-npx tsx scripts/bootstrap.ts
+# Generate new database
+npm run db:generate
 ```
 
-**Important**: Save the **Admin Key** (`ak_*`) from the output - you'll need it for the admin panel.
+**Run migrations:**
+```bash
+# Run migrations if needed
+npm run db:migrate
+```
+
+**Bootstrap database:**
+```bash
+# Creates initial workspace, admin key, and virtual key
+npm run db:bootstrap
+```
+
+**Important**: Save both keys from the output:
+- **Admin Key** (`ak_*`) - For accessing the admin panel
+- **Virtual Key** (`vk_*`) - For gateway API requests with rate limits
 
 **Start the server:**
 ```bash
@@ -99,18 +100,15 @@ npm run dev:node
 The gateway uses two types of keys:
 
 - **Admin Keys** (`ak_*`): Authenticate to the admin panel for managing workspaces, users, and settings
-  - Created by: Bootstrap script
   - Header: `x-axon-admin-key`
   - No rate limits
   - Global access
 
 - **Virtual Keys** (`vk_*`): Gateway access with cost controls
-  - Created by: API call after server starts
   - Header: `x-axon-api-key`  
   - Rate limits (RPM/TPM)
   - Model restrictions
   - Workspace-scoped
-  - Linked to provider keys
 
 </details>
 
@@ -125,9 +123,9 @@ Deployment guides:
 
 </sup>
 
-### 2. Add Provider Keys & Create Virtual Keys
+### 2. Add Provider Keys
 
-**First, add your AI provider keys** to the gateway:
+First, add your AI provider keys to the gateway:
 
 ```bash
 # Add OpenAI key
@@ -141,25 +139,6 @@ curl -X POST http://localhost:8787/v1/admin/provider-keys \
   }'
 ```
 
-**Then, create a virtual key** linked to your provider key:
-
-```bash
-# Create virtual key (save the returned plainKey!)
-curl -X POST http://localhost:8787/v1/admin/virtual-keys \
-  -H "x-axon-admin-key: YOUR_ADMIN_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "workspaceId": "YOUR_WORKSPACE_ID",
-    "providerKeyId": "PROVIDER_KEY_ID_FROM_STEP_ABOVE", 
-    "name": "My App Key",
-    "rateLimitRpm": 100,
-    "rateLimitTpm": 50000,
-    "allowedModels": ["gpt-4o-mini", "gpt-4"]
-  }'
-```
-
-**Important**: Save the `plainKey` from the virtual key response - it will not be shown again!
-
 ### 3. Make your first request
 
 Use your **Virtual Key** to make gateway requests:
@@ -171,7 +150,7 @@ from axon_ai import Axon
 
 # Configure with your virtual key
 client = Axon(
-    api_key="YOUR_VIRTUAL_KEY",  # vk_* from step 2
+    api_key="YOUR_VIRTUAL_KEY",  # vk_* from bootstrap
     provider="openai"
 )
 
