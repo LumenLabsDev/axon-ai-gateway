@@ -64,18 +64,6 @@ cd gateway
 npm install
 ```
 
-**Setup database:**
-```bash
-# Generate new database
-npm run db:generate
-```
-
-**Run migrations:**
-```bash
-# Run migrations if needed
-npm run db:migrate
-```
-
 **Bootstrap database:**
 ```bash
 # Creates initial workspace, admin key, and virtual key

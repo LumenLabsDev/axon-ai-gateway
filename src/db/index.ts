@@ -1,9 +1,11 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import Database from 'better-sqlite3';
 import * as schema from './schema';
 import { mkdir } from 'fs/promises';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 // Get database path from environment or use default
 const DATABASE_PATH = process.env.DATABASE_PATH || './data/gateway.db';
@@ -13,7 +15,7 @@ let sqlite: Database.Database | null = null;
 
 /**
  * Initialize the database connection
- * Creates the data directory if it doesn't exist
+ * Creates the data directory if it doesn't exist and applies migrations
  */
 export async function initializeDatabase() {
   const timestamp = new Date().toISOString();
@@ -34,6 +36,16 @@ export async function initializeDatabase() {
 
     // Create Drizzle instance
     db = drizzle(sqlite, { schema });
+
+    // Apply migrations
+    const migrationsFolder = join(process.cwd(), 'src', 'db', 'migrations');
+    if (existsSync(migrationsFolder)) {
+      console.log(`[${timestamp}] [DB] [INFO] Applying migrations from: ${migrationsFolder}`);
+      migrate(db, { migrationsFolder });
+      console.log(`[${timestamp}] [DB] [INFO] Migrations applied successfully`);
+    } else {
+      console.log(`[${timestamp}] [DB] [WARN] Migrations folder not found: ${migrationsFolder}`);
+    }
 
     console.log(`[${timestamp}] [DB] [INFO] Database initialized successfully`);
     return db;
