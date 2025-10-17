@@ -22,6 +22,33 @@
   <div class="card">
     <div class="card-header">
       <h2 class="card-title">Recent Activity</h2>
+      <div class="card-actions">
+        <div class="input-with-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path
+              fill-rule="evenodd"
+              d="M9 3.5a5.5 5.5 0 1 0 3.473 9.8l2.613 2.614a.75.75 0 1 0 1.06-1.06l-2.613-2.614A5.5 5.5 0 0 0 9 3.5Zm-4 5.5a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <input
+            type="search"
+            x-ref="dashboardSearch"
+            class="form-input form-input-sm"
+            placeholder="Filter activity..."
+            x-model.debounce.300ms="searchTerm"
+            @keydown.escape="clearSearch()"
+            aria-label="Filter recent activity"
+          />
+        </div>
+        <button
+          class="btn btn-secondary btn-sm"
+          x-show="searchTerm"
+          @click="clearSearch()"
+        >
+          Clear
+        </button>
+      </div>
     </div>
     <div x-show="loading" class="loading-container">
       <div class="loading-spinner"></div>
@@ -29,7 +56,11 @@
     <div x-show="!loading && recentLogs.length === 0" class="empty-state">
       <p>No recent activity</p>
     </div>
-    <div x-show="!loading && recentLogs.length > 0" class="table-container">
+    <div x-show="!loading && recentLogs.length > 0 && filteredLogs.length === 0" class="empty-state">
+      <p>No activity matches your filter.</p>
+      <button class="btn btn-secondary btn-sm" @click="clearSearch()">Reset filter</button>
+    </div>
+    <div x-show="!loading && filteredLogs.length > 0" class="table-container">
       <table>
         <thead>
           <tr>
@@ -41,7 +72,7 @@
           </tr>
         </thead>
         <tbody>
-          <template x-for="log in recentLogs" :key="log.time">
+          <template x-for="log in filteredLogs" :key="log.time + log.endpoint">
             <tr>
               <td x-text="log.time"></td>
               <td><span class="badge badge-gray" x-text="log.method"></span></td>

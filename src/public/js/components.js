@@ -27,12 +27,34 @@ document.addEventListener('alpine:init', () => {
   },
   recentLogs: [],
   loading: true,
+  searchTerm: '',
 
   async init() {
     // Wait for workspace to be ready
     await waitForWorkspace();
     await this.loadStats();
     this.connectToLogStream();
+  },
+
+  get filteredLogs() {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) {
+      return this.recentLogs;
+    }
+
+    return this.recentLogs.filter((log) => {
+      return ['time', 'method', 'endpoint', 'status'].some((field) => {
+        const value = log[field];
+        return value && String(value).toLowerCase().includes(term);
+      });
+    });
+  },
+
+  clearSearch() {
+    this.searchTerm = '';
+    this.$nextTick(() => {
+      this.$refs.dashboardSearch?.focus();
+    });
   },
 
   async loadStats() {
@@ -59,7 +81,7 @@ document.addEventListener('alpine:init', () => {
     logSource.addEventListener('log', (event) => {
       const entry = JSON.parse(event.data);
       this.recentLogs.unshift(entry);
-      this.recentLogs = this.recentLogs.slice(0, 5); // Keep only 5 most recent
+      this.recentLogs = this.recentLogs.slice(0, 20); // Keep the most recent 20 entries for filtering
       this.stats.totalRequests++;
     });
 
