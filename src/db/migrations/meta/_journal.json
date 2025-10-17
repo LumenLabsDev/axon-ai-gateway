@@ -8,6 +8,13 @@
       "when": 1760550643351,
       "tag": "0000_nice_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760726874478,
+      "tag": "0001_add_request_activity_logs",
+      "breakpoints": false
     }
   ]
 }

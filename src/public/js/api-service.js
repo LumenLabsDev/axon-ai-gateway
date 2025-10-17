@@ -159,6 +159,20 @@ const API = {
     get: (timeRange = '24h') => API.request(`/analytics?timeRange=${timeRange}`)
   },
 
+  logs: {
+    list: (params = {}) => {
+      const searchParams = new URLSearchParams();
+      if (params.page) searchParams.set('page', params.page);
+      if (params.pageSize) searchParams.set('pageSize', params.pageSize);
+      if (params.search) searchParams.set('search', params.search);
+      if (params.status) searchParams.set('status', params.status);
+
+      const queryString = searchParams.toString();
+      return API.request(`/logs${queryString ? `?${queryString}` : ''}`);
+    },
+    get: (id) => API.request(`/logs/${id}`)
+  },
+
   // Update admin key
   setAdminKey(key) {
     this.adminKey = key;
