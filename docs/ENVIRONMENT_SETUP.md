@@ -35,6 +35,9 @@ ENVIRONMENT=development
 
 # Log Level (debug, info, warn, error)
 LOG_LEVEL=info
+
+# Enable real-time log streaming endpoint
+ENABLE_LOG_STREAMS=true
 ```
 
 ## How It Works

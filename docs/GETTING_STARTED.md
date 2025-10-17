@@ -39,6 +39,8 @@ Create a `.env` file:
 # Generate a secure encryption key
 node -e "console.log('ENCRYPTION_KEY=' + require('crypto').randomBytes(32).toString('base64'))" > .env
 echo "DATABASE_PATH=./data/gateway.db" >> .env
+# Optional: disable real-time log streaming if you don't need the /log/stream endpoint
+# echo "ENABLE_LOG_STREAMS=false" >> .env
 ```
 
 ### 4. Initialize Database & Create Admin Key

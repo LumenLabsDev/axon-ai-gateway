@@ -407,6 +407,42 @@ export const requestLogs = sqliteTable(
   })
 );
 
+/**
+ * Detailed Request Logs table
+ * Stores rich request/response metadata for debugging and auditing
+ */
+export const requestActivityLogs = sqliteTable(
+  'request_activity_logs',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    workspaceId: text('workspace_id').references(() => workspaces.id, {
+      onDelete: 'set null',
+    }),
+    virtualKeyId: text('virtual_key_id').references(() => virtualKeys.id, {
+      onDelete: 'set null',
+    }),
+    method: text('method').notNull(),
+    endpoint: text('endpoint').notNull(),
+    statusCode: integer('status_code').notNull(),
+    duration: integer('duration'),
+    requestOptions: text('request_options', { mode: 'json' }).$type<any[]>(),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    workspaceIdx: index('request_activity_logs_workspace_idx').on(
+      table.workspaceId
+    ),
+    createdAtIdx: index('request_activity_logs_created_at_idx').on(
+      table.createdAt
+    ),
+    statusIdx: index('request_activity_logs_status_idx').on(table.statusCode),
+  })
+);
+
 // Type exports for use in application code
 export type Workspace = typeof workspaces.$inferSelect;
 export type NewWorkspace = typeof workspaces.$inferInsert;
@@ -443,3 +479,5 @@ export type NewWorkspaceGuardrail = typeof workspaceGuardrails.$inferInsert;
 
 export type RequestLog = typeof requestLogs.$inferSelect;
 export type NewRequestLog = typeof requestLogs.$inferInsert;
+export type RequestActivityLog = typeof requestActivityLogs.$inferSelect;
+export type NewRequestActivityLog = typeof requestActivityLogs.$inferInsert;

@@ -759,37 +759,111 @@ Alpine.data('logsManager', () => ({
   currentPage: 1,
   perPage: 10,
   selectedItems: new Set(),
+  loading: false,
+  logStreamEnabled: false,
+  streamInitialized: false,
+  logSource: null,
+  totalAvailable: 0,
 
-  init() {
-    this.connectToLogStream();
+  async init() {
+    await this.fetchLogs();
   },
-  
+
+  async fetchLogs(showToast = false) {
+    this.loading = true;
+    try {
+      const response = await API.logs.list({ page: 1, pageSize: 200 });
+      this.logStreamEnabled = response.streamEnabled ?? false;
+
+      const data = response.data || [];
+      this.logs = data.map(log => this.transformApiLog(log));
+      this.totalAvailable = response.pagination?.total ?? this.logs.length;
+      this.currentPage = 1;
+
+      if (!this.logStreamEnabled && this.logSource) {
+        this.logSource.close();
+        this.logSource = null;
+        this.streamInitialized = false;
+      }
+
+      if (this.logStreamEnabled && !this.streamInitialized) {
+        this.connectToLogStream();
+      }
+
+      if (showToast) {
+        Utils.showToast('Logs refreshed', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to load logs', error);
+      Utils.showToast('Failed to load logs: ' + (error.message || error), 'error');
+    } finally {
+      this.loading = false;
+    }
+  },
+
   loadLogs() {
-    // Refresh connection
-    this.logs = [];
-    Utils.showToast('Logs refreshed', 'success');
+    this.fetchLogs(true);
+  },
+
+  transformApiLog(log) {
+    return {
+      id: log.id,
+      time: this.formatTime(log.createdAt),
+      method: log.method,
+      endpoint: log.endpoint,
+      status: log.status,
+      duration: log.duration ?? 0,
+      requestOptions: log.requestOptions ?? [],
+    };
+  },
+
+  formatTime(value) {
+    if (!value) return '';
+    try {
+      return new Date(value).toLocaleString();
+    } catch (error) {
+      return value;
+    }
   },
 
   connectToLogStream() {
-    const logSource = new EventSource('/log/stream');
+    if (!this.logStreamEnabled) {
+      return;
+    }
 
-    logSource.addEventListener('connected', (event) => {
+    if (this.logSource) {
+      this.logSource.close();
+    }
+
+    const logSource = new EventSource('/log/stream');
+    this.logSource = logSource;
+    this.streamInitialized = true;
+
+    logSource.addEventListener('connected', () => {
       console.log('Connected to log stream');
     });
 
     logSource.addEventListener('log', (event) => {
-      const entry = JSON.parse(event.data);
-      entry.id = Date.now() + Math.random(); // Add unique ID
-      this.logs.unshift(entry);
-      // Keep max 1000 logs in memory
-      if (this.logs.length > 1000) {
-        this.logs = this.logs.slice(0, 1000);
+      try {
+        const entry = JSON.parse(event.data);
+        entry.id = entry.id || Date.now() + Math.random();
+        entry.time = entry.time || this.formatTime(new Date().toISOString());
+        entry.duration = entry.duration ?? 0;
+        this.logs.unshift(entry);
+        if (this.logs.length > 1000) {
+          this.logs = this.logs.slice(0, 1000);
+        }
+      } catch (error) {
+        console.error('Failed to parse log entry', error);
       }
     });
 
     logSource.onerror = (error) => {
       console.error('Log stream error:', error);
-      setTimeout(() => this.connectToLogStream(), 5000);
+      logSource.close();
+      if (this.logStreamEnabled) {
+        setTimeout(() => this.connectToLogStream(), 5000);
+      }
     };
   },
 

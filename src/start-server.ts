@@ -15,6 +15,9 @@ import { requestValidator } from './middlewares/requestValidator';
 import { initializeDatabase, closeDatabase } from './db';
 import { cleanupOldRecords } from './services/rateLimitService';
 
+const logStreamEnabled =
+  (process.env.ENABLE_LOG_STREAMS ?? 'true').toLowerCase() !== 'false';
+
 // Extract the port number from the command line arguments
 const defaultPort = 8787;
 const args = process.argv.slice(2);
@@ -121,70 +124,72 @@ if (
     return Promise.race([fn(), timeoutPromise]);
   }
 
-  app.get('/log/stream', (c: Context) => {
-    const clientId = Date.now().toString();
+  if (logStreamEnabled) {
+    app.get('/log/stream', (c: Context) => {
+      const clientId = Date.now().toString();
 
-    // Set headers to prevent caching
-    c.header('Cache-Control', 'no-cache');
-    c.header('X-Accel-Buffering', 'no');
+      // Set headers to prevent caching
+      c.header('Cache-Control', 'no-cache');
+      c.header('X-Accel-Buffering', 'no');
 
-    return streamSSE(c, async (stream) => {
-      const addLogClient: any = c.get('addLogClient');
-      const removeLogClient: any = c.get('removeLogClient');
+      return streamSSE(c, async (stream) => {
+        const addLogClient: any = c.get('addLogClient');
+        const removeLogClient: any = c.get('removeLogClient');
 
-      const client = {
-        sendLog: (message: any) =>
-          sendWithTimeout(() => stream.writeSSE(message)),
-      };
-      // Add this client to the set of log clients
-      addLogClient(clientId, client);
+        const client = {
+          sendLog: (message: any) =>
+            sendWithTimeout(() => stream.writeSSE(message)),
+        };
+        // Add this client to the set of log clients
+        addLogClient(clientId, client);
 
-      // If the client disconnects (closes the tab, etc.), this signal will be aborted
-      const onAbort = () => {
-        removeLogClient(clientId);
-      };
-      c.req.raw.signal.addEventListener('abort', onAbort);
+        // If the client disconnects (closes the tab, etc.), this signal will be aborted
+        const onAbort = () => {
+          removeLogClient(clientId);
+        };
+        c.req.raw.signal.addEventListener('abort', onAbort);
 
-      try {
-        // Send an initial connection event
-        await sendWithTimeout(() =>
-          stream.writeSSE({ event: 'connected', data: clientId })
-        );
+        try {
+          // Send an initial connection event
+          await sendWithTimeout(() =>
+            stream.writeSSE({ event: 'connected', data: clientId })
+          );
 
-        // Use an interval instead of a while loop
-        const heartbeatInterval = setInterval(async () => {
-          if (c.req.raw.signal.aborted) {
-            clearInterval(heartbeatInterval);
-            return;
-          }
+          // Use an interval instead of a while loop
+          const heartbeatInterval = setInterval(async () => {
+            if (c.req.raw.signal.aborted) {
+              clearInterval(heartbeatInterval);
+              return;
+            }
 
-          try {
-            await sendWithTimeout(() =>
-              stream.writeSSE({ event: 'heartbeat', data: 'pulse' })
-            );
-          } catch (error) {
-            // console.error(`Heartbeat failed for client ${clientId}:`, error);
-            clearInterval(heartbeatInterval);
-            removeLogClient(clientId);
-          }
-        }, 10000);
+            try {
+              await sendWithTimeout(() =>
+                stream.writeSSE({ event: 'heartbeat', data: 'pulse' })
+              );
+            } catch (error) {
+              // console.error(`Heartbeat failed for client ${clientId}:`, error);
+              clearInterval(heartbeatInterval);
+              removeLogClient(clientId);
+            }
+          }, 10000);
 
-        // Wait for abort signal
-        await new Promise((resolve) => {
-          c.req.raw.signal.addEventListener('abort', () => {
-            clearInterval(heartbeatInterval);
-            resolve(undefined);
+          // Wait for abort signal
+          await new Promise((resolve) => {
+            c.req.raw.signal.addEventListener('abort', () => {
+              clearInterval(heartbeatInterval);
+              resolve(undefined);
+            });
           });
-        });
-      } catch (error) {
-        // console.error(`Error in log stream for client ${clientId}:`, error);
-      } finally {
-        // Remove this client when the connection is closed
-        removeLogClient(clientId);
-        c.req.raw.signal.removeEventListener('abort', onAbort);
-      }
+        } catch (error) {
+          // console.error(`Error in log stream for client ${clientId}:`, error);
+        } finally {
+          // Remove this client when the connection is closed
+          removeLogClient(clientId);
+          c.req.raw.signal.removeEventListener('abort', onAbort);
+        }
+      });
     });
-  });
+  }
 }
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });

@@ -123,6 +123,7 @@ import * as promptsHandler from './handlers/admin/promptsHandler';
 import * as promptPartialsHandler from './handlers/admin/promptPartialsHandler';
 import * as guardrailsHandler from './handlers/admin/guardrailsHandler';
 import * as analyticsHandler from './handlers/admin/analyticsHandler';
+import * as logsHandler from './handlers/admin/logsHandler';
 
 // Admin Keys (admin authentication for admin panel)
 app.get(
@@ -159,6 +160,21 @@ app.delete(
   workspaceContext,
   workspaceAuth,
   adminKeysHandler.deleteAdminKey
+);
+
+app.get(
+  '/v1/admin/logs',
+  adminKeyAuth,
+  workspaceContext,
+  workspaceAuth,
+  logsHandler.listLogs
+);
+app.get(
+  '/v1/admin/logs/:id',
+  adminKeyAuth,
+  workspaceContext,
+  workspaceAuth,
+  logsHandler.getLog
 );
 
 // Workspaces (list and create are global operations, others need workspace auth)
